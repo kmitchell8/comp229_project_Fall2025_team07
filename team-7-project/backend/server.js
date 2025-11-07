@@ -19,7 +19,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(bodyParser.json());
-const PORT = 3000;
+const PORT = 5000;
 const MONGO_URI = "" //might be located in the .env file (process.env.MONGO_URI)
 const MONGO_LOCAL =""//might be located in the .env file (process.env.MONGO_LOCAL)
 

@@ -7,7 +7,7 @@
 
 const mongoose = require('mongoose'); // needed to connect to MongoDB (type: commonjs)
 
-const UsersSchema = new mongoose.Schema({
+const UserSchema = new mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true }
@@ -16,4 +16,4 @@ const UsersSchema = new mongoose.Schema({
     timestamps: { createdAt: 'created', updatedAt: 'updated' }
 });
 
-module.exports = mongoose.model("Users", UsersSchema);
+module.exports = mongoose.model("Users", UserSchema);

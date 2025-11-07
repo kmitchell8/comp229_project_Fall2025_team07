@@ -7,8 +7,8 @@
 
 const mongoose = require('mongoose'); // needed to connect to MongoDB (type: commonjs)
 
-const BooksSchema = new mongoose.Schema({
+const BookSchema = new mongoose.Schema({
     
 });
 
-module.exports = mongoose.model("Users", BooksSchema);
+module.exports = mongoose.model("Users", BookSchema);

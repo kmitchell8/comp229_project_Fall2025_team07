@@ -8,7 +8,13 @@
 const mongoose = require('mongoose'); // needed to connect to MongoDB (type: commonjs)
 
 const BookSchema = new mongoose.Schema({
-    
+    cover: {type: String, rquired: true },
+    title: { type: String, required: true },
+    author: { type: String, required: true },
+    publisher: { type: String, required: true },
+    published: { type: Date},
+    ISBN_10: {type: Integer},
+    ISBN_13: {type: Integer}
 });
 
 module.exports = mongoose.model("Users", BookSchema);

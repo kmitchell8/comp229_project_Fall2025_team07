@@ -1,0 +1,128 @@
+/*
+ * File Name: userController.js
+ * Author(s): 
+ * Student ID (s): 
+ * Date: nov 10th
+ * Note: AI assisted Code (Gemini)
+ */
+
+const User = require('../models/users');
+const _ = require('lodash'); // Used for cleaning up request bodies
+
+// Middleware to pre-load a user profile based on the 'userId' parameter in the route
+const userByID = async (req, res, next, id) => {
+    try {
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({
+                error: "User not found"
+            });
+        }
+        // Attach the found user object to the request, stripping the password hash for security.
+        const { password, ...safeUser } = user.toObject(); 
+        req.profile = safeUser;
+        next();
+    } catch (err) {
+        return res.status(400).json({
+            error: "Could not retrieve user"
+        });
+    }
+};
+
+//SINGLE USER SECURE
+
+// GET: Read the non-sensitive profile data of the user loaded by userByID
+const read = (req, res) => {
+    // req.profile already contains the non-sensitive user data loaded by router.param
+    return res.json(req.profile);
+};
+
+// PUT: Update user data
+const update = async (req, res, next) => {
+    try {
+        // Find the user by ID
+        let user = await User.findById(req.profile._id);
+        if (!user) return res.status(404).json({ error: "User not found during update." });
+
+        // Update the user object with new data from the request body
+        // We use loadsh's extend method to merge the changes
+        user = _.extend(user, req.body);
+        user.updatedAt = Date.now();
+        await user.save();
+
+        // Prepare the response profile (strip password hash)
+        const { password, ...safeUser } = user.toObject(); 
+        res.json(safeUser);
+
+    } catch (err) {
+        // Handle validation or save errors
+        return res.status(400).json({
+            error: "Could not update user: " + err.message
+        });
+    }
+};
+
+// DELETE: Remove the user
+const remove = async (req, res, next) => {
+    try {
+        const user = req.profile; // User object from req.profile
+        const deletedUser = await user.remove(); 
+        
+        // Prepare response profile (strip password hash)
+        const { password, ...safeUser } = deletedUser.toObject(); 
+        res.json({ message: "User successfully deleted.", user: safeUser });
+
+    } catch (err) {
+        return res.status(400).json({
+            error: "Could not delete user: " + err.message
+        });
+    }
+};
+
+
+//GENERAL 
+
+// POST: Create a new user (Often used for registration, but kept for generic CRUD)
+const create = async (req, res) => {
+    try {
+        const newUser = new User(req.body);
+        const savedUser = await newUser.save();
+        // NOTE: In a real app, you should strip sensitive info before sending back.
+        res.status(201).json(savedUser);
+    } catch (err) {
+        // Handle validation errors or duplicate keys
+        res.status(400).json({ error: err.message });
+    }
+};
+
+// GET: List all users
+const list = async (req, res) => {
+    try {
+        // NOTE: In a real app, this route should be restricted to 'admin' roles.
+        const users = await User.find().select('username email role createdAt'); // Select safe fields
+        res.status(200).json(users);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+// DELETE: Delete all users
+const removeAll = async (req, res) => {
+    try {
+        // NOTE: This should be restricted to 'admin' roles and avoided in production.
+        const result = await User.deleteMany({});
+        res.status(200).json({ message: `You deleted ${result.deletedCount} user(s)` });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+module.exports = {
+    userByID, // The crucial parameter middleware
+    read,
+    update,
+    remove,
+    create,
+    list,
+    removeAll
+};

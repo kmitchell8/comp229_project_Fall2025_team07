@@ -8,9 +8,32 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/users');
+const authCtrl = require('../controllers/authController');
+const userCtrl = require('../controllers/userController');
+//import { requireSignin } from '../controllers/authController';
 
-//Create user(s)
+//Authentication Routes
+//user registration
+router.post('/register', authCtrl.register);
+//user Login
+router.post('/login', authCtrl.signin);
 
+//references CRUD in userController
+router.route('/')
+    .post(/*authCtrl.requireSignin, authCtrl.isAdmin,*/userCtrl.create)       // Equivalent to the old router.post('/')
+    .get(/*authCtrl.requireSignin, authCtrl.isAdmin,*/userCtrl.list)          // Equivalent to the old router.get('/')
+    .delete(/*authCtrl.requireSignin, authCtrl.isAdmin,*/userCtrl.removeAll); // Equivalent to the old router.delete('/')
+
+router.route('/:userId')
+    .get(authCtrl.requireSignin, userCtrl.read)// Equivalent to the old router
+    .put(authCtrl.requireSignin, authCtrl.hasAuthorization, userCtrl.update)// Equivalent to the old router
+    .delete(authCtrl.requireSignin, authCtrl.hasAuthorization, userCtrl.remove);// Equivalent to the old router
+
+// This ensures that whenever the route contains ':userId', the userCtrl.userByID
+// function is run first to load the user object onto the request body.
+router.param('userId', userCtrl.userByID); //AI recommendation
+/*
+//Create user(s) - does not require authentication
 router.post('/', async (req, res) => {
   try {
     const newUser = new User(req.body);
@@ -32,9 +55,21 @@ router.get('/', async (req, res) => {
   }
 });
 
+//Delete all users
+
+router.delete('/', async (req, res) => {
+  try {
+    const result = await User.deleteMany({});
+    res.status(200).json({ message: `You deleted ${result.deletedCount} user(s)` });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+
 //Get a single user
 
-router.get('/:id', async (req, res) => {
+router.get('/:userId', async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ message: 'User not found' });
@@ -46,7 +81,7 @@ router.get('/:id', async (req, res) => {
 
 //Update a single user
 
-router.put('/:id', async (req, res) => {
+router.put('/:userId', async (req, res) => {
   try {
     const updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
@@ -61,7 +96,7 @@ router.put('/:id', async (req, res) => {
 
 //Remove a single user
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:userId', async (req, res) => {
   try {
     const deletedUser = await User.findByIdAndDelete(req.params.id);
     if (!deletedUser) return res.status(404).json({ message: 'User not found' });
@@ -71,15 +106,7 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-//Delete all users
+*/
 
-router.delete('/', async (req, res) => {
-  try {
-    const result = await User.deleteMany({});
-    res.status(200).json({ message: `You deleted ${result.deletedCount} user(s)` });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
 
 module.exports = router;

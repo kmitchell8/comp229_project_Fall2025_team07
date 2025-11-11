@@ -27,10 +27,20 @@ const MONGO_LOCAL =""//might be located in the .env file (process.env.MONGO_LOCA
 //creating the MongoDB connection with Cloud server
 
 
+mongoose.connect([process.env.MONGO_LOCAL()],{
+    UseNewUrlParser:true,
+    useUnifiedTopology: true
+});
+
 
 
 //creating the MongoDB connection with Local server 
 
+
+mongoose.connect([process.env.MONGO_URI()], {
+    UseNewUrlParser: true,
+    useUnifiedTopology: true
+})
 
 
 
@@ -41,9 +51,16 @@ mongoose.connection.once('open', () => {
 //enabling the API routes
 
 
+app.get('/', (req, res,) => {    
+    res.status(200).json({ "message": "Any message indicating the server is working" }); //may not be necessary once front end is established
+});
 
 
 app.listen(PORT, () => {
+    console.log(`Server is running at http://localhost:${PORT}`);
+    console.log(`Contacts are visible at http://localhost:${PORT}${'/api/contacts'}`);
+    console.log(`Users are visible at http://localhost:${PORT}${'/api/users'}`);
+    console.log(`Books are visible at http://localhost:${PORT}${'/api/books'}`); 
 })
 
 

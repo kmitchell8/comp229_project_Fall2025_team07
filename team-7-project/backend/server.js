@@ -14,10 +14,10 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 dotenv.config();
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT;
 //const MONGO_URI = "" //might be located in the .env file (process.env.MONGO_URI)
-//const mongoUri = process.env.MONGO_URI; //Cloud server
 //const MONGO_LOCAL =""//might be located in the .env file (process.env.MONGO_LOCAL)
+//const mongoUri = process.env.MONGO_URI; //Cloud server
 const mongoUri = process.env.MONGO_LOCAL; //Local server
 //API Routes
 const contactRoutes = require('./routes/contactRoutes');
@@ -71,6 +71,7 @@ app.listen(PORT, () => {
     console.log(`Contacts are visible at http://localhost:${PORT}${'/api/contacts'}`);
     console.log(`Users are visible at http://localhost:${PORT}${'/api/users'}`);
     console.log(`Books are visible at http://localhost:${PORT}${'/api/books'}`);
+    console.log(`Authentications are visible at http://localhost:${PORT}${'/api/auth'}`);
 })
 
 

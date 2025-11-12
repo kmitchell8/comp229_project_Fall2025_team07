@@ -14,9 +14,9 @@ const userCtrl = require('../controllers/userController');
 
 //Authentication Routes
 //user registration
-router.post('/register', authCtrl.register);
+//router.post('/register', authCtrl.register); //access from authRoutes
 //user Login
-router.post('/login', authCtrl.signin);
+//router.post('/signin', authCtrl.signin); //accessed from authRoutes
 
 //references CRUD in userController
 router.route('/')
@@ -25,9 +25,9 @@ router.route('/')
     .delete(/*authCtrl.requireSignin, authCtrl.isAdmin,*/userCtrl.removeAll); // Equivalent to the old router.delete('/')
 
 router.route('/:userId')
-    .get(authCtrl.requireSignin, userCtrl.read)// Equivalent to the old router
-    .put(authCtrl.requireSignin, authCtrl.hasAuthorization, userCtrl.update)// Equivalent to the old router
-    .delete(authCtrl.requireSignin, authCtrl.hasAuthorization, userCtrl.remove);// Equivalent to the old router
+    .get(authCtrl.requireSignin, userCtrl.read)// Equivalent to the old router.get('/:userID')
+    .put(authCtrl.requireSignin, authCtrl.hasAuthorization, userCtrl.update)// Equivalent to the old router.put('/:userID')
+    .delete(authCtrl.requireSignin, authCtrl.hasAuthorization, userCtrl.remove);// Equivalent to the old router.delete('/:userID')
 
 // This ensures that whenever the route contains ':userId', the userCtrl.userByID
 // function is run first to load the user object onto the request body.

@@ -12,17 +12,17 @@ const User = require('../models/users');
 //import User from '..models/users';
 const jwt = require('jsonwebtoken');
 //import jwt from 'jsonwebtoken';
-const { expressJwt } = require('express-jwt');
+const { expressjwt } = require('express-jwt');
 //const userCtrl = require('./userController');
 //import {expressJwt} from 'express-jwt';
 
 
 //Define config 
 const config = {
-    jwtSecret: process.env.JWT_SECRET || '12345'
+    jwtSecret: process.env.JWT_SECRET 
 };
 
-//register//for later implimentation
+//register user//for later implimentation
 
 const register = async (req, res) => {
     try {
@@ -79,7 +79,7 @@ const signout = (req, res) => {
 //MIDDLEWARE
 
 //requireSignin: 
-const requireSignin = expressJwt({
+const requireSignin = expressjwt({
     secret: config.jwtSecret,
     userProperty: 'auth', // Attaches decoded JWT payload to req.auth
     algorithms: ['HS256']  //defineds a specific algorithm to use 

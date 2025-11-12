@@ -7,7 +7,7 @@
  */
 
 const User = require('../models/users');
-const _ = require('lodash'); // Used for cleaning up request bodies
+const _ = require('loadsh'); // Used for cleaning up request bodies
 
 // Middleware to pre-load a user profile based on the 'userId' parameter in the route
 const userByID = async (req, res, next, id) => {
@@ -83,6 +83,7 @@ const remove = async (req, res, next) => {
 //GENERAL 
 
 // POST: Create a new user (Often used for registration, but kept for generic CRUD)
+//router.route('/register').post(authCtrl.register); will be used for registration
 const create = async (req, res) => {
     try {
         const newUser = new User(req.body);
@@ -99,6 +100,7 @@ const create = async (req, res) => {
 const list = async (req, res) => {
     try {
         // NOTE: In a real app, this route should be restricted to 'admin' roles.
+        //will be restricted
         const users = await User.find().select('username email role createdAt'); // Select safe fields
         res.status(200).json(users);
     } catch (err) {
@@ -110,6 +112,7 @@ const list = async (req, res) => {
 const removeAll = async (req, res) => {
     try {
         // NOTE: This should be restricted to 'admin' roles and avoided in production.
+        //will be restricted
         const result = await User.deleteMany({});
         res.status(200).json({ message: `You deleted ${result.deletedCount} user(s)` });
     } catch (err) {

@@ -13,8 +13,8 @@ const BookSchema = new mongoose.Schema({
     author: { type: String, required: true },
     publisher: { type: String, required: true },
     published: { type: Date},
-    ISBN_10: {type: Integer},
-    ISBN_13: {type: Integer}
+    ISBN_10: {type: Number},
+    ISBN_13: {type: Number}
 });
 
 module.exports = mongoose.model("Users", BookSchema);

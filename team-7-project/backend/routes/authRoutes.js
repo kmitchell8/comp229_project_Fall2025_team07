@@ -13,6 +13,6 @@ const authCtrl = require('../controllers/authController');
 
 router.route('/signin').post(authCtrl.signin);
 router.route('/signout').get(authCtrl.signout);
-router.route('/register').post(authCtrl.register);
+//router.route('/register').post(authCtrl.register); //Creates User can be accessed from userRoutes
 
 module.exports =  router;

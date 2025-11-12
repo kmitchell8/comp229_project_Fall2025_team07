@@ -1,7 +1,7 @@
 /*
  * File Name: server.js
- * Author(s): 
- * Student ID (s): 
+ * Author(s): Adrian Myers, Kevon Mitchell
+ * Student ID (s): , 301508202
  * Date: 
  */
 

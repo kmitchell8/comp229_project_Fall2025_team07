@@ -1,9 +1,11 @@
 /*
  * File Name: userController.js
- * Author(s): 
- * Student ID (s): 
- * Date: nov 10th
- * Note: AI assisted Code (Gemini)
+ * Author(s): Kevon Mitchell    
+ * Student ID (s): 301508202
+ * Date: November 11, 2025
+ * Note: AI assisted Code (Gemini) and Original CRUD code from routes/userRoutes.js
+ * and code from authController.js ("AUTHENTICATION (16) (2) (5).pptx")
+ * (user controllers are needed to complete code in "AUTHENTICATION (16) (2) (5).pptx")
  */
 
 const User = require('../models/users');
@@ -19,6 +21,7 @@ const userByID = async (req, res, next, id) => {
             });
         }
         // Attach the found user object to the request, stripping the password hash for security.
+        //password 
         const { password, ...safeUser } = user.toObject(); 
         req.profile = safeUser;
         next();
@@ -84,11 +87,13 @@ const remove = async (req, res, next) => {
 
 // POST: Create a new user (Often used for registration, but kept for generic CRUD)
 //router.route('/register').post(authCtrl.register); will be used for registration
+//register defined in authController.js
 const create = async (req, res) => {
     try {
         const newUser = new User(req.body);
         const savedUser = await newUser.save();
         // NOTE: In a real app, you should strip sensitive info before sending back.
+        //restricted in userRoutes        
         res.status(201).json(savedUser);
     } catch (err) {
         // Handle validation errors or duplicate keys
@@ -100,7 +105,7 @@ const create = async (req, res) => {
 const list = async (req, res) => {
     try {
         // NOTE: In a real app, this route should be restricted to 'admin' roles.
-        //will be restricted
+        //will be restricted in userRoutes
         const users = await User.find().select('username email role createdAt'); // Select safe fields
         res.status(200).json(users);
     } catch (err) {

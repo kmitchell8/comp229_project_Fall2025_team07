@@ -1,7 +1,7 @@
 /*
  * File Name: bookRoutes.js
- * Author(s): Aalayah Rodriguez
- * Student ID (s): 301080934
+ * Author(s): Aalayah Rodriguez, Kevon Mitchell
+ * Student ID (s): 301080934, 301508202
  * Date: nov 10th
  */
 

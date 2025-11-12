@@ -1,8 +1,8 @@
 /*
  * File Name: authRoutes.js
- * Author(s): 
- * Student ID (s): 
- * Date: 
+ * Author(s): Kevon Mitchell
+ * Student ID (s): 301508202
+ * Date: November 11, 2025
  */
 
 
@@ -13,6 +13,6 @@ const authCtrl = require('../controllers/authController');
 
 router.route('/signin').post(authCtrl.signin);
 router.route('/signout').get(authCtrl.signout);
-//router.route('/register').post(authCtrl.register); //Creates User can be accessed from userRoutes
+router.route('/register').post(authCtrl.register); //Creates User can be accessed from userRoutes
 
 module.exports =  router;

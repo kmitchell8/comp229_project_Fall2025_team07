@@ -1,8 +1,8 @@
 /*
  * File Name: users.js
- * Author(s): 
- * Student ID (s): 
- * Date: 
+ * Author(s): Adrian Myers, Kevon Mitchell
+ * Student ID (s): , 301508202
+ * Date: November 10, 2025
  */
 
 const mongoose = require('mongoose'); // needed to connect to MongoDB (type: commonjs)

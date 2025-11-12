@@ -1,8 +1,9 @@
 /*
  * File Name: userRoutes.js
- * Author(s): Aalayah Rodriguez
- * Student ID (s): 301080934
+ * Author(s): Aalayah Rodriguez, Kevon Mitchell
+ * Student ID (s): 301080934, 301508202
  * Date: nov 10th
+ * Note: code based on slides from week6 "AUTHENTICATION (16) (2) (5).pptx" in comp229(Centennial College)
  */
 
 const express = require('express');
@@ -18,11 +19,11 @@ const userCtrl = require('../controllers/userController');
 //user Login
 //router.post('/signin', authCtrl.signin); //accessed from authRoutes
 
-//references CRUD in userController
+//references CRUD in userController //used for ADMIN purposes
 router.route('/')
-    .post(/*authCtrl.requireSignin, authCtrl.isAdmin,*/userCtrl.create)       // Equivalent to the old router.post('/')
-    .get(/*authCtrl.requireSignin, authCtrl.isAdmin,*/userCtrl.list)          // Equivalent to the old router.get('/')
-    .delete(/*authCtrl.requireSignin, authCtrl.isAdmin,*/userCtrl.removeAll); // Equivalent to the old router.delete('/')
+    .post(authCtrl.requireSignin, authCtrl.isAdmin,userCtrl.create)       // Equivalent to the old router.post('/')
+    .get(authCtrl.requireSignin, authCtrl.isAdmin,userCtrl.list)          // Equivalent to the old router.get('/')
+    .delete(authCtrl.requireSignin, authCtrl.isAdmin,userCtrl.removeAll); // Equivalent to the old router.delete('/')
 
 router.route('/:userId')
     .get(authCtrl.requireSignin, userCtrl.read)// Equivalent to the old router.get('/:userID')

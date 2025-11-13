@@ -9,7 +9,7 @@
  */
 
 const User = require('../models/users');
-const _ = require('loadsh'); // Used for cleaning up request bodies
+const _ = require('lodash'); // Used for cleaning up request bodies
 
 // Middleware to pre-load a user profile based on the 'userId' parameter in the route
 const userByID = async (req, res, next, id) => {

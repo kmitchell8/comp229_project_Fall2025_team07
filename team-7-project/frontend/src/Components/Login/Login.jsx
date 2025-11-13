@@ -5,7 +5,7 @@ import './Login.css'
 //import "./example.css";
 
 
-function LoginForm() {
+function Login() {
 
     const {
         register,
@@ -19,6 +19,7 @@ function LoginForm() {
 
 
     return (
+        <div className='login'>
         <form onSubmit={handleSubmit(onSubmit)} className="hook">
             <label className="hook__text">Email</label>
             <input
@@ -45,7 +46,8 @@ function LoginForm() {
                 Submit
             </button>
         </form>
+        </div>
     );
 }
 
-export default LoginForm;
+export default Login;

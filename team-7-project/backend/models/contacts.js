@@ -11,7 +11,8 @@ const mongoose = require('mongoose'); // needed to connect to MongoDB (type: com
 const ContactSchema = new mongoose.Schema({
     firstname: { type: String, required: true },
     lastname: { type: String, required: true },
-    email: { type: String, required: true, unique: true }
+    email: { type: String, required: true, unique: true },
+    phone: {type: String, required: true}
 }, {
     // Auto inputs the date in the correct format
     timestamps: { createdAt: 'created', updatedAt: 'updated' }

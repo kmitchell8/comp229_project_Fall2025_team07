@@ -3,6 +3,7 @@
  * Author(s): Adrian Myers, Kevon Mitchell
  * Student ID (s): , 301508202
  * Date: November 10, 2025
+ * Note: code based on slides from week6 "AUTHENTICATION (16) (2) (5).pptx" in comp229(Centennial College)
  */
 
 const mongoose = require('mongoose'); // needed to connect to MongoDB (type: commonjs)

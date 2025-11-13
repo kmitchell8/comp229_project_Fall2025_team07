@@ -3,12 +3,30 @@
  * Author(s): Aalayah Rodriguez, Kevon Mitchell
  * Student ID (s): 301080934, 301508202
  * Date: nov 10th
+ * Note: based on code from userRoutes
  */
 
 const express = require('express');
 const router = express.Router();
-const Contact = require('../models/contacts');
+//const Contact = require('../models/contacts');
+const authCtrl = require('../controllers/authController');
+const contactCtrl = require('../controllers/contactController');
 
+//references CRUD in contactController 
+router.route('/')
+    .post(authCtrl.requireSignin, authCtrl.isAdmin,contactCtrl.create)       // Equivalent to the old router.post('/')
+    .get(authCtrl.requireSignin, authCtrl.isAdmin,contactCtrl.list)          // Equivalent to the old router.get('/')
+    .delete(authCtrl.requireSignin, authCtrl.isAdmin,contactCtrl.removeAll); // Equivalent to the old router.delete('/')
+
+router.route('/:contactId')
+    .get(authCtrl.requireSignin, authCtrl.isAdmin,contactCtrl.read)// Equivalent to the old router.get('/:contactID')
+    .put(authCtrl.requireSignin, authCtrl.hasAuthorization, contactCtrl.update)// Equivalent to the old router.put('/:contactID')
+    .delete(authCtrl.requireSignin, authCtrl.hasAuthorization, contactCtrl.remove);// Equivalent to the old router.delete('/:contactID')
+
+
+router.param('contactId', contactCtrl.contactByID); 
+
+/*
 //Create contact(s)
 
 router.post('/', async (req, res) => {
@@ -82,5 +100,5 @@ router.delete('/', async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
-
+*/
 module.exports = router;

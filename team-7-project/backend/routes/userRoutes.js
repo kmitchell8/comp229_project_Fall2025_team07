@@ -8,7 +8,7 @@
 
 const express = require('express');
 const router = express.Router();
-const User = require('../models/users');
+//const User = require('../models/users');
 const authCtrl = require('../controllers/authController');
 const userCtrl = require('../controllers/userController');
 //import { requireSignin } from '../controllers/authController';

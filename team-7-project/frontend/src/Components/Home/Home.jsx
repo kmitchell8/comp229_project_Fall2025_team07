@@ -2,13 +2,13 @@ import React from 'react'
 import './Home.css'
 
 
-const Home =()=>{
-  return (
-   
+const Home = () => {
+    return (
+    <div className = 'home'>
       
-      <p>Coming Soon</p>
-    
-  )
+      <p>Under Construction</p>    
+       
+    </div>)
 }
 
 export default Home

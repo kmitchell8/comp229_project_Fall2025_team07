@@ -8,13 +8,13 @@
 const mongoose = require('mongoose'); // needed to connect to MongoDB (type: commonjs)
 
 const BookSchema = new mongoose.Schema({
-    cover: {type: String, rquired: true },
+    cover: {type: String, required: true },
     title: { type: String, required: true },
     author: { type: String, required: true },
     publisher: { type: String, required: true },
     published: { type: Date},
-    ISBN_10: {type: Number},
-    ISBN_13: {type: Number}
+    ISBN_10: {type: String},
+    ISBN_13: {type: String}
 },{
     // Auto inputs the date in the correct format
     timestamps: { createdAt: 'created', updatedAt: 'updated' }

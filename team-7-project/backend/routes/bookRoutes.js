@@ -3,12 +3,29 @@
  * Author(s): Aalayah Rodriguez, Kevon Mitchell
  * Student ID (s): 301080934, 301508202
  * Date: nov 10th
+ * Note: based on code from userRoutes
  */
 
 const express = require('express');
 const router = express.Router();
-const Book = require('../models/books');
+//const Book = require('../models/books');
+const authCtrl = require('../controllers/authController');
+const bookCtrl = require('../controllers/bookController');
 
+//references CRUD in bookController 
+router.route('/')
+    .post(authCtrl.requireSignin, authCtrl.isAdmin,bookCtrl.create)       // Equivalent to the old router.post('/')
+    .get(bookCtrl.list)          // Equivalent to the old router.get('/')
+    .delete(authCtrl.requireSignin, authCtrl.isAdmin,bookCtrl.removeAll); // Equivalent to the old router.delete('/')
+
+router.route('/:bookId')
+    .get(bookCtrl.read)// Equivalent to the old router.get('/:bookID')
+    .put(authCtrl.requireSignin, authCtrl.hasAuthorization, bookCtrl.update)// Equivalent to the old router.put('/:bookID')
+    .delete(authCtrl.requireSignin, authCtrl.hasAuthorization, bookCtrl.remove);// Equivalent to the old router.delete('/:bookID')
+
+
+router.param('bookId', bookCtrl.bookByID); 
+/*
 //Create book(s)
 
 router.post('/', async (req, res) => {
@@ -72,5 +89,5 @@ router.delete('/', async (req, res) => {
 });
 
 //Delete all books
-
+*/
 module.exports = router;

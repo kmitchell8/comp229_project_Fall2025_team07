@@ -10,9 +10,10 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true); // New state for initial loading
 
     // Derived state: the simplified role
+
     const role = userInfo ? (userInfo.role || 'user') : 'signedOut';//state based on user role
 
-    // --- Authentication Logic ---
+    //Authentication Logic 
 
     // Reads token/user from localStorage on app load
     const checkAuthState = useCallback(() => {
@@ -57,7 +58,7 @@ export const AuthProvider = ({ children }) => {
         window.location.hash = ''; // Reset hash on signout
     };
 
-    // --- Context Value ---
+    // Context Value
 
     const value = {
         userInfo,

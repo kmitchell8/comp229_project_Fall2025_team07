@@ -20,7 +20,7 @@ const { expressjwt } = require('express-jwt');
 
 //Define config 
 const config = {
-    jwtSecret: process.env.JWT_SECRET 
+    jwtSecret: process.env.JWT_SECRET
 };
 
 //register user//for later implimentation
@@ -90,9 +90,10 @@ const requireSignin = expressjwt({
 //hasAuthorization: 
 const hasAuthorization = (req, res, next) => {
     // Check if profile ID matches auth ID OR if the user is an admin
-    const authorized = req.profile && req.auth &&
-        (req.profile._id.toString() === req.auth._id || req.auth.role === 'admin');//admin role for later implimentation
-
+    const isOwner = req.profile && req.auth &&
+        (req.profile._id.toString() === req.auth._id.toString())
+    const isAdmin = req.auth && req.auth.role === 'admin';//admin role for later implimentation
+    const authorized = isOwner || isAdmin;
     if (!(authorized)) {
         return res.status(403).json({
             error: "User is not authorized"
@@ -157,5 +158,5 @@ const hasAuthorization = (req, res, next) => {
     next()
 }
 */
-module.exports = { register,signin, signout, requireSignin, hasAuthorization,isAdmin }
+module.exports = { register, signin, signout, requireSignin, hasAuthorization, isAdmin }
 

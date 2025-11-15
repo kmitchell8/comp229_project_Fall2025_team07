@@ -68,7 +68,7 @@ const update = async (req, res, next) => {
 const remove = async (req, res, next) => {
     try {
         const contact = req.contact; // Contact object from req.contact
-        const deletedContact = await contact.remove();
+        const deletedContact = await contact.findbyIdAndDelete();
 
 
         res.json({ message: "Contact successfully deleted.", contact: deletedContact.toObject() });
@@ -102,7 +102,7 @@ const create = async (req, res) => {
 // GET: List all contacts
 const list = async (req, res) => {
     try {
-        const contacts = await Contact.find().select('cover title author publisher'); //selects fields I would like to display
+        const contacts = await Contact.find().select('title firstname lastname email phone'); //selects fields I would like to display
         res.status(200).json(contacts);
     } catch (err) {
         res.status(500).json({ message: err.message });

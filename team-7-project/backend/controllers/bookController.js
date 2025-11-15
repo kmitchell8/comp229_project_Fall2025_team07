@@ -44,12 +44,12 @@ const update = async (req, res, next) => {
         //let book = req.loadedBook;        
         // Find the book by ID
         //let book = await Book.findById(req.book._id);
-        
+
         let book = req.book;
         if (!book) return res.status(404).json({ error: "Book not found during update." });
 
         // Update the book object with new data from the request body
-        // We use loadsh's extend method to merge the changes
+        // We use lodash's extend method to merge the changes
         book = _.extend(book, req.body);
         book.updatedAt = Date.now();
         await book.save();
@@ -68,7 +68,7 @@ const update = async (req, res, next) => {
 const remove = async (req, res, next) => {
     try {
         const book = req.book; // Book object from req.book
-        const deletedBook = await book.remove();
+        const deletedBook = await book.findbyIdAndDelete();
 
 
         res.json({ message: "Book successfully deleted.", book: deletedBook.toObject() });
@@ -102,7 +102,7 @@ const create = async (req, res) => {
 // GET: List all books
 const list = async (req, res) => {
     try {
-        const books = await Book.find().select('cover title author publisher'); //selects fields I would like to display
+        const books = await Book.find().select('cover title author publisher rated description'); //selects fields I would like to display
         res.status(200).json(books);
     } catch (err) {
         res.status(500).json({ message: err.message });

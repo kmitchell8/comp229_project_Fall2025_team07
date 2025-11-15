@@ -16,6 +16,25 @@ body {
   font-family: 'Outfit';
 }
 
+/*===========
+authContext.css
+===========*/
+.loading {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f9fafb
+}
+
+.loading p {
+  text-align: center;
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 600;
+  color: #374151;
+  padding: 2rem;
+}
 
 /*===========================*/
 /*:root {

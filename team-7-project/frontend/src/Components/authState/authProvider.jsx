@@ -46,14 +46,14 @@ export const AuthProvider = ({ children }) => {
         // Assume JWT ('jwt') and user data ('user') are already stored in localStorage by the Login component
         setUserInfo(user);
         setView('authenticated');
-        window.location.replace='./profile.html';
+        window.location.replace('./profile.html');
     };
 
     // Handler for Signout (called by SignoutButton.jsx or Navbar.jsx)
-    const logout = () => {
+    const logout = async () => {
         try {
             //call the server API to invalidate the session/cookie
-            signOut();
+           await signOut();
         } catch (err) {
             console.error(err);
         } finally {
@@ -65,7 +65,7 @@ export const AuthProvider = ({ children }) => {
             setView('login'); // Switch to login view
             
             //window.location.hash = ''; // resets hash on signout on pages where needed
-            window.location.replace = './';
+            window.location.replace('./');
         }
     };
 

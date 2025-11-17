@@ -15,5 +15,4 @@ createRoot(document.getElementById('root')).render(
     <LogOrReg/>
     </AuthProvider>
   </StrictMode>,
-  {"message":"remove or adjust login/register component on live site"}
 )

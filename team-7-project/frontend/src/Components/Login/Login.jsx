@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../authState/useAuth.jsx';
 import {signIn } from '../Api/authApi.jsx';
+import {getPage} from '../Api/getPage.jsx'
 import './Login.css'
 
 
@@ -14,24 +15,8 @@ function Login() {
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
 
-    const getPage = () => {
-            // to see full setup instructions see file Project/path_extraction.docx        
-            const path = window.location.pathname;
-            const segments = path.split('/');
-            const lastSegment = segments.pop() || '';
-    
-            if (!lastSegment) {
-                return 'index';
-            }
-            //remove ".html" to get only the value for the page name
-            const getSegmentName = lastSegment.replace(/\.[^/.]+$/, '');
-            //
-            // return the last segment of the path without the .html portion
-            return getSegmentName;
-        };
         //getting a usable string from the function
-        const getPageString = getPage();
-    
+        const getPageString = getPage();    
         //logic to ensure user does not get to the login/regster pages if logged in
         useEffect(() => {
             if (isAuthenticated && (getPageString === 'login' || getPageString === 'register')) {
@@ -39,6 +24,9 @@ function Login() {
                 window.location.replace('./');
             }
         }, [isAuthenticated, getPageString]);
+         if (getPageString === 'login' && isAuthenticated) {
+    return null;
+  }
 
     {/*
     const {

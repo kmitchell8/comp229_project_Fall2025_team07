@@ -2,6 +2,7 @@ import React from 'react'
 import './Navbar.css'
 //import logo from '/images/team_7_logo.png'
 import { useAuth } from '../../Components/authState/useAuth.jsx';
+import {getPage} from '../Api/getPage.jsx'
 
 
 
@@ -11,23 +12,7 @@ const Navbar = () => {
     const { _view, isAuthenticated, role, logout, _setView } = useAuth();
     const currentPath = window.location.pathname;
     const isLogOrReg = currentPath.endsWith('/login.html') || currentPath.endsWith('/register.html');
-    const getPage = () => {
-        // to see full setup instructions see file Project/path_extraction.docx        
-        const path = window.location.pathname;
-        const segments = path.split('/');
-        const lastSegment = segments.pop() || '';
-
-        if (!lastSegment) {
-            return 'index';
-        }
-        //remove ".html" to get only the value for the page name
-        const getSegmentName = lastSegment.replace(/\.[^/.]+$/, '');
-        //
-
-
-        // return the last segment of the path without the .html portion
-        return getSegmentName;
-    };
+   
     //capitalising the first letter of the string and creating a vale to display the current file path
     const getPageString = getPage().charAt(0).toUpperCase() + getPage().slice(1);
     //const pageString = ` / ${getPageString}`;

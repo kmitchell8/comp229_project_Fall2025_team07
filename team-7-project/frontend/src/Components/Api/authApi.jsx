@@ -37,7 +37,7 @@ export const signOut = async () => {
 
 
 //Register API
-export const register = async (name, email, password) => {
+export const signUp = async (name, email, password) => {
 
     const response = await fetch(`${BASE_URL}/register`, {
         method: 'POST',

@@ -43,7 +43,7 @@ const register = async (req, res) => {
 
 //login/sigin 
 const signin = async (req, res) => {
-    console.log('Starting signin process...');
+    console.log('Test log in authController/signin: Starting signin process...');
     try {
         let user = await User.findOne({ "email": req.body.email });
 

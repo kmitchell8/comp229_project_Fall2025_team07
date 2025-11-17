@@ -11,12 +11,38 @@ const Navbar = () => {
     const { _view, isAuthenticated, role, logout, _setView } = useAuth();
     const currentPath = window.location.pathname;
     const isLogOrReg = currentPath.endsWith('/login.html') || currentPath.endsWith('/register.html');
+    const getPage = () => {
+        // to see full setup instructions see file Project/path_extraction.docx        
+        const path = window.location.pathname;
+        const segments = path.split('/');
+        const lastSegment = segments.pop() || '';
 
-    
+        if (!lastSegment) {
+            return 'index';
+        }
+        //remove ".html" to get only the value for the page name
+        const getSegmentName = lastSegment.replace(/\.[^/.]+$/, '');
+        //
+
+
+        // return the last segment of the path without the .html portion
+        return getSegmentName;
+    };
+    //capitalising the first letter of the string and creating a vale to display the current file path
+    const getPageString = getPage().charAt(0).toUpperCase() + getPage().slice(1);
+    //const pageString = ` / ${getPageString}`;
+    const pageString = getPageString === "Index" ? '' : ` / ${getPageString}`;
+
+
+
     const renderLoginOrRegister = () => (
         <ul className="nav-menu">
             <li><a href="./">Go Back Home</a></li>
+
         </ul>
+
+        // Only run if the user is authenticated AND the current page is login or register
+
     );
 
     //function to render links for unauthenticated users
@@ -27,10 +53,8 @@ const Navbar = () => {
                 {/* setView changes the state in AuthProvider, triggering a re-render */}
                 {/*onClick={() => setView('login')}
                 SetView is not necessary for this  Navbar setup*/}
-                <a href="./login.html">Login</a>
-            </li>
-            <li>
-                <a href="./register.html">Register</a>
+                <a href="./login.html">Login /</a>
+                <a href="./register.html"> Register</a>
             </li>
         </>
     );
@@ -69,7 +93,9 @@ const Navbar = () => {
                 renderLoginOrRegister()
                 : <ul className="nav-menu">
                     {/* Common link for all views */}
-                    <li><a href="./">Home</a></li>
+                    <li><a href="./">Home</a>
+
+                        {pageString}</li>
                     <li><a href="./Library.html">Library</a></li>
                     <li><a href="./services.html">Services</a></li>
                     <li><a href="./contact.html">Contact</a></li>
@@ -83,8 +109,8 @@ const Navbar = () => {
 
 
             {/* Testing: delete in final code*/}
-           
-             {/*<div className="current-status">
+
+            {/*<div className="current-status">
                 Status: {isAuthenticated ? 'Authenticated' : 'Signed Out'} /
                 Role: {role}
             </div>*/}

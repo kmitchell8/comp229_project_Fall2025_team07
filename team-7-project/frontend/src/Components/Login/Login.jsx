@@ -1,17 +1,44 @@
 //import { useForm } from 'react-hook-form';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../authState/useAuth.jsx';
-import { signIn } from '../Api/authApi.jsx';
+import {signIn } from '../Api/authApi.jsx';
 import './Login.css'
 
 
 function Login() {
     //state to hold form data
+    const {isAuthenticated} = useAuth();
     const { login } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
+
+    const getPage = () => {
+            // to see full setup instructions see file Project/path_extraction.docx        
+            const path = window.location.pathname;
+            const segments = path.split('/');
+            const lastSegment = segments.pop() || '';
+    
+            if (!lastSegment) {
+                return 'index';
+            }
+            //remove ".html" to get only the value for the page name
+            const getSegmentName = lastSegment.replace(/\.[^/.]+$/, '');
+            //
+            // return the last segment of the path without the .html portion
+            return getSegmentName;
+        };
+        //getting a usable string from the function
+        const getPageString = getPage();
+    
+        //logic to ensure user does not get to the login/regster pages if logged in
+        useEffect(() => {
+            if (isAuthenticated && (getPageString === 'login' || getPageString === 'register')) {
+                console.log(`User is Logged in. Redirecting from ${getPageString} page to homepage.`);
+                window.location.replace('./');
+            }
+        }, [isAuthenticated, getPageString]);
 
     {/*
     const {
@@ -52,7 +79,7 @@ function Login() {
         <div className='login'>
 
             <div className="login-card">
-                <h1 className="header">Sign In</h1>
+                <h1 className="login-header">Sign In</h1>
                 
 
                 {error && (

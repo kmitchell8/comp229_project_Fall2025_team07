@@ -1,8 +1,12 @@
+/*
+ * File Name: Register.css
+ * Student’s Name: Kevon Mitchell
+ * Student ID: 301508202
+ * Date: November 16, 2025
+ * Note: See code in Login.css
+ */
 
-
-
-
-
+/*page container - contains the form card*/
 .register{
     display: flex;
     flex-direction: column;
@@ -10,4 +14,106 @@
     justify-content: center;
     gap: 80px;
     margin: 80px 170px;    
+    
 }
+/*form card container inside main container*/
+.register-card {
+    width: 100%;
+    max-width: 24rem; 
+    background-color: white;
+    padding: 3rem 2rem; 
+    border-radius: 1.5rem; 
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb; 
+    text-align: center;
+}
+
+
+.register-header {
+    font-size: 2.25rem; 
+    font-weight: 800; 
+    color: #1f2937; 
+    margin-bottom: 3rem; 
+}
+
+/*error handling*/
+.register-error {
+    background-color: #fef2f2; 
+    color: #ef4444; 
+    border: 1px solid #fca5a5;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    margin-bottom: 1.5rem; 
+    text-align: left;
+    font-size: 0.875rem;
+}
+
+.error-message {
+    font-weight: 700; 
+}
+
+/* form Layout */
+.register-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem; 
+}
+
+/*input label*/
+.input-label {
+    display: block;
+    font-size: 0.875rem; 
+    font-weight: 600; 
+    color: #555; 
+    margin-bottom: 0.25rem; 
+    text-align: left;
+}
+
+/*input field*/
+.input-field {
+    width: 100%;
+    padding: 0.75rem; 
+    border: 1px solid #ccc; 
+    border-radius: 0.25rem; 
+    box-sizing: border-box;
+    transition: all 0.15s ease-in-out; 
+    outline: none;
+}
+
+.input-field:focus {
+    border-color: #007bff; 
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25); 
+}
+
+/*register button*/
+.register-button {
+    width: 100%;
+    padding: 0.8rem;
+    margin-top: 1rem; 
+    border: none;
+    border-radius: 0.4rem;
+    color: white;
+    font-weight: 700;
+    font-size: 1.125rem;
+    cursor: pointer;
+    background: linear-gradient(to right, #00c6ff, #6f59ff, #7f00ff);     
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+}
+
+.register-button:hover {
+    transform: scale(1.02); 
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15);
+}
+
+.register-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.switch-text {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-bottom: 0.5rem; /* Space below the link text */
+}
+

@@ -73,7 +73,7 @@ const remove = async (req, res, next) => {
         
         // Prepare response profile (strip password hash)
         const { password, ...safeUser } = deletedUser.toObject(); 
-        res.json({ message: "User successfully deleted.", user: safeUser });
+        res.json({ message: "User successfully deleted."});
 
     } catch (err) {
         return res.status(400).json({

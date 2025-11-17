@@ -68,10 +68,10 @@ const update = async (req, res, next) => {
 const remove = async (req, res, next) => {
     try {
         const contact = req.contact; // Contact object from req.contact
-        const deletedContact = await contact.findbyIdAndDelete();
+        await contact.remove();
 
 
-        res.json({ message: "Contact successfully deleted.", contact: deletedContact.toObject() });
+        res.json({ message: "Contact successfully deleted."});
 
     } catch (err) {
         return res.status(400).json({

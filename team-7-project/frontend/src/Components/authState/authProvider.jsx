@@ -1,6 +1,7 @@
 import React, { /*createContext, */useState, useEffect, useCallback } from 'react';
 import { AuthContext } from './authContext';
-import './index.css'
+import { signOut } from '../Api/authApi';
+import '../../index.css'
 
 // AuthProvider component handles the state and logic,
 
@@ -23,12 +24,12 @@ export const AuthProvider = ({ children }) => {
                 const user = JSON.parse(storedUser);
                 setUserInfo(user);
                 setView('authenticated');
-            } catch  {
+            } catch {
                 // Handle corrupted storage
                 localStorage.removeItem('user');
                 localStorage.removeItem('jwt');
                 setView('login');
-                
+
             }
         } else {
             setView('login');
@@ -45,17 +46,27 @@ export const AuthProvider = ({ children }) => {
         // Assume JWT ('jwt') and user data ('user') are already stored in localStorage by the Login component
         setUserInfo(user);
         setView('authenticated');
+        window.location.href='./profile.html';
     };
 
     // Handler for Signout (called by SignoutButton.jsx or Navbar.jsx)
     const logout = () => {
-        // Clear local storage
-        localStorage.removeItem('jwt');
-        localStorage.removeItem('user');
-        
-        setUserInfo(null); // Clear user info
-        setView('login'); // Switch to login view
-        window.location.hash = ''; // Reset hash on signout
+        try {
+            //call the server API to invalidate the session/cookie
+            signOut();
+        } catch (err) {
+            console.error(err);
+        } finally {
+            //clear local storage
+            localStorage.removeItem('jwt');
+            localStorage.removeItem('user');
+
+            setUserInfo(null); // Clear user info
+            setView('login'); // Switch to login view
+            
+            //window.location.hash = ''; // resets hash on signout on pages where needed
+            window.location.href = './';
+        }
     };
 
     // Context Value

@@ -4,10 +4,13 @@ import './index.css'
 //import App from './App.jsx'
 import Home from './Components/Home/Home.jsx'
 import Navbar from './Components/Navbar/Navbar.jsx'
+import { AuthProvider } from './Components/authState/authProvider.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
+    <AuthProvider>
     <Navbar/>
     <Home/>
+    </AuthProvider>
   </StrictMode>,
 )

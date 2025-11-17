@@ -51,7 +51,7 @@ app.use(cookieParser());
 app.use('/api/contacts', contactRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/books', bookRoutes);
-app.use('/api/auth', authRoutes);
+app.use('/api', authRoutes);
 
 app.get('/', (req, res,) => {
     res.status(200).json({ "message": "Any message indicating the server is working" }); //may not be necessary once front end is established

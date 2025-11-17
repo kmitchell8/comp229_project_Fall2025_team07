@@ -1,26 +1,115 @@
-import { useForm } from 'react-hook-form';
-import React from 'react'
+//import { useForm } from 'react-hook-form';
+import React, { useState } from 'react';
+import { useAuth } from '../authState/useAuth.jsx';
+import { signIn } from '../Api/authApi.jsx';
 import './Login.css'
-
-//import "./example.css";
 
 
 function Login() {
+    //state to hold form data
+    const { login } = useAuth();
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(false);
 
+    {/*
     const {
         register,
         handleSubmit,
         formState: { errors },
     } = useForm();
+    */}
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError(null);
+        setLoading(true); //sets loading state to true
 
-    const onSubmit = (data) => {
-        console.log(data);
+
+        try {
+
+            const data = await signIn(email, password);
+            // Save the token (jwt) and user info to localStorage
+            localStorage.setItem('jwt', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            // call the universal login function forom useAuth.jsx instead of the prop
+            //sets isAuthenticated to true, updates user and role
+            login(data.user);
+
+
+        } catch (err) {
+            // Handle error thrown by the service
+            console.error('Login error:', err.message);
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+
     };
 
 
     return (
         <div className='login'>
-        <form onSubmit={handleSubmit(onSubmit)} className="hook">
+
+            <div className="login-card">
+                <h1 className="header">Sign In</h1>
+                
+
+                {error && (
+                    <div className="login-error" role="alert">
+                        <span className="error-message">{error}</span>
+                    </div>
+                )}
+
+                <form onSubmit={handleSubmit} className="form-layout">
+                    
+                    {/*input fields laid out for ease of view and debugging / do not change*/}
+                    {/*email input field*/}                    
+                    <div className="input-group">
+                        <label htmlFor="email" className="input-label">Email</label>
+                        <input
+                            type="email"
+                            id="email" // Added ID for htmlFor association
+                            placeholder="Type your email"
+                            className="input-field"
+                            required
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}//updates the 'value" as the user enters
+                                                                    //details in the input field in a synchronised way
+                            disabled={loading}
+                        />
+                    </div>
+
+                    {/*password input*/}
+                    <div className="input-group">
+                        <label htmlFor="password" className="input-label">Password</label>
+                        <input
+                            type="password"
+                            id="password" 
+                            placeholder="Type your password"
+                            className="input-field"
+                            required
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            disabled={loading}
+                        />
+                    </div>
+
+                    <p className="switch-text">
+                        Don't have an account? <span>
+                            <a href="./register.html">Signup</a></span>
+                    </p>
+                    {/*Login Button*/}
+                    <button type="submit" className="login-button" disabled={loading}>
+                        {loading ? 'Signing In...' : 'Sign In'}
+                    </button>
+                </form>
+
+
+            </div>
+
+            {/*
+        <form onSubmit={handleSubmit} className="hook">
             <label className="hook__text">Email</label>
             <input
                 type="email"
@@ -45,7 +134,7 @@ function Login() {
             <button className="hook__button" type="submit">
                 Submit
             </button>
-        </form>
+        </form>*/}
         </div>
     );
 }

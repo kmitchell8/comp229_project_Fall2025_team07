@@ -5,12 +5,23 @@ import { useAuth } from '../../Components/authState/useAuth.jsx';
 
 
 
+
+
 const Navbar = () => {
     const { _view, isAuthenticated, role, logout, _setView } = useAuth();
+    const currentPath = window.location.pathname;
+    const isLogOrReg = currentPath.endsWith('/login.html') || currentPath.endsWith('/register.html');
+
+    
+    const renderLoginOrRegister = () => (
+        <ul className="nav-menu">
+            <li><a href="./">Go Back Home</a></li>
+        </ul>
+    );
 
     //function to render links for unauthenticated users
     const renderSignedOutLinks = () => (
-        <>{/* allows the file to add elements without needing an extra tag such as <div></div>/<ul></ul> */}
+        <>{/* allows the file to add elements without needing a ccntainer tag such as <div></div>/<ul></ul> */}
             {/* Show Login link only if not currently on the login view */}
             <li>
                 {/* setView changes the state in AuthProvider, triggering a re-render */}
@@ -44,35 +55,39 @@ const Navbar = () => {
 
             {/* Universal Authenticated Links */}
             <li>
-                <button onClick={logout}>Sign Out</button>
+                <a onClick={logout} >Sign Out</a>
             </li>
         </>
     );
 
     return (
         <nav className="navbar">
-            <div className="navbar-brand">
+            <div className="logo">
                 <a href="./"><img src="/images/team_7_logo.png" height="50px" width="50px" alt="" /></a>
             </div>
+            {isLogOrReg ?
+                renderLoginOrRegister()
+                : <ul className="nav-menu">
+                    {/* Common link for all views */}
+                    <li><a href="./">Home</a></li>
+                    <li><a href="./Library.html">Library</a></li>
+                    <li><a href="./services.html">Services</a></li>
+                    <li><a href="./contact.html">Contact</a></li>
+                    <li><a href="./about.html">About</a></li>
+                    {/* rendering based on authentication status */}
+                    {isAuthenticated
+                        ? renderAuthenticatedLinks()
+                        : renderSignedOutLinks()}
+                </ul>
+            }
 
-            <ul className="nav-menu">
-                {/* Common link for all views */}
-                <li><a href="./">Home</a></li>
-                <li><a href="./Library.html">Library</a></li>
-                <li><a href="./services.html">Services</a></li>
-                <li><a href="./contact.html">Contact</a></li>
-                <li><a href="./about.html">About</a></li>
-                {/* rendering based on authentication status */}
-                {isAuthenticated
-                    ? renderAuthenticatedLinks()
-                    : renderSignedOutLinks()}
-            </ul>
 
             {/* Testing: delete in final code*/}
-            <div className="current-status">
-                Status: **{isAuthenticated ? 'Authenticated' : 'Signed Out'}** /
-                Role: **{role}**
-            </div>
+           
+             {/*<div className="current-status">
+                Status: {isAuthenticated ? 'Authenticated' : 'Signed Out'} /
+                Role: {role}
+            </div>*/}
         </nav>
     )
 }

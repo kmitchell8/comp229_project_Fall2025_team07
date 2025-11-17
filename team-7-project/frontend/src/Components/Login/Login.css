@@ -1,13 +1,122 @@
+/*
+ * File Name: Login.css
+ * Student’s Name: Kevon Mitchell
+ * Student ID: 301508202
+ * Date: November 16, 2025
+ * Note: AI assisted styling (Gemini) 
+ */
 
-
-
-
-
-.login{
+/*page container - contains the form card*/
+.login {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 80px;
     margin: 80px 170px;    
+}
+
+/*form card container inside main container*/
+.login-card{
+    width: 100%;
+    max-width: 24rem;
+    background-color: white;
+    padding: 3rem 2rem;
+    border-radius: 1.5rem;
+    box-shadow: 0 4px 20px #0000001a;
+    border: 1px solid #e5e7eb;
+    text-align: center;
+}
+
+.header {
+    font-size: 2.25rem; 
+    font-weight: 800; 
+    color: #1f2937; 
+    margin-bottom: 3rem; 
+}
+
+/*error handling*/
+.login-error {
+    background-color: #fef2f2; 
+    color: #ef4444; 
+    border: 1px solid #fca5a5;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    margin-bottom: 1.5rem; 
+    text-align: left;
+    font-size: 0.875rem;
+}
+
+.error-message {
+    font-weight: 700; 
+}
+
+
+
+/*form layout*/
+.form-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/*input label*/
+.input-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.5rem;
+    text-align: left;
+}
+
+/* input field*/
+.input-field {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    box-sizing: border-box;
+    transition: all 0.15s ease-in-out;
+    outline: none;
+    background-color: #fffacd;
+}
+
+.input-field:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px #3b82f680;
+    background-color: #fff;
+}
+
+/*login button*/
+.login-button {
+    width: 100%;
+    padding: 0.75rem;
+    border: none;
+    border-radius: 0.5rem;
+    color: white;
+    font-weight: bold;
+    font-size: 1.125rem;
+    cursor: pointer;
+    background: linear-gradient(to right, #00c6ff, #6f59ff, #7f00ff);
+    box-shadow: 0 4px 6px -1px #0000001a, 0 2px 4px -2px #0000000f;
+    transition: transform 0.2s ease;
+}
+
+.login-button:hover {
+    transform: scale(1.01);
+    box-shadow: 0 10px 15px -3px #0000001a, 0 4px 6px -4px #0000001a;
+
+}
+
+.register-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* switch-text */
+.switch-text {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-top: 1.5rem;
+    text-align: center;
 }

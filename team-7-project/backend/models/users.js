@@ -9,7 +9,7 @@
 const mongoose = require('mongoose'); // needed to connect to MongoDB (type: commonjs)
 const bcrypt = require('bcrypt'); 
 
-// Set the number of salt rounds for bcrypt. 10 is a good standard default.
+// 10 is a good standard default.
 const SALT_ROUNDS = 10;
 
 const UserSchema = new mongoose.Schema({
@@ -62,7 +62,6 @@ UserSchema.path('hashed_password').validate(function (v) {
     }
 }, null);
 
-// --- METHODS ---
 UserSchema.methods = { 
     authenticate: async function (plainText) {
         if (!plainText || !this.hashed_password) return false;

@@ -8,7 +8,7 @@
 
 
 //import express from 'express'; //using tpye: "module"
-const express = require('express');//using type="commonjs"
+//const express = require('express');//using type="commonjs"
 const User = require('../models/users');
 //import User from '..models/users';
 const jwt = require('jsonwebtoken');
@@ -80,7 +80,7 @@ const signout = (req, res) => {
 
 //MIDDLEWARE
 
-//requireSignin: 
+//requireSignin
 const requireSignin = expressjwt({
     secret: config.jwtSecret,
     userProperty: 'auth', // Attaches decoded JWT payload to req.auth
@@ -88,7 +88,7 @@ const requireSignin = expressjwt({
 });
 
 
-//hasAuthorization: 
+//hasAuthorization
 const hasAuthorization = (req, res, next) => {
     // Check if profile ID matches auth ID OR if the user is an admin
     const isOwner = req.profile && req.auth &&

@@ -25,6 +25,8 @@ const userRoutes = require('./routes/userRoutes');
 const bookRoutes = require('./routes/bookRoutes');
 const authRoutes = require('./routes/authRoutes');
 
+
+
 //creating the MongoDB connection with Cloud server
 /*mongoose.connect(mongoUri, {
     useNewUrlParser: true,
@@ -37,6 +39,8 @@ mongoose.connection.once('open', () => {
 });
 
 */
+
+//MONGO_DB Connection
 mongoose.connect(mongoUri)
     .then(() => console.log('Connected to MongoDB successfully!'))
     .catch(err => console.error('MongoDB connection error:', err.message));
@@ -54,7 +58,7 @@ app.use('/api/books', bookRoutes);
 app.use('/api', authRoutes);
 
 app.get('/', (req, res,) => {
-    res.status(200).json({ "message": "Any message indicating the server is working" }); //may not be necessary once front end is established
+    res.status(200).json({ "message": "Any message indicating the server is working" }); //leav in for testing purposes
 });
 
 app.use((err, req, res, next) => {
@@ -71,7 +75,7 @@ app.listen(PORT, () => {
     console.log(`Contacts are visible at http://localhost:${PORT}${'/api/contacts'}`);
     console.log(`Users are visible at http://localhost:${PORT}${'/api/users'}`);
     console.log(`Books are visible at http://localhost:${PORT}${'/api/books'}`);
-    console.log(`Authentications are visible at http://localhost:${PORT}${'/api/auth'}`);
+    console.log(`Authentications are visible at http://localhost:${PORT}${'/api'}`);
 })
 
 

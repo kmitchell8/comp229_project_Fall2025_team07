@@ -16,16 +16,15 @@ const UserSchema = new mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     hashed_password: {
-        type: String, required: true
+        type: String, /*required: true*/ //currently the required validation is firing before the "pre" check
     },
-    salt: String,
     role: { type: String, enum: ['user', 'admin'], default: 'user' }
 }, {
     // Auto inputs the date in the correct format
     timestamps: { createdAt: 'created', updatedAt: 'updated' }
 });
 
-UserSchema.virtual('password').set(function (password) {//checks given password aagainst encrypted password
+UserSchema.virtual('password').set(function (password) {//checks given password against encrypted password
     this._password = password;
 })
     .get(function () {
@@ -35,7 +34,13 @@ UserSchema.virtual('password').set(function (password) {//checks given password 
 // --- ASYNCHRONOUS PRE-SAVE HOOK (for secure hashing) ---
 UserSchema.pre('save', async function (next) {
     // Only run this function if the password has been modified (or is new)
-    if (!this.isModified('_password')) {
+    /*if (!this.isModified('_password')) {
+        return next();
+
+        
+    }*/
+   //runs if password does not exist
+    if (!this._password) { 
         return next();
     }
 
@@ -57,18 +62,22 @@ UserSchema.path('hashed_password').validate(function (v) {
     if (this._password && this._password.length < 6) {
         this.invalidate('password', 'Password must be at least 6 characters.');
     }
+    //updated change means this is the only validator for the password requirement
+    //during registration //required: true was removed from the schema for hashed_password
     if (this.isNew && !this._password) {
         this.invalidate('password', 'Password is required');
     }
+    return true;
 }, null);
 
 UserSchema.methods = { 
+    
     authenticate: async function (plainText) {
         if (!plainText || !this.hashed_password) return false;
         try {
             return await bcrypt.compare(plainText, this.hashed_password);
         } catch (err) {
-            console.error("Bcrypt comparison failed:", err);
+            console.error("Bycript authenticate failed:", err);
             return false;
         }
     } 

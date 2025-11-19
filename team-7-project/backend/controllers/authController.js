@@ -26,6 +26,7 @@ const config = {
 //register user//for later implimentation
 
 const register = async (req, res) => {
+    console.log(req.body);
     try {
         const newUser = new User(req.body);
         const savedUser = await newUser.save();
@@ -43,14 +44,22 @@ const register = async (req, res) => {
 
 //login/sigin 
 const signin = async (req, res) => {
-    console.log('Test log in authController/signin: Starting signin process...');
     try {
+        //explicit password requirement due to the removal of the hashed_password requirement 
+        //in the user.js userSchema
+        if (!req.body.password) {
+            return res.status(401).json({ error: "Password is required for sign-in." });
+        }
+        
         let user = await User.findOne({ "email": req.body.email });
 
         if (!user) {
             return res.status(401).json({ error: "User not found" });
         }
-        if (!user.authenticate(req.body.password)) {
+            //needs to explicitly get the bolean result from the bcrypt comparison function
+            //otherwise a user can sign in with an unverified password
+        const isAuthenticated = await user.authenticate(req.body.password);
+        if (!isAuthenticated) {
             return res.status(401).json({ error: "Email and password don't match." });
         }
         // Generate the token //isAdmin role will be looked at later

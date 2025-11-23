@@ -11,3 +11,23 @@
     gap: 80px;
     margin: 80px 170px;    
 }
+
+.library__book-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.library__book-title {
+    flex: 1;
+    min-width: 0;
+}
+
+.library__delete-button {
+    cursor: pointer;
+    color: red;
+    margin-left: 20px;
+    flex-shrink: 0;
+    min-width: 60px;
+    text-align: right;
+}

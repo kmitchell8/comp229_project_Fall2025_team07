@@ -106,7 +106,7 @@ const list = async (req, res) => {
     try {
         // NOTE: In a real app, this route should be restricted to 'admin' roles.
         //will be restricted in userRoutes
-        const users = await User.find().select('username email role createdAt'); // Select safe fields
+        const users = await User.find().select('name email role createdAt'); // Select safe fields
         res.status(200).json(users);
     } catch (err) {
         res.status(500).json({ message: err.message });

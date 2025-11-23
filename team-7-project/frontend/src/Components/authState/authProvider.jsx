@@ -1,7 +1,7 @@
 import React, { /*createContext, */useState, useEffect, useCallback } from 'react';
 import { AuthContext } from './authContext';
 import { signOut } from '../Api/authApi';
-import '../../index.css'
+
 
 // AuthProvider component handles the state and logic,
 
@@ -49,7 +49,7 @@ export const AuthProvider = ({ children }) => {
         window.location.replace('./profile.html');
     };
 
-    // Handler for Signout (called by SignoutButton.jsx or Navbar.jsx)
+    // Handler for Signout (called by Navbar.jsx)
     const logout = async () => {
         try {
             //call the server API to invalidate the session/cookie

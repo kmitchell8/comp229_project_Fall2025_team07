@@ -13,7 +13,7 @@ const Navbar = () => {
     const currentPath = window.location.pathname;
     const isLogOrReg = currentPath.endsWith('/login.html') || currentPath.endsWith('/register.html');
    
-    //capitalising the first letter of the string and creating a vale to display the current file path
+    //capitalising the first letter of the string and creating a value to display the current file path
     const getPageString = getPage().charAt(0).toUpperCase() + getPage().slice(1);
     //const pageString = ` / ${getPageString}`;
     const pageString = getPageString === "Index" ? '' : ` / ${getPageString}`;

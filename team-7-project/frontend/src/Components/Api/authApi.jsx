@@ -15,7 +15,8 @@ export const signIn = async (email, password) => {
     let data;
     try {
         data = await response.json();
-        // eslint-disable-next-line no-unused-vars
+        //(e)
+        // eslint-disable-next-line no-unused-vars 
     } catch (e) {
         throw new Error(`Unexpected data (HTTP Status:${response.status})`);
     }

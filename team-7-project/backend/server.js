@@ -14,9 +14,9 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 dotenv.config();
 const app = express();
-const PORT = process.env.PORT;
-//const MONGO_URI = "" //might be located in the .env file (process.env.MONGO_URI)
-//const MONGO_LOCAL =""//might be located in the .env file (process.env.MONGO_LOCAL)
+const PORT = process.env.PORT || 5000;
+//const mongoUri = "" //might be located in the .env file (process.env.MONGO_URI) //cloud
+//const mongoUri = "mongodb://localhost/LibraryDB"//might be located in the .env file (process.env.MONGO_LOCAL)
 //const mongoUri = process.env.MONGO_URI; //Cloud server
 const mongoUri = process.env.MONGO_LOCAL; //Local server
 //API Routes

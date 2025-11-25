@@ -1,6 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-
+import './index.css'
 import About from './Components/About/About.jsx'
 import Navbar from './Components/Navbar/Navbar.jsx'
 import { AuthProvider } from './Components/authState/authProvider.jsx'

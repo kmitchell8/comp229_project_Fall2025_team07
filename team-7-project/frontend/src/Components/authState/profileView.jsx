@@ -5,8 +5,36 @@ import Profile from '../Profile/Profile.jsx'
 import Admin from '../Admin/Admin.jsx'
 import Navbar from '../Navbar/Navbar.jsx'
 
+
+
 export const ProfileView = () => {
-    const { role: userRole } = useAuth(); //use the Auth hook to access role of the user
+    const { role: userRole, isAuthenticated, loading } = useAuth(); //use the Auth hook to access role of the user
+    //const [isRedirecting, setIsRedirecting] = useState(false);
+
+    useEffect(() => {
+
+        // If not signed in redirect to the home page
+        //attempts to block the view of the profile page
+        if (loading) {
+            return null;
+        }
+        //redirect guard logic
+        if (!isAuthenticated) {
+            console.log("User not signed in. Redirecting to home page.");
+            window.location.replace('./'); // Start the fade-out/transition
+            /*setIsRedirecting(true);
+            const redirectTimer = setTimeout(() => {
+                window.location.replace('./');
+            }, -0.1); // 0.3 seconds
+            return () => clearTimeout(redirectTimer);
+        }
+        else if (isAuthenticated) {
+            // If authenticated, stop redirecting flag
+            setIsRedirecting(false);*/
+            return null;
+        }
+
+    }, [isAuthenticated,loading]);//isAuthenticated dependency
 
     // logic to determine the initial view based on the URL hash
     const getInitialView = useCallback(() => {

@@ -2,7 +2,7 @@ import React from 'react'
 import './Navbar.css'
 //import logo from '/images/team_7_logo.png'
 import { useAuth } from '../../Components/authState/useAuth.jsx';
-import {getPage} from '../Api/getPage.jsx'
+import { getPage} from '../Api/getPage.jsx'
 
 
 
@@ -12,7 +12,7 @@ const Navbar = () => {
     const { _view, isAuthenticated, role, logout, _setView } = useAuth();
     const currentPath = window.location.pathname;
     const isLogOrReg = currentPath.endsWith('/login.html') || currentPath.endsWith('/register.html');
-   
+
     //capitalising the first letter of the string and creating a value to display the current file path
     const getPageString = getPage().charAt(0).toUpperCase() + getPage().slice(1);
     //const pageString = ` / ${getPageString}`;

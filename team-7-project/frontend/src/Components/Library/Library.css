@@ -1,33 +1,91 @@
 
 
 
-
-
-.library{
+.library {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 80px;
-    margin: 80px 170px;    
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 40px;
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 40px;
+    width: 100%;
+}
+
+.library__section {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.library__section h4 {
+    margin: 0;
+    padding: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #ffffff;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 8px;
+}
+
+.library__list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
 }
 
 .library__book-item {
     display: flex;
     align-items: center;
-    margin-bottom: 8px;
+    gap: 12px;
+    padding: 12px 16px;
+    background-color: #f9f9f9;
+    border-radius: 6px;
+    border: 1px solid #e8e8e8;
+    transition: background-color 0.2s ease;
+}
+
+.library__book-item:hover {
+    background-color: #f5f5f5;
 }
 
 .library__book-title {
-    flex: 1;
+    flex: 0 1 auto;
     min-width: 0;
+    font-weight: 500;
+    color: #333;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+.library__book-author {
+    flex: 0 0 auto;
+    color: #666;
+    font-size: 0.95em;
+    white-space: nowrap;
 }
 
 .library__delete-button {
     cursor: pointer;
-    color: red;
-    margin-left: 20px;
+    color: #d32f2f;
+    margin-left: auto;
     flex-shrink: 0;
-    min-width: 60px;
-    text-align: right;
+    padding: 4px 12px;
+    font-size: 0.9em;
+    border: 1px solid #d32f2f;
+    border-radius: 4px;
+    background-color: transparent;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    font-family: inherit;
+    font-weight: inherit;
+    outline: none;
+}
+
+.library__delete-button:hover {
+    background-color: #d32f2f;
+    color: white;
 }

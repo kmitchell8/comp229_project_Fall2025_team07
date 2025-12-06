@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { useAuth } from './useAuth.jsx'
+import { useAuth } from '../authState/useAuth.jsx'
 import { getHash } from '../Api/getPage.jsx'
 import Profile from '../Profile/Profile.jsx'
 import Admin from '../Admin/Admin.jsx'
@@ -21,7 +21,8 @@ export const ProfileView = () => {
         //redirect guard logic
         if (!isAuthenticated) {
             console.log("User not signed in. Redirecting to home page.");
-            window.location.replace('./'); // Start the fade-out/transition
+            window.location.replace('./'); 
+            // Start the fade-out/transition
             /*setIsRedirecting(true);
             const redirectTimer = setTimeout(() => {
                 window.location.replace('./');

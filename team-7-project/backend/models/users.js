@@ -7,7 +7,7 @@
  */
 
 const mongoose = require('mongoose'); // needed to connect to MongoDB (type: commonjs)
-const bcrypt = require('bcrypt'); 
+const bcrypt = require('bcrypt');
 
 // 10 is a good standard default.
 const SALT_ROUNDS = 10;
@@ -31,7 +31,7 @@ UserSchema.virtual('password').set(function (password) {//checks given password 
         return this._password;
     });
 
-// --- ASYNCHRONOUS PRE-SAVE HOOK (for secure hashing) ---
+//ASYNCHRONOUS PRE-SAVE HOOK (for secure hashing)
 UserSchema.pre('save', async function (next) {
     // Only run this function if the password has been modified (or is new)
     /*if (!this.isModified('_password')) {
@@ -39,8 +39,8 @@ UserSchema.pre('save', async function (next) {
 
         
     }*/
-   //runs if password does not exist
-    if (!this._password) { 
+    //runs if password does not exist
+    if (!this._password) {
         return next();
     }
 
@@ -70,8 +70,8 @@ UserSchema.path('hashed_password').validate(function (v) {
     return true;
 }, null);
 
-UserSchema.methods = { 
-    
+UserSchema.methods = {
+
     authenticate: async function (plainText) {
         if (!plainText || !this.hashed_password) return false;
         try {
@@ -80,7 +80,7 @@ UserSchema.methods = {
             console.error("Bycript authenticate failed:", err);
             return false;
         }
-    } 
+    }
 }
 
 

@@ -49,7 +49,7 @@ const update = async (req, res, next) => {
         if (!contact) return res.status(404).json({ error: "Contact not found during update." });
 
         // Update the contact object with new data from the request body
-        // We use loadsh's extend method to merge the changes
+        //use loadsh's extend method to merge the changes
         contact = _.extend(contact, req.body);
         contact.updatedAt = Date.now();
         await contact.save();
@@ -83,14 +83,12 @@ const remove = async (req, res, next) => {
 
 //GENERAL 
 
-// POST: Create a new contact (Often used for registration, but kept for generic CRUD)
-//router.route('/register').post(authCtrl.register); will be used for registration
-//register defined in authController.js
+
 const create = async (req, res) => {
     try {
         const newContact = new Contact(req.body);
         const savedContact = await newContact.save();
-        // NOTE: In a real app, you should strip sensitive info before sending back.
+        //should strip sensitive info before sending back.
         //restricted in contactRoutes        
         res.status(201).json(savedContact);
     } catch (err) {
@@ -112,7 +110,7 @@ const list = async (req, res) => {
 // DELETE: Delete all contacts
 const removeAll = async (req, res) => {
     try {
-        // NOTE: This should be restricted to 'admin' roles and avoided in production.
+        //should be restricted to 'admin' roles and avoided in production.
         //will be restricted in contactRoutes
         const result = await Contact.deleteMany({});
         res.status(200).json({ message: `You deleted ${result.deletedCount} contact(s)` });

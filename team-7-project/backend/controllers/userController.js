@@ -48,12 +48,12 @@ const update = async (req, res, next) => {
         if (!user) return res.status(404).json({ error: "User not found during update." });
 
         // Update the user object with new data from the request body
-        // We use loadsh's extend method to merge the changes
+        //use loadsh's extend method to merge the changes
         user = _.extend(user, req.body);
         user.updatedAt = Date.now();
         await user.save();
 
-        // Prepare the response profile (strip password hash)
+        //Prepare the response profile (strip password hash)
         const { password, ...safeUser } = user.toObject(); 
         res.json(safeUser);
 
@@ -85,14 +85,14 @@ const remove = async (req, res, next) => {
 
 //GENERAL 
 
-// POST: Create a new user (Often used for registration, but kept for generic CRUD)
+// POST: Create a new user (used for registration, but kept for generic CRUD)
 //router.route('/register').post(authCtrl.register); will be used for registration
 //register defined in authController.js
 const create = async (req, res) => {
     try {
         const newUser = new User(req.body);
         const savedUser = await newUser.save();
-        // NOTE: In a real app, you should strip sensitive info before sending back.
+        //should strip sensitive info before sending back.
         //restricted in userRoutes        
         res.status(201).json(savedUser);
     } catch (err) {
@@ -104,7 +104,7 @@ const create = async (req, res) => {
 // GET: List all users
 const list = async (req, res) => {
     try {
-        // NOTE: In a real app, this route should be restricted to 'admin' roles.
+        //this route should be restricted to 'admin' roles.
         //will be restricted in userRoutes
         const users = await User.find().select('name email role createdAt'); // Select safe fields
         res.status(200).json(users);
@@ -116,7 +116,7 @@ const list = async (req, res) => {
 // DELETE: Delete all users
 const removeAll = async (req, res) => {
     try {
-        // NOTE: This should be restricted to 'admin' roles and avoided in production.
+        //should be restricted to 'admin' roles and avoided in production.
         //will be restricted
         const result = await User.deleteMany({});
         res.status(200).json({ message: `You deleted ${result.deletedCount} user(s)` });

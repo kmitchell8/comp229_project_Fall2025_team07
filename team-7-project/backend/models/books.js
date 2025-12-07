@@ -29,7 +29,7 @@ const BookSchema = new mongoose.Schema({
             ?coverString //ternary If statement // if there's no extention the description text file will be the same as the cover value
             :coverString.substring(0, editPath); // if there is an extension it will be removed 
 
-            return `/public/descriptions/${descString}.txt`;//default value 
+            return `/documents/description/${descString}.txt`;//default value 
         }
     },
     genre: {type: String, required: true},

@@ -62,9 +62,9 @@ const signin = async (req, res) => {
         if (!isAuthenticated) {
             return res.status(401).json({ error: "Email and password don't match." });
         }
-        // Generate the token //isAdmin role will be looked at later
+        //Generate the token //isAdmin role will be looked at later
         const token = jwt.sign({ _id: user._id, role: user.role }, config.jwtSecret);
-        // Set cookie //removes sensitive user data
+        //Set cookie //removes sensitive user data
         res.cookie('t', token, { expire: new Date(Date.now() + 99990000) });
 
         const userObject = user.toObject(); //cleaner implimentation

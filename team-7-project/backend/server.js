@@ -11,6 +11,7 @@ const mongoose = require('mongoose'); // needed to connect to MongoDB
 //const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
+const path = require('path');
 const dotenv = require('dotenv');
 dotenv.config();
 const app = express();
@@ -52,6 +53,8 @@ app.use(express.json());
 app.use(cookieParser());
 //app.use(bodyParser.json());  //handled by express.json
 //enabling the API routes
+app.use('/documents/description', express.static(path.join(__dirname, 'public', 'documents', 'description')));
+app.use('/images/cover', express.static(path.join(__dirname, 'public', 'images', 'cover')))
 app.use('/api/contacts', contactRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/books', bookRoutes);

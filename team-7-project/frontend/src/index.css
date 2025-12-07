@@ -36,6 +36,17 @@ authContext.css
   padding: 2rem;
 }
 
+/*======================
+adminView.jsx
+=========================*/
+.admin-container{
+    display: flex;
+    flex-direction: column;
+    align-items: left;
+    justify-content: center;
+    gap: 80px;
+    margin: 80px 170px;    
+}
 /*===========================*/
 /*:root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;

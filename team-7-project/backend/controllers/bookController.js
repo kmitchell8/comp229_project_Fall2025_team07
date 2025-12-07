@@ -8,7 +8,22 @@
 
 const Book = require('../models/books');
 const _ = require('lodash'); // Used for cleaning up request bodies
+const fs = require('fs');
+const path = require('path');
+const { v4: uuidv4 } = require('uuid');
 
+//permanent storage path 
+const COVERS_DIR = path.join(__dirname, '..', 'public', 'images', 'cover'); //book cover storage
+const DESCRIPTIONS_DIR = path.join(__dirname, '..', 'public', 'documents', 'description'); //book documents storage
+
+if (!fs.existsSync(COVERS_DIR)) {
+    fs.mkdirSync(COVERS_DIR, { recursive: true });
+}
+
+if (!fs.existsSync(DESCRIPTIONS_DIR)) {
+    fs.mkdirSync(DESCRIPTIONS_DIR, { recursive: true });
+
+}
 // Middleware to pre-load a book profile based on the 'bookId' parameter in the route
 const bookByID = async (req, res, next, id) => {
     try {
@@ -71,7 +86,7 @@ const remove = async (req, res, next) => {
         await book.remove();
 
 
-        res.json({ message: "Book successfully deleted."});
+        res.json({ message: "Book successfully deleted." });
 
     } catch (err) {
         return res.status(400).json({
@@ -83,14 +98,11 @@ const remove = async (req, res, next) => {
 
 //GENERAL 
 
-// POST: Create a new book (Often used for registration, but kept for generic CRUD)
-//router.route('/register').post(authCtrl.register); will be used for registration
-//register defined in authController.js
+
 const create = async (req, res) => {
     try {
         const newBook = new Book(req.body);
         const savedBook = await newBook.save();
-        // NOTE: In a real app, you should strip sensitive info before sending back.
         //restricted in bookRoutes        
         res.status(201).json(savedBook);
     } catch (err) {
@@ -112,12 +124,97 @@ const list = async (req, res) => {
 // DELETE: Delete all books
 const removeAll = async (req, res) => {
     try {
-        // NOTE: This should be restricted to 'admin' roles and avoided in production.
+        //should be restricted to 'admin' roles and avoided in production.
         //will be restricted in bookRoutes
         const result = await Book.deleteMany({});
         res.status(200).json({ message: `You deleted ${result.deletedCount} book(s)` });
     } catch (err) {
         res.status(500).json({ message: err.message });
+    }
+};
+
+const uploadCover = async (req, res) => {
+    try {
+        const bookCover = req.file;
+        if (!bookCover) {
+            return res.status(400).json({ error: "No file provided." });
+        }
+
+        const fileExtension = bookCover.originalname.split('.').pop();
+        const fileName = `${uuidv4()}.${fileExtension}`;
+        const savePath = path.join(COVERS_DIR, fileName);
+        fs.writeFileSync(savePath, bookCover.buffer);//save to disk
+        return res.status(200).json({ coverFileName: fileName });//sends filename back to front end
+
+    } catch (error) {
+        console.error("Cover upload error:", error);
+        res.status(500).json({ error: "Failed to upload cover." });
+    }
+}
+
+const uploadDescription = async (req, res) => {
+    try {
+        const { descriptionContent, coverBaseName } = req.body;
+
+        if (!coverBaseName) {
+            return res.status(400).json({ error: "Missing UUID." });
+        }
+        //keep path integrety
+        if (coverBaseName.includes('/') || coverBaseName.includes('\\')) {
+            return res.status(400).json({ error: "Invalid filename provided." });
+        }
+
+        const descriptionFileName = `${coverBaseName}.txt`;
+        const savePath = path.join(DESCRIPTIONS_DIR, descriptionFileName);
+        fs.writeFileSync(savePath, descriptionContent, 'utf8');
+        return res.status(200).json({ descriptionFileName: descriptionFileName });//sends filename back to front end
+
+    } catch (error) {
+        console.error("Description upload error:", error);
+        res.status(500).json({ error: "Failed to create description file." });
+    }
+};
+
+const deleteCover = async (req, res) => {
+
+    const { filename } = req.body; //Assuming { filename: 'uuid.ext' }
+
+    if (!filename) {
+        return res.status(400).json({ error: "Filename is required for deletion." });
+    }
+
+    const lastDotIndex = filename.lastIndexOf('.');
+    const baseName = lastDotIndex === -1 ? filename : filename.substring(0, lastDotIndex);
+
+    const coverPath = path.join(COVERS_DIR, filename);
+    const descriptionFileName = `${baseName}.txt`; // The associated description file
+    const descriptionPath = path.join(DESCRIPTIONS_DIR, descriptionFileName);
+    let deletedCover = false;
+    let deletedDescription = false;
+    try {
+        // Check and delete the Cover Image
+        if (fs.existsSync(coverPath)) {
+            fs.unlinkSync(coverPath);
+            deletedCover = true;
+        }
+
+        // Check and delete the Description Text File
+        if (fs.existsSync(descriptionPath)) {
+            fs.unlinkSync(descriptionPath);
+            deletedDescription = true;
+        }
+        if (deletedCover || deletedDescription) {
+            return res.json({
+                message: `Cover Deleted: ${deletedCover ? 'Yes' : 'No'}, Description Deleted: ${deletedDescription ? 'Yes' : 'No'}`
+            });
+        } else {
+            //if neither file was found
+            return res.status(204).send();
+        }
+
+    } catch (err) {
+        console.error(`Error deleting files with filename: ${filename}:`, err);
+        return res.status(500).json({ error: "Failed to delete files." });
     }
 };
 
@@ -128,5 +225,8 @@ module.exports = {
     remove,
     create,
     list,
-    removeAll
+    removeAll,
+    uploadCover,
+    uploadDescription,
+    deleteCover
 };

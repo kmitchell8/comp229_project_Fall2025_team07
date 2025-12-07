@@ -6,7 +6,7 @@ import './index.css'
 //import Admin from './Components/Admin/Admin.jsx'
 //import Navbar from './Components/Navbar/Navbar.jsx'
 import { AuthProvider } from './Components/authState/authProvider.jsx';
-import { ProfileView } from './Components/authState/profileView.jsx';
+import { ProfileView } from './Components/Views/profileView.jsx';
 
 
 

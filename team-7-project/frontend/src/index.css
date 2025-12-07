@@ -17,7 +17,7 @@ body {
 }
 
 /*===========
-authContext.css
+authContext.jsx
 ===========*/
 .loading {
   min-height: 100vh;
@@ -39,14 +39,122 @@ authContext.css
 /*======================
 adminView.jsx
 =========================*/
-.admin-container{
-    display: flex;
-    flex-direction: column;
-    align-items: left;
-    justify-content: center;
-    gap: 80px;
-    margin: 80px 170px;    
+
+:root {
+  --admin-bg-color: #1a0867;
+  /* Slightly lighter dark blue/purple for padding/sections */
+  --card-bg-color: #240c83;
+  /* Darker purple for the main admin card background */
+  --primary-color: #ffffff;
+  /* White text, consistent with body */
+  --accent-color: #79a6ff;
+  /* Bright, light blue for links/accents (pops on dark background) */
+  --dark-accent-hover: #5070ff;
+  /* Deeper blue for hover state */
+  --border-color: #3812b1;
+  /* Subtle border color */
+  --shadow-color: rgba(0, 0, 0, 0.4);
+  /* Darker, more pronounced shadow */
 }
+
+/* Global Admin Container Styling */
+.admin {
+
+  background-color: transparent;
+  padding: 20px;
+}
+
+/* Main View Content Area */
+.render-view {
+  padding-top: 20px;
+}
+
+/* Default Admin Dashboard (The list of links) */
+.admin-container {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  max-width: 600px;
+  margin: 40px auto;
+  padding: 30px;
+  background-color: var(--card-bg-color);
+  border-radius: 10px;
+  box-shadow: 0 8px 20px var(--shadow-color);
+  border-left: 5px solid var(--accent-color);
+}
+
+.admin-container>.admin {
+  padding: 0;
+  margin: 0;
+}
+
+.admin-container>.admin h3 {
+  margin: 0;
+}
+
+.admin-container>.admin a {
+  display: block;
+  padding: 15px 20px;
+  font-size: 1.1em;
+  font-weight: 700;
+  color: var(--primary-color);
+  background-color: var(--admin-bg-color);
+  text-decoration: none;
+  border-radius: 8px;
+  transition: background-color 0.3s ease, transform 0.1s ease, color 0.3s ease;
+  border: 1px solid var(--border-color);
+}
+
+.admin-container>.admin a:hover {
+  background-color: var(--accent-color);
+  color: var(--card-bg-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Test Messages and Footer Content */
+.admin>p {
+  font-size: 1.1em;
+  color: var(--primary-color);
+  text-align: center;
+  margin-top: 30px;
+  padding: 10px;
+}
+
+.admin>div:last-child {
+  max-width: 600px;
+  margin: 20px auto;
+  padding: 15px;
+  background-color: var(--admin-bg-color);
+  border-radius: 8px;
+  box-shadow: 0 2px 5px var(--shadow-color);
+  border-top: 1px solid var(--border-color);
+}
+
+.admin>div:last-child p {
+  font-size: 0.9em;
+  color: #bdbdff;
+  text-align: center;
+}
+
+/*  Content Views (CreateBook, UpdateBook, etc.) */
+.render-view>* {
+  max-width: 100%;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .admin-container {
+    margin: 20px auto;
+    padding: 20px;
+  }
+
+  .admin-container>.admin a {
+    font-size: 1em;
+    padding: 12px 15px;
+  }
+}
+
 /*===========================*/
 /*:root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;

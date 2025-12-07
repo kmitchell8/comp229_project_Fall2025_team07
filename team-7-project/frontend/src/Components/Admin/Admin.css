@@ -7,5 +7,409 @@
     align-items: left;
     justify-content: center;
     gap: 80px;
-    margin: 80px 170px;    
+    margin: 80px 170px;   
+     
+
+}
+
+:root {
+    --primary-text: #ffffff;
+    --secondary-text: #bdbdff;
+    --bg-dark-primary: #0d0249;
+    --bg-dark-secondary: #240c83; /* Card/Container background */
+    --accent-color: #79a6ff; 
+    --dark-accent-hover: #5070ff;
+    --success-color: #4CAF50;
+    --error-color: #F44336;
+    --border-color: #3812b1;
+    --table-header-bg: #1a0867;
+    --input-bg: #1a0867; /* Input background */
+    --update-color: #ffc107; /* Yellow/Amber for active Update button */
+    --view-color: #007bff; /* Blue for View button */
+    --update-color: #ffc107; /* Yellow/Amber for active Update button */
+    
+}
+/*============================
+CreateBook.jsx
+=============================*/
+
+/* --- General Form Container --- */
+.create-book-container {
+    max-width: 800px;
+    margin: 50px auto;
+    padding: 30px;
+    background-color: var(--bg-dark-secondary);
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    font-family: 'Outfit', sans-serif;
+    color: var(--primary-text);
+}
+
+.form-title {
+    font-size: 2.2em;
+    font-weight: 700;
+    color: var(--accent-color);
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+/* --- Form Layout and Groups --- */
+.book-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Space between main sections */
+}
+
+.form-section-group {
+    display: grid;
+    /* Create a responsive 2 or 3 column layout */
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+    gap: 20px;
+    padding: 15px;
+    background-color: var(--input-bg);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: var(--secondary-text);
+}
+
+.required {
+    color: var(--error-color);
+    margin-left: 2px;
+}
+
+/* --- Inputs and Textareas --- */
+.form-input {
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 1em;
+    color: var(--primary-text);
+    background-color: var(--bg-dark-secondary);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box; /* Crucial for padding/width calculation */
+}
+
+.form-input:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(121, 166, 255, 0.4);
+    outline: none;
+    background-color: var(--input-bg);
+}
+
+.large-textarea textarea.form-input {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* --- Error/Feedback Styling --- */
+.field-feedback {
+    margin-top: 5px;
+    font-size: 0.85em;
+    font-style: italic;
+}
+
+.error-message {
+    color: var(--error-color);
+}
+
+.form-input.input-error {
+    border-color: var(--error-color);
+}
+
+
+/* --- Action Group and Button --- */
+.form-action-group {
+    padding: 15px 0;
+    text-align: center;
+}
+
+.button-primary {
+    padding: 12px 25px;
+    font-size: 1.1em;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    background-color: var(--success-color); /* Use success color for creation button */
+    color: var(--primary-text);
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    width: 100%;
+    max-width: 300px;
+}
+
+.button-primary:hover:not(:disabled) {
+    background-color: #388e3c;
+    transform: translateY(-2px);
+}
+
+.button-primary:disabled {
+    background-color: #4a4a4a;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+
+/* --- Info/Global Feedback Boxes --- */
+.info-box {
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.error-box {
+    background-color: #4a1c1c; /* Dark Red Background */
+    border: 1px solid var(--error-color);
+    color: var(--error-color);
+}
+
+.success-box {
+    background-color: #1c4a1c; /* Dark Green Background */
+    border: 1px solid var(--success-color);
+    color: var(--success-color);
+}
+
+/*===================
+UpdateUser.jsx
+====================*/
+
+
+.user-table-container {
+    max-width: 95%;
+    margin: 50px auto;
+    padding: 30px;
+    background-color: var(--bg-dark-secondary);
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    font-family: 'Outfit', sans-serif;
+    color: var(--primary-text);
+    overflow-x: auto; 
+}
+
+.table-header-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+h1 {
+    font-size: 2em;
+    font-weight: 700;
+    color: var(--accent-color);
+}
+
+/* --- Table Styling --- */
+.user-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.user-table thead tr {
+    background-color: var(--table-header-bg);
+    border-bottom: 2px solid var(--border-color);
+}
+
+.user-table th {
+    padding: 15px 10px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.9em;
+    color: var(--secondary-text);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.user-table td {
+    padding: 8px 10px; 
+    border-bottom: 1px solid var(--border-color);
+    color: var(--primary-text);
+    vertical-align: middle;
+}
+
+.user-table tbody tr:hover {
+    background-color: #3812b150; 
+}
+
+/* --- Editable Field Styling (Inputs) --- */
+.editable-input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 1em;
+    color: var(--primary-text);
+    background-color: var(--input-bg);
+    box-sizing: border-box;
+}
+
+.editable-input:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(121, 166, 255, 0.4);
+    outline: none;
+}
+
+/* --- Role Radio Buttons in Table --- */
+.role-radio-group-table {
+    display: flex;
+    gap: 15px; /* Spacing between radio options */
+}
+
+.role-radio-label-table {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 1em;
+    transition: color 0.2s;
+    white-space: nowrap; /* Prevent role name from wrapping */
+}
+
+/* Hide default radio button */
+.role-radio-label-table input[type="radio"] {
+    opacity: 0;
+    position: absolute;
+}
+
+/* Custom indicator styling */
+.radio-custom-indicator-table {
+    height: 16px;
+    width: 16px;
+    background-color: var(--input-bg);
+    border: 2px solid var(--border-color);
+    border-radius: 50%;
+    margin-right: 5px;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+/* Checked state */
+.role-radio-label-table input[type="radio"]:checked + .radio-custom-indicator-table {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px var(--input-bg);
+}
+
+/* Disabled state for all editable elements */
+.editable-input:disabled,
+.role-radio-label-table input[type="radio"]:disabled + .radio-custom-indicator-table,
+.role-radio-label-table input[type="radio"]:disabled ~ .radio-text {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* --- Feedback Row Styling --- */
+.feedback-base td {
+    padding: 8px 10px;
+    border-bottom: none !important;
+    font-weight: 600;
+}
+
+.feedback-error {
+    background-color: #4a1c1c; 
+    color: var(--error-color);
+}
+
+.feedback-success {
+    background-color: #1c4a1c; 
+    color: var(--success-color);
+}
+
+
+/* --- Buttons --- */
+.button-group {
+    padding: 8px 12px;
+    font-size: 0.9em;
+    font-weight: 600;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    white-space: nowrap;
+}
+
+/* New style for the cell holding the buttons */
+.action-button-group-cell {
+    display: flex;
+    gap: 8px; /* Space between buttons */
+    align-items: center;
+    padding: 8px 10px;
+}
+
+/* View Button specific style */
+.view-button {
+    background-color: var(--view-color);
+    color: var(--primary-text);
+}
+
+.view-button:hover:not(:disabled) {
+    background-color: #0056b3; /* Darker blue on hover */
+    transform: translateY(-1px);
+}
+
+/* Update Button specific style (Default/Disabled) */
+.update-button {
+    background-color: #4a4a4a; 
+    color: var(--primary-text);
+    cursor: not-allowed; 
+}
+
+/* Highlight the button when changes are present (has-changes) */
+.update-button.has-changes {
+    background-color: var(--update-color);
+    color: #1a0867; 
+    cursor: pointer;
+}
+
+.update-button.has-changes:hover:not(:disabled) {
+    background-color: #e6b200; 
+    transform: translateY(-1px);
+}
+
+/* Reload Button specific style */
+.reload-button {
+    background-color: var(--accent-color);
+    color: var(--bg-dark-secondary);
+}
+
+.reload-button:hover:not(:disabled) {
+    background-color: var(--dark-accent-hover);
+    color: var(--primary-text);
+}
+
+.button-group:disabled {
+    opacity: 0.6;
+    box-shadow: none;
+}
+
+
+/* --- Info/Error Box Styling --- */
+.loading-container, .info-box {
+    margin: 50px auto;
+    padding: 30px;
+    max-width: 600px;
+    text-align: center;
+    border-radius: 12px;
+    background-color: var(--table-header-bg);
+}
+
+.error-box {
+    border: 1px solid var(--error-color);
+    color: var(--error-color);
+}
+
+.empty-box {
+    border: 1px solid var(--secondary-text);
+    color: var(--secondary-text);
 }

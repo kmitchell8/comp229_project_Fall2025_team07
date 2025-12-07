@@ -22,15 +22,17 @@ router.route('/')
 
 router.route('/cover')
   .post(authCtrl.requireSignin, authCtrl.isAdmin, upload.single('coverImage'), bookCtrl.uploadCover)       // Equivalent to the old router.post('/')
-  .delete(authCtrl.requireSignin, authCtrl.isAdmin, bookCtrl.deleteCover); // Equivalent to the old router.delete('/')
-
+  .delete(authCtrl.requireSignin, authCtrl.isAdmin, bookCtrl.deleteCover); // Equivalent to the old router.delete('/:ID')
+/* router.route('/cover/:filename')
+ .delete(authCtrl.requireSignin, authCtrl.isAdmin, bookCtrl.deleteCover); // Equivalent to the old router.delete('/:ID')
+*/
 router.route('/description')
   .post(authCtrl.requireSignin, authCtrl.isAdmin, bookCtrl.uploadDescription);// Equivalent to the old router.post('/')
 
 router.route('/:bookId')
   .get(bookCtrl.read)// Equivalent to the old router.get('/:bookID')
   .put(authCtrl.requireSignin, authCtrl.hasAuthorization, bookCtrl.update)// Equivalent to the old router.put('/:bookID')
-  .delete(authCtrl.requireSignin, authCtrl.hasAuthorization, bookCtrl.remove);// Equivalent to the old router.delete('/:bookID')
+  .delete(authCtrl.requireSignin, authCtrl.hasAuthorization, bookCtrl.remove);// Equivalent to the old router.delete('/:ID')
 
 
 router.param('bookId', bookCtrl.bookByID);

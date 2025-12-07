@@ -176,8 +176,8 @@ const uploadDescription = async (req, res) => {
 };
 
 const deleteCover = async (req, res) => {
-
-    const { filename } = req.body; //Assuming { filename: 'uuid.ext' }
+    const filename = req.body.cover;//UUID.ext
+    //const { filename } = req.body; //Assuming { filename: 'uuid.ext' }
 
     if (!filename) {
         return res.status(400).json({ error: "Filename is required for deletion." });

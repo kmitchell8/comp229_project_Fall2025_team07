@@ -91,6 +91,19 @@ const AdminView = ({ pathSegments: parentSegments = [] }) => {
     //we should stop rendering anything here.
     return null;
   }
+  const NavigationLinks = ({ currentView }) => {//need to be outside the render or it will continually lose it's state
+  return (
+    <div>
+      {currentView !== 'admin' && (
+        <button onClick={() => window.location.hash = 'admin'}
+          className="button-group"
+        >
+          Go Back
+        </button>
+      )}
+    </div>
+  );
+};
   //conditional rendering
   const itemId = parentSegments[2];
   const renderView = () => {
@@ -153,6 +166,7 @@ const AdminView = ({ pathSegments: parentSegments = [] }) => {
 
       <main className="render-view">
         {renderView()}
+        <NavigationLinks currentView={currentView} />
       </main>
     </div>
     <p>this is another test message</p>

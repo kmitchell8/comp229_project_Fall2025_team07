@@ -3,12 +3,14 @@ import React, { useEffect, useState } from 'react'
 import './Library.css'
 import bookApi from '../Api/bookApi'
 import { useAuth } from '../authState/useAuth'
+//import {useNavigate} from 'react-router-dom'
 
 const Library = () => {
   const [bookShelves, setBookShelves] = useState({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const { getToken } = useAuth()
+  //const navigate = useNavigate();
 
   useEffect(() => {
     const loadBooks = async () => {
@@ -16,7 +18,7 @@ const Library = () => {
         setLoading(true)
         setError(null)
         const books = await bookApi.list()
-        
+
         if (!Array.isArray(books)) {
           throw new Error('Invalid response format')
         }
@@ -30,14 +32,14 @@ const Library = () => {
         // Group books by genre
         const groupedBooks = books.reduce((acc, book) => {
           // Normalize genre (capitalize first letter, handle variations)
-          const genre = book.genre 
+          const genre = book.genre
             ? book.genre.charAt(0).toUpperCase() + book.genre.slice(1).toLowerCase()
             : 'Unknown'
-          
+
           if (!acc[genre]) {
             acc[genre] = []
           }
-          
+
           // Store the full book object, not just the title
           acc[genre].push({
             id: book._id,
@@ -45,7 +47,7 @@ const Library = () => {
             author: book.author ? book.author.trim() : null,
             cover: book.cover
           })
-          
+
           return acc
         }, {})
 
@@ -61,16 +63,22 @@ const Library = () => {
     loadBooks()
   }, [])
 
+  /*const handleView = (bookId) => { needed for later implimentation of book view
+    // Navigate to a book details page using the bookId as a URL parameter
+    navigate(`/book/details/${bookId}`)
+  }*/
+
   const handleDelete = async (bookId) => {
     if (!window.confirm('Are you sure you want to delete this book?')) {
       return
     }
 
+
     try {
       await bookApi.deleteOne(bookId, getToken)
-      
+
       const books = await bookApi.list()
-      
+
       if (!Array.isArray(books)) {
         throw new Error('Invalid response format')
       }
@@ -82,21 +90,21 @@ const Library = () => {
 
       // Regroup books by genre
       const groupedBooks = books.reduce((acc, book) => {
-        const genre = book.genre 
+        const genre = book.genre
           ? book.genre.charAt(0).toUpperCase() + book.genre.slice(1).toLowerCase()
           : 'Unknown'
-        
+
         if (!acc[genre]) {
           acc[genre] = []
         }
-        
+
         acc[genre].push({
           id: book._id,
           title: (book.title || 'Untitled book').trim(),
           author: book.author ? book.author.trim() : null,
           cover: book.cover
         })
-        
+
         return acc
       }, {})
 
@@ -131,12 +139,20 @@ const Library = () => {
                 {book.author && (
                   <span className="library__book-author"> by {book.author}</span>
                 )}
-                <button 
+                <button
                   className="library__delete-button"
                   onClick={() => handleDelete(book.id)}
                   type="button"
                 >
                   Delete
+                </button>
+                <button
+
+                  className="library__view-button"
+                  //onClick={() => handleView(book.id)} //implimented later
+                  type="button"
+                >
+                  View
                 </button>
               </p>
             ))}

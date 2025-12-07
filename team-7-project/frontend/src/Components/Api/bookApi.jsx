@@ -44,9 +44,13 @@ const fetchHelper = async (url, options) => {
             console.log('API call successful:', url, data);
             return data;
         } else {
-            const errorMessage = data.message || `API request failed with status: ${response.status}.`;
+
+            const detailedMessage = data ||{};
+            const error = new Error(detailedMessage.error||detailedMessage.message ||`API request failed with status: ${response.status}.`);
+            //const errorMessage = data.message || `API request failed with status: ${response.status}.`;
+            error.payload = detailedMessage;
             console.error('API call failed:', response.status, data);
-            throw new Error(errorMessage);
+            throw error;
         }
     } catch (error) {
         console.error('Network or Authorization error:', error);
@@ -87,6 +91,7 @@ const removeCover = async (filename, getToken) => {
     return fetchHelper(`${BASE_URL}/cover`, {
         method: 'DELETE',
         headers: headers,
+        body: JSON.stringify({ cover: filename }),
     });
 };
 

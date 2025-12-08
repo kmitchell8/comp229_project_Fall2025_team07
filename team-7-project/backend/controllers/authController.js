@@ -71,9 +71,9 @@ const signin = async (req, res) => {
         //Set cookie //removes sensitive user data
         return res.cookie('t', token, { 
             expire: new Date(Date.now() + 99990000),
-            httpOnly: true, //recommended for security
-            secure: process.env.NODE_ENV === 'production',//recommended for production
-            sameSite: 'None'// Ensures the cookie is sent in cross-site requests
+            //httpOnly: true, //recommended for security
+            //secure: process.env.NODE_ENV === 'production',//recommended for production
+           // sameSite: 'None'// Ensures the cookie is sent in cross-site requests
 
         })
         .json({//chain the response togeter to avoid an empty response header 

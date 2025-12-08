@@ -69,7 +69,8 @@ const update = async (req, res, next) => {
 const remove = async (req, res, next) => {
     try {
         const user = req.profile; // User object from req.profile
-        const deletedUser = await user.remove(); 
+        //const deletedUser = await user.remove(); //depricated
+        const deletedUser = await user.deleteOne();
         
         // Prepare response profile (strip password hash)
         const { password, ...safeUser } = deletedUser.toObject(); 

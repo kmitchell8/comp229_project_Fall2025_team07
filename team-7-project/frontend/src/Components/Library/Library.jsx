@@ -2,21 +2,21 @@
 import React, { useEffect, useState } from 'react'
 import './Library.css'
 import bookApi from '../Api/bookApi'
-import { useAuth } from '../authState/useAuth'
+//import { useAuth } from '../authState/useAuth'
 //import {useNavigate} from 'react-router-dom'
 
 const Library = () => {
   const [bookShelves, setBookShelves] = useState({})
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const { getToken } = useAuth()
+ // const [loading, setLoading] = useState(true)
+  //const [error, setError] = useState(null)
+  //const { getToken } = useAuth()
   //const navigate = useNavigate();
 
   useEffect(() => {
     const loadBooks = async () => {
       try {
-        setLoading(true)
-        setError(null)
+       // setLoading(true)
+        //setError(null)
         const books = await bookApi.list()
 
         if (!Array.isArray(books)) {
@@ -25,7 +25,7 @@ const Library = () => {
 
         if (books.length === 0) {
           setBookShelves({})
-          setLoading(false)
+          //setLoading(false)
           return
         }
 
@@ -54,9 +54,9 @@ const Library = () => {
         setBookShelves(groupedBooks)
       } catch (error) {
         console.error('Error loading books:', error)
-        setError(error.message || 'Failed to load books')
+        //setError(error.message || 'Failed to load books')
       } finally {
-        setLoading(false)
+        //setLoading(false)
       }
     }
 
@@ -65,9 +65,10 @@ const Library = () => {
 
   /*const handleView = (bookId) => { needed for later implimentation of book view
     // Navigate to a book details page using the bookId as a URL parameter
-    navigate(`/book/details/${bookId}`)
+    navigate(`library/book/${bookId}`)
   }*/
 
+    /*
   const handleDelete = async (bookId) => {
     if (!window.confirm('Are you sure you want to delete this book?')) {
       return
@@ -126,7 +127,7 @@ const Library = () => {
   if (Object.keys(bookShelves).length === 0) {
     return <div className="library">No books found in the library.</div>
   }
-
+*/
   return (
     <div className="library">
       {Object.entries(bookShelves).map(([genre, books]) => (
@@ -139,13 +140,13 @@ const Library = () => {
                 {book.author && (
                   <span className="library__book-author"> by {book.author}</span>
                 )}
-                <button
+                {/*<button
                   className="library__delete-button"
                   onClick={() => handleDelete(book.id)}
                   type="button"
                 >
                   Delete
-                </button>
+                </button>*/}
                 <button
 
                   className="library__view-button"

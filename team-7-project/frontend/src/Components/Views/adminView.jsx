@@ -125,7 +125,7 @@ const AdminView = ({ pathSegments: parentSegments = [] }) => {
             </div>
             <div className='admin'>
               <h3>
-                <a href="#/admin/updatebook">update book/delete</a>
+                <a href="#/admin/updatebook">update book</a>
               </h3>
             </div>
             <div className='admin'>

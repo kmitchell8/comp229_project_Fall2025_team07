@@ -68,7 +68,7 @@
     white-space: nowrap;
 }
 
-.library__delete-button {
+.library__delete-button, .library__view-button {
     cursor: pointer;
     color: #d32f2f;
     margin-left: auto;
@@ -85,7 +85,7 @@
     outline: none;
 }
 
-.library__delete-button:hover {
+.library__delete-button:hover, .library__view-button:hover {
     background-color: #d32f2f;
     color: white;
 }

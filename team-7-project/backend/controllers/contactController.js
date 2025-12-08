@@ -68,7 +68,8 @@ const update = async (req, res, next) => {
 const remove = async (req, res, next) => {
     try {
         const contact = req.contact; // Contact object from req.contact
-        await contact.remove();
+        //await contact.remove();//depricated
+        await contact.deleteOne();
 
 
         res.json({ message: "Contact successfully deleted."});

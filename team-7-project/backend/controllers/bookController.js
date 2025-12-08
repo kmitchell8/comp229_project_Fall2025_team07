@@ -83,7 +83,8 @@ const update = async (req, res, next) => {
 const remove = async (req, res, next) => {
     try {
         const book = req.book; // Book object from req.book
-        await book.remove();
+        //await book.remove(); //depricated
+        await book.deleteOne();
 
 
         res.json({ message: "Book successfully deleted." });

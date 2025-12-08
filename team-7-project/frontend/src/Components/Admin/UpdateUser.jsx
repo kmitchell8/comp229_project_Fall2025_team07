@@ -14,7 +14,7 @@ const formatDate = (dateString) => {
             hour: '2-digit',
             minute: '2-digit'
         });
-    // eslint-disable-next-line no-unused-vars
+        // eslint-disable-next-line no-unused-vars
     } catch (e) {
         return dateString;
     }
@@ -28,12 +28,14 @@ const UpdateUser = (/*{pathId}/*{parentSegment}*/) => {//pass the _id path to be
     //anything in the profile.html# path is invoked at any point in the routing   
     //see profileView and Adminview to understand the routing
 
-const { getToken } = useAuth();
-    const [feedbackMessage, setFeedbackMessage] = useState({}); 
+    const { role: userRole, getToken, userInfo } = useAuth();
+    const [feedbackMessage, setFeedbackMessage] = useState({});
     const [users, setUsers] = useState([]); // Original Source of Truth (oiringal data used for reference)
-    const [editedUsers, setEditedUsers] = useState([]); 
+    const [editedUsers, setEditedUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setErr] = useState(null);
+    const currentUserId = userInfo ? userInfo._id : null;
+    const canChangeRole = userRole === 'admin';
 
     // Role uses radio buttons.
     const columns = [
@@ -49,12 +51,12 @@ const { getToken } = useAuth();
     const loadUsers = useCallback(async () => {
         setLoading(true);
         setErr(null);
-        setFeedbackMessage({}); 
+        setFeedbackMessage({});
 
         try {
             const data = await userApi.list(getToken);
             setUsers(data);
-            setEditedUsers(JSON.parse(JSON.stringify(data))); 
+            setEditedUsers(JSON.parse(JSON.stringify(data)));
         } catch (error) {
             setErr(error.message || "An unknown error occurred while listing users.");
         } finally {
@@ -77,9 +79,9 @@ const { getToken } = useAuth();
         });
         setErr(null);
     }, []);
-    
+
     const hasChanges = (originalUser, editedUser) => {
-        const updatableKeys = ['name', 'email', 'role']; 
+        const updatableKeys = ['name', 'email', 'role'];
         return updatableKeys.some(key => {
             return originalUser[key] !== editedUser[key];
         });
@@ -90,10 +92,22 @@ const { getToken } = useAuth();
         const editedUser = editedUsers.find(u => u._id === userId);
 
         if (!originalUser || !editedUser || !hasChanges(originalUser, editedUser)) {
-             setFeedbackMessage(prev => ({ ...prev, [userId]: { message: `No changes detected for user: ${userName}.`, isError: false } }));
-             return;
+            setFeedbackMessage(prev => ({ ...prev, [userId]: { message: `No changes detected for user: ${userName}.`, isError: false } }));
+            return;
         }
-        
+
+        const isConfirmed = window.confirm(
+            `Are you sure you want to update user: ${userName}? \n\nThis will save the detected changes (including any role changes).`
+        );
+
+        if (!isConfirmed) {
+            //clicked 'Cancel' on the confirmation dialog
+            setFeedbackMessage(prev => ({
+                ...prev,
+                [userId]: { message: `Update for ${userName} cancelled by admin.`, isError: false }
+            }));
+            return;
+        }
         const updateData = {
             name: editedUser.name,
             email: editedUser.email,
@@ -107,7 +121,7 @@ const { getToken } = useAuth();
         });
 
         try {
-            await userApi.update(updateData, userId, getToken); 
+            await userApi.update(updateData, userId, getToken);
 
             setUsers(prevUsers => prevUsers.map(u => u._id === userId ? editedUser : u));
 
@@ -126,7 +140,7 @@ const { getToken } = useAuth();
             }));
         }
     };
-    
+
     //Placeholder handler for View action (will be replaced with navigation)
     const handleViewUser = (userId, userName) => {
         console.log(`[NAVIGATION PLACEHOLDER] Navigating to detail page for User ID: ${userId} (${userName})`);
@@ -136,8 +150,8 @@ const { getToken } = useAuth();
 
     const ReloadListButton = () => {
         return (
-            <button 
-                onClick={loadUsers} 
+            <button
+                onClick={loadUsers}
                 className="button-group reload-button"
                 disabled={loading}
             >
@@ -147,7 +161,7 @@ const { getToken } = useAuth();
     };
 
     // RENDER STATES 
-if (loading && users.length === 0) {
+    if (loading && users.length === 0) {
         return (
             <div className="loading-container">
                 <p>Loading User Data...</p>
@@ -180,7 +194,7 @@ if (loading && users.length === 0) {
                 <h1>User Directory</h1>
                 <ReloadListButton />
             </div>
-            
+
             <table className="user-table">
                 <thead>
                     <tr>
@@ -193,11 +207,11 @@ if (loading && users.length === 0) {
                     </tr>
                 </thead>
                 <tbody>
-                    {editedUsers.map((user, index) => { 
+                    {editedUsers.map((user, index) => {
                         const feedback = feedbackMessage[user._id];
                         const originalUser = users.find(u => u._id === user._id) || {};
                         const userHasChanges = hasChanges(originalUser, user);
-                        
+
                         return (
                             <React.Fragment key={`user-${user._id || index}`}>
                                 {/* Feedback Row */}
@@ -226,11 +240,11 @@ if (loading && users.length === 0) {
                                                                 <label key={roleOption} className="role-radio-label-table">
                                                                     <input
                                                                         type="radio"
-                                                                        name={`role-${user._id}`} 
+                                                                        name={`role-${user._id}`}
                                                                         value={roleOption}
                                                                         checked={currentValue === roleOption}
                                                                         onChange={(e) => handleCellChange(user._id, col.fieldKey, e.target.value)}
-                                                                        disabled={loading}
+                                                                        disabled={loading || !canChangeRole || user._id === currentUserId}
                                                                     />
                                                                     <span className="radio-custom-indicator-table"></span>
                                                                     <span className="radio-text">{roleOption}</span>
@@ -243,7 +257,7 @@ if (loading && users.length === 0) {
                                                             type={col.inputType || 'text'}
                                                             value={currentValue}
                                                             onChange={(e) => handleCellChange(user._id, col.fieldKey, e.target.value)}
-                                                            className="editable-input" 
+                                                            className="editable-input"
                                                             disabled={loading}
                                                         />
                                                     )
@@ -254,7 +268,7 @@ if (loading && users.length === 0) {
                                             </td>
                                         );
                                     })}
-                                    <td className="action-button-group-cell"> 
+                                    <td className="action-button-group-cell">
                                         <button
                                             className="button-group view-button"
                                             onClick={() => handleViewUser(user._id, user.name)}
@@ -265,7 +279,7 @@ if (loading && users.length === 0) {
                                         <button
                                             className={`button-group update-button ${userHasChanges ? 'has-changes' : ''}`}
                                             onClick={() => handleUpdate(user._id, user.name)}
-                                            disabled={loading || !userHasChanges} 
+                                            disabled={loading || !userHasChanges}
                                         >
                                             Update
                                         </button>

@@ -279,7 +279,8 @@ h1 {
 /* Editable Field Styling (Inputs) */
 .editable-input {
     width: 100%;
-    padding: 8px;
+    max-width: 250px;
+    padding: 8px 10px;
     border: 1px solid var(--border-color);
     border-radius: 4px;
     font-size: 1em;
@@ -290,7 +291,7 @@ h1 {
 
 .editable-input:focus {
     border-color: var(--accent-color);
-    box-shadow: 0 0 0 2px rgba(121, 166, 255, 0.4);
+    box-shadow: 0 0 0 2px #79a6ff66;
     outline: none;
 }
 

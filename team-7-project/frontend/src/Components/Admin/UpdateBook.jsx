@@ -34,11 +34,12 @@ const UpdateBook = (/*{pathId}/*{parentSegment}*/) => {
     const [loading, setLoading] = useState(true);
     const [error, setErr] = useState(null);
 
-    const updatableBookKeys = ['title', 'author', 'ISBN_10', 'ISBN_13','quantity', 'genre', 'rated'];
+    const updatableBookKeys = ['title', 'author','publisher', 'ISBN_10', 'ISBN_13','quantity', 'genre', 'rated'];
 
     const columns = [
         { header: 'Title', key: 'title', fieldKey: 'title', editable: true, inputType: 'text' },
         { header: 'Author', key: 'author', fieldKey: 'author', editable: true, inputType: 'text' },
+        { header: 'Publisher', key: 'publisher', fieldKey: 'publisher', editable: true, inputType: 'text' },
         { header: 'ISBN', key: 'ISBN_10', fieldKey: 'ISBN_10', editable: true, inputType: 'text' },
         { header: 'ISBN', key: 'ISBN_13', fieldKey: 'ISBN_13', editable: true, inputType: 'text' },
         { header: 'Genre', key: 'genre', fieldKey: 'genre', editable: true, inputType: 'text' },

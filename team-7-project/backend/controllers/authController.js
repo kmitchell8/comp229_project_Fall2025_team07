@@ -75,15 +75,14 @@ const signin = async (req, res) => {
             user: userObject
         }
         //Set cookie //removes sensitive user data
-        res.cookie('t', token, {
+       return res.cookie('t', token, {
             expire: new Date(Date.now() + 99990000)
             //httpOnly: true, //recommended for security
             //secure: process.env.NODE_ENV === 'production',//recommended for production
             // sameSite: 'None'// Ensures the cookie is sent in cross-site requests
 
-        });
-
-        return res.status(200).json(responseData);
+        })
+        .status(200).json(responseData);//chain the return
 
     } catch (err) {
         return res.status(401).json({ error: "Could not sign in: " + err.message });

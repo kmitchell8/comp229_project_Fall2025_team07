@@ -18,8 +18,8 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 //const mongoUri = "" //might be located in the .env file (process.env.MONGO_URI) //cloud
 //const mongoUri = "mongodb://localhost/LibraryDB"//might be located in the .env file (process.env.MONGO_LOCAL)
-//const mongoUri = process.env.MONGO_URI; //Cloud server
-const mongoUri = process.env.MONGO_LOCAL; //Local server
+const mongoUri = process.env.MONGO_URI; //Cloud server
+//const mongoUri = process.env.MONGO_LOCAL; //Local server
 //API Routes
 const contactRoutes = require('./routes/contactRoutes');
 const userRoutes = require('./routes/userRoutes');
@@ -74,11 +74,11 @@ app.use((err, req, res, next) => {
 })
 
 app.listen(PORT, () => {
-    console.log(`Server is running at http://localhost:${PORT}`);
-    console.log(`Contacts are visible at http://localhost:${PORT}${'/api/contacts'}`);
-    console.log(`Users are visible at http://localhost:${PORT}${'/api/users'}`);
-    console.log(`Books are visible at http://localhost:${PORT}${'/api/books'}`);
-    console.log(`Authentications are visible at http://localhost:${PORT}${'/api'}`);
+    console.log(`Server is running at ${mongoUri}`);
+    console.log(`Contacts are visible at ${mongoUri}${'api/contacts'}`);
+    console.log(`Users are visible at ${mongoUri}${'api/users'}`);
+    console.log(`Books are visible at ${mongoUri}${'api/books'}`);
+    console.log(`Authentications are visible at ${mongoUri}${'api'}`);
 })
 
 

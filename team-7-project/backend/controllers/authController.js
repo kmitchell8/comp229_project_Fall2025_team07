@@ -71,7 +71,7 @@ const signin = async (req, res) => {
         return res.cookie('t', token, { 
             expire: new Date(Date.now() + 99990000),
             httpOnly: true, //recommended for security
-            secure: process.env.NODE.ENV === 'production'//recommended for production
+            secure: process.env.NODE_ENV === 'production'//recommended for production
 
         })
         .json({//chain the response togeter to avoid an empty response header 

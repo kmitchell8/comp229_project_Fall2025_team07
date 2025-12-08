@@ -45,7 +45,7 @@ function Login() {
 
             const data = await signIn(email, password);
             // Save the token (jwt) and user info to localStorage
-            localStorage.setItem('jwt', data.token);
+            localStorage.setItem('jwt', JSON.stringify({token: data.token}));
             localStorage.setItem('user', JSON.stringify(data.user));
             // call the universal login function forom useAuth.jsx instead of the prop
             //sets isAuthenticated to true, updates user and role

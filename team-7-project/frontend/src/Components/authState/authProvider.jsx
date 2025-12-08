@@ -19,7 +19,8 @@ export const AuthProvider = ({ children }) => {
     // Reads token/user from localStorage on app load
     const checkAuthState = useCallback(() => {
         const storedUser = localStorage.getItem('user');
-        if (storedUser) {
+        const storedToken = localStorage.getItem('jwt');
+        if (storedUser && storedToken) {
             try {
                 const user = JSON.parse(storedUser);
                 setUserInfo(user);

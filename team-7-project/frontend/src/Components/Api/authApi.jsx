@@ -14,15 +14,35 @@ export const signIn = async (email, password) => {
         body: JSON.stringify({ email, password }),//turns json information into usable strings
     });
     let data;
-    try {
-        data = await response.json();
-        //(e)
-        // eslint-disable-next-line no-unused-vars 
-    } catch (e) {
-        throw new Error(`Unexpected data (HTTP Status:${response.status})`);
-    }
+
+    // Error status
     if (!response.ok) {
-        throw new Error(data.error || data.message || 'Login failed.');
+        let errorData = {};
+        try {
+
+            errorData = await response.json();
+            // eslint-disable-next-line no-unused-vars
+        } catch (e) {
+            //generic message
+            throw new Error(`Server error: ${response.status} ${response.statusText}`);
+        }
+        //pecific error message from the backend
+        throw new Error(errorData.error || errorData.message || 'Login failed.');
+    }
+
+    //successful status
+    try {
+        // 
+        data = await response.json();
+    } catch (e) {
+        // If the status was 200 but parsing failed, the body was empty or corrupt.
+        console.error("Login successful but data was unreadable:", e);
+        throw new Error("Login failed: Server returned success but no user data.");
+    }
+
+    // Ensure the necessary data is present before returning
+    if (!data.token || !data.user) {
+        throw new Error("Login failed: Response is missing token or user data.");
     }
 
     return data;

@@ -61,7 +61,7 @@
 CreateBook.jsx
 =============================*/
 
-/* --- General Form Container --- */
+/* General Form Container  */
 .create-book-container {
     max-width: 800px;
     margin: 50px auto;
@@ -81,7 +81,7 @@ CreateBook.jsx
     text-align: center;
 }
 
-/* --- Form Layout and Groups --- */
+/* Form Layout and Groups  */
 .book-form {
     display: flex;
     flex-direction: column;
@@ -116,7 +116,7 @@ CreateBook.jsx
     margin-left: 2px;
 }
 
-/* --- Inputs and Textareas --- */
+/* Inputs and Textareas */
 .form-input {
     padding: 10px 12px;
     border: 1px solid var(--border-color);
@@ -126,7 +126,7 @@ CreateBook.jsx
     background-color: var(--bg-dark-secondary);
     transition: border-color 0.2s, box-shadow 0.2s;
     box-sizing: border-box;
-    /* Crucial for padding/width calculation */
+    /* padding/width calculation */
 }
 
 .form-input:focus {
@@ -141,7 +141,7 @@ CreateBook.jsx
     min-height: 100px;
 }
 
-/* --- Error/Feedback Styling --- */
+/* Error/Feedback Styling */
 .field-feedback {
     margin-top: 5px;
     font-size: 0.85em;
@@ -157,7 +157,7 @@ CreateBook.jsx
 }
 
 
-/* --- Action Group and Button --- */
+/* Action Group and Button */
 .form-action-group {
     padding: 15px 0;
     text-align: center;
@@ -190,7 +190,7 @@ CreateBook.jsx
 }
 
 
-/* --- Info/Global Feedback Boxes --- */
+/* Info/Global Feedback Boxes */
 .info-box {
     padding: 15px;
     margin-bottom: 20px;
@@ -243,7 +243,7 @@ h1 {
     color: var(--accent-color);
 }
 
-/* --- Table Styling --- */
+/* Table Styling  */
 .user-table {
     width: 100%;
     border-collapse: collapse;
@@ -429,7 +429,7 @@ h1 {
     box-shadow: none;
 }
 
-/* --- DELETE BUTTON (Danger Action) --- */
+/* DELETE BUTTON (Danger Action)  */
 .delete-button {
     /* Use variables defined in the :root section */
     background-color: var(--color-danger);
@@ -452,11 +452,10 @@ h1 {
 
 .delete-button:active {
     background-color: var(--color-danger-border);
-    border-color: #a71d2a;
-    /* Slightly deeper red for press effect */
+    border-color: var(--color-danger-dark);
 }
 
-/* Disabled state: Muted color and disabled cursor */
+
 .delete-button:disabled {
     background-color: var(--color-danger-disabled);
     border-color: var(--color-danger-disabled);

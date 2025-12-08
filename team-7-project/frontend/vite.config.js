@@ -15,6 +15,15 @@ export default defineConfig({
         // optional: rewrites the path if you don't want the '/api' prefix
         // rewrite: (path) => path.replace(/^\/api/, ''), 
       },
+      build: {
+    rollupOptions: {
+      input: {
+        // Define ALL your HTML files here
+        main: resolve(__dirname, 'index.html'), // Assuming index.html is in frontend/
+        login: resolve(__dirname, 'login.html'), // Assuming login.html is in frontend/
+        library: resolve(__dirname, 'library.html'),
+        // Add all other pages here (e.g., about: resolve(__dirname, 'about.html'))
+      },
     },
   },
 })

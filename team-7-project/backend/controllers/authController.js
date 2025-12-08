@@ -14,6 +14,7 @@ const User = require('../models/users');
 const jwt = require('jsonwebtoken');
 //import jwt from 'jsonwebtoken';
 const { expressjwt } = require('express-jwt');
+const { response } = require('express');
 //const userCtrl = require('./userController');
 //import {expressJwt} from 'express-jwt';
 
@@ -51,14 +52,14 @@ const signin = async (req, res) => {
         if (!req.body.password) {
             return res.status(401).json({ error: "Password is required for sign-in." });
         }
-        
+
         let user = await User.findOne({ "email": req.body.email });
 
         if (!user) {
             return res.status(401).json({ error: "User not found" });
         }
-            //needs to explicitly get the bolean result from the bcrypt comparison function
-            //otherwise a user can sign in with an unverified password
+        //needs to explicitly get the bolean result from the bcrypt comparison function
+        //otherwise a user can sign in with an unverified password
         const isAuthenticated = await user.authenticate(req.body.password);
         if (!isAuthenticated) {
             return res.status(401).json({ error: "Email and password don't match." });
@@ -68,18 +69,21 @@ const signin = async (req, res) => {
         delete userObject.password; //removes the password from the object
         //Generate the token //isAdmin role will be looked at later
         const token = jwt.sign({ _id: user._id, role: user.role }, config.jwtSecret);
+
+        const responseData = {
+            token: token,
+            user: userObject
+        }
         //Set cookie //removes sensitive user data
-        return res.cookie('t', token, { 
-            expire: new Date(Date.now() + 99990000),
+        res.cookie('t', token, {
+            expire: new Date(Date.now() + 99990000)
             //httpOnly: true, //recommended for security
             //secure: process.env.NODE_ENV === 'production',//recommended for production
-           // sameSite: 'None'// Ensures the cookie is sent in cross-site requests
+            // sameSite: 'None'// Ensures the cookie is sent in cross-site requests
 
-        })
-        .json({//chain the response togeter to avoid an empty response header 
-            token,
-            user: userObject
         });
+
+        return res.status(200).json(responseData);
 
     } catch (err) {
         return res.status(401).json({ error: "Could not sign in: " + err.message });

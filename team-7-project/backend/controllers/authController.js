@@ -35,7 +35,7 @@ const register = async (req, res) => {
         const userObject = savedUser.toObject();
         delete userObject.password;
 
-        res.status(201).json(userObject);
+        return res.status(201).json(userObject);
     } catch (err) {
         // Handle validation errors or duplicate keys
         res.status(400).json({ error: err.message });

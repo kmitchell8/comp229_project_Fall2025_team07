@@ -69,16 +69,32 @@ export const signUp = async (name, email, password) => {
 
         body: JSON.stringify({ name, email, password }),//turns json information into usable strings
     });
-    let data;
-    try {
-        data = await response.json();
-        // eslint-disable-next-line no-unused-vars
-    } catch (e) {
-        throw new Error(`Unexpected data (HTTP Status:${response.status})`);
-    }
+let data;
+
+    // ERROR STATUS 
     if (!response.ok) {
-        throw new Error(data.error || data.message || 'Registration failed. Please check your inputs.');
+        let errorData = {};
+        try {
+            //
+            errorData = await response.json(); 
+        // eslint-disable-next-line no-unused-vars
+        } catch (e) {
+            // generic error
+            throw new Error(`Server error during registration: ${response.status} ${response.statusText}`);
+        }
+        // specific error message 
+        throw new Error(errorData.error || errorData.message || 'Registration failed. Please check your inputs.');
     }
 
-    return data;
+    // SUCCESSFUL STATUS
+    try {
+      
+        data = await response.json(); 
+    } catch (e) {        
+        console.error("Registration successful but user data was unreadable:", e);        
+        throw new Error("Registration successful, but server returned unreadable data.");
+    }
+
+
+    return data; 
 };

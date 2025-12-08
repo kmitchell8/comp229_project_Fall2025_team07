@@ -1,5 +1,7 @@
 //import React from 'react';
-const BASE_URL = 'api/contacts';
+import { API_URL } from "../../../config";
+const BASE_URL = `${API_URL}/contacts`;
+
 
 //getting the header and making it global for all modules
 const getAuthHeaders = async(getToken) => {

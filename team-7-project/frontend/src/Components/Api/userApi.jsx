@@ -1,5 +1,6 @@
 //import React from 'react';
-const BASE_URL = 'api/users';
+import { API_URL } from "../../../config";
+const BASE_URL = `${API_URL}/users`;
 
 //getting the header and making it global for all modules
 const getAuthHeaders = async(getToken) => {

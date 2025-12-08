@@ -1,5 +1,7 @@
 //import React from 'react';
-const BASE_URL = 'api/books';
+import { API_URL } from "../../../config";
+const BASE_URL = `${API_URL}/books`;
+
 
 //getting the header and making it global for all modules
 const getAuthHeaders = async (getToken) => {

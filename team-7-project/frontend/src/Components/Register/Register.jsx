@@ -38,7 +38,7 @@ const Register = () => {
 
     try {
       await signUp(name, email, password);
-      window.location.href = './signin.html';
+      window.location.href = './login.html';
 
     } catch (err) {
       console.error('Registration error:', err.message);

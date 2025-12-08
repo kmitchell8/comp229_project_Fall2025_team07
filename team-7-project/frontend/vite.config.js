@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 const SERVER_PORT = 5000;
 // https://vite.dev/config/
 export default defineConfig({
+  base: '/',
   plugins: [react()],
   server: {
     proxy: {

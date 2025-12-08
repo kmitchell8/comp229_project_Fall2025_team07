@@ -36,9 +36,10 @@ const register = async (req, res) => {
         delete userObject.password;
 
         return res.status(201).json(userObject);
+
     } catch (err) {
         // Handle validation errors or duplicate keys
-        res.status(400).json({ error: err.message });
+        return res.status(400).json({ error: err.message });
     }
 };
 
@@ -71,7 +72,8 @@ const signin = async (req, res) => {
         return res.cookie('t', token, { 
             expire: new Date(Date.now() + 99990000),
             httpOnly: true, //recommended for security
-            secure: process.env.NODE_ENV === 'production'//recommended for production
+            secure: process.env.NODE_ENV === 'production',//recommended for production
+            sameSite: 'None'// Ensures the cookie is sent in cross-site requests
 
         })
         .json({//chain the response togeter to avoid an empty response header 

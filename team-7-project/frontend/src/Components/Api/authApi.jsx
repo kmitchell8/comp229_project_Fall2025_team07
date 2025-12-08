@@ -12,6 +12,7 @@ export const signIn = async (email, password) => {
         },
 
         body: JSON.stringify({ email, password }),//turns json information into usable strings
+        credentials: 'include'
     });
     let data;
 
@@ -68,6 +69,7 @@ export const signUp = async (name, email, password) => {
         },
 
         body: JSON.stringify({ name, email, password }),//turns json information into usable strings
+        credentials: 'include'
     });
 let data;
 

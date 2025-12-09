@@ -43,7 +43,7 @@ const UpdateUser = (/*{pathId}/*{parentSegment}*/) => {//pass the _id path to be
         { header: 'Name', key: 'name', fieldKey: 'name', editable: false, inputType: 'text' },
         { header: 'Email', key: 'email', fieldKey: 'email', editable: false, inputType: 'email' },
         { header: 'Role', key: 'role', fieldKey: 'role', editable: true, inputType: 'radio' }, // Set inputType to 'radio' for specific rendering
-        { header: 'Created On', key: 'createdAt', fieldKey: 'createdAt', editable: false, format: formatDate },
+        { header: 'Created On', key: 'created', fieldKey: 'created', editable: false, format: formatDate },
     ];
 
     // Function to load user data from the API

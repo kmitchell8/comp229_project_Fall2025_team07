@@ -19,8 +19,8 @@ export const AuthProvider = ({ children }) => {
     // Reads token/user from localStorage on app load
     const checkAuthState = useCallback(() => {
         const storedUser = localStorage.getItem('user');
-        const storedToken = localStorage.getItem('jwt');
-        if (storedUser && storedToken) {
+        //const storedToken = localStorage.getItem('jwt');
+        if (storedUser /*&& storedToken*/) {
             try {
                 const user = JSON.parse(storedUser);
                 setUserInfo(user);
@@ -81,7 +81,7 @@ export const AuthProvider = ({ children }) => {
         logout, // Universal logout function
         setView, // Universal function to switch views ('login', 'register')
         isAuthenticated: !!userInfo,
-        // Helper to get the token for authenticated API calls (using the new key 'jwt')
+        // Helper to get the token for authenticated API calls (using 'jwt')
         getToken: () => localStorage.getItem('jwt'),
     };
 

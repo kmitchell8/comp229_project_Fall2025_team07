@@ -7,7 +7,7 @@ const BASE_URL = `${API_URL}/books`;
 const getAuthHeaders = async (getToken) => {
     const jwt = await getToken();
     if (!jwt) {
-        // If the token is missing, we throw an error immediately before fetching
+        // If the token is missing, throw an error immediately before fetching
         throw new Error('User not authorized. Please Login.');
     }
     return {
@@ -18,7 +18,7 @@ const getAuthHeaders = async (getToken) => {
 const getAuthHeadersNoJson = async (getToken) => {
     const jwt = await getToken();
     if (!jwt) {
-        // If the token is missing, we throw an error immediately before fetching
+        // If the token is missing, throw an error immediately before fetching
         throw new Error('User not authorized. Please Login.');
     }
     return {

@@ -14,7 +14,7 @@ const User = require('../models/users');
 const jwt = require('jsonwebtoken');
 //import jwt from 'jsonwebtoken';
 const { expressjwt } = require('express-jwt');
-const { response } = require('express');
+//const { response } = require('express'); //for HTTP cookie
 //const userCtrl = require('./userController');
 //import {expressJwt} from 'express-jwt';
 

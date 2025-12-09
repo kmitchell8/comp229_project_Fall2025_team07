@@ -52,7 +52,7 @@ const LogOrReg = () => {
     try {
       if (submitAction === 'register') {
         await signUp(name, email, password);
-        window.location.replace('./signin.html');
+        window.location.replace('./login.html');
 
       }
       if (submitAction == 'signin') {

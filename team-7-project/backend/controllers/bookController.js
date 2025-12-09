@@ -115,7 +115,7 @@ const create = async (req, res) => {
 // GET: List all books
 const list = async (req, res) => {
     try {
-        const books = await Book.find().select('cover title author publisher ISBN_10 ISBN_13 description rated genre'); //selects fields I would like to display
+        const books = await Book.find().select('cover title author publisher ISBN_10 ISBN_13 description rated genre created'); //selects fields I would like to display
         res.status(200).json(books);
     } catch (err) {
         res.status(500).json({ message: err.message });

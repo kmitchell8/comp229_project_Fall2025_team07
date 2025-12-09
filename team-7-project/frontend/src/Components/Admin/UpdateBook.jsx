@@ -45,7 +45,7 @@ const UpdateBook = (/*{pathId}/*{parentSegment}*/) => {
         { header: 'Genre', key: 'genre', fieldKey: 'genre', editable: true, inputType: 'text' },
         { header: 'Rated', key: 'rated', fieldKey: 'rated', editable: true, inputType: 'text' },
       //  { header: 'Quantity', key: 'quantity', fieldKey: 'quantity', editable: true, inputType: 'number' },
-        { header: 'Added On', key: 'createdAt', fieldKey: 'createdAt', editable: false, format: formatDate },
+        { header: 'Added On', key: 'created', fieldKey: 'created', editable: false, format: formatDate },
     ];
 
     // Function to load book data from the API

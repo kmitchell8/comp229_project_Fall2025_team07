@@ -113,7 +113,8 @@ adminView.jsx
 }
 
 /* Test Messages and Footer Content */
-.admin>p {
+.admin>p,
+.profile>p {
   font-size: 1.1em;
   color: var(--primary-color);
   text-align: center;
@@ -121,7 +122,8 @@ adminView.jsx
   padding: 10px;
 }
 
-.admin>div:last-child {
+.admin>div:last-child,
+.profile>div:last-child {
   max-width: 600px;
   margin: 20px auto;
   padding: 15px;
@@ -131,7 +133,8 @@ adminView.jsx
   border-top: 1px solid var(--border-color);
 }
 
-.admin>div:last-child p {
+.admin>div:last-child p,
+.profile>div:last-child p {
   font-size: 0.9em;
   color: #bdbdff;
   text-align: center;

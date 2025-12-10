@@ -7,7 +7,7 @@ const Profile = () => {
 
     return (<div className='profile'>
         <p>this is a test message</p>
-         <p>view profile details (contact info)</p>
+        <p>view profile details (contact info,picture, library card, favourites, bought, rented, suggestions)</p>
         <div>
 
             <p><strong>User ID:</strong> {userInfo?._id || 'N/A'}</p>

@@ -18,8 +18,8 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 //const mongoUri = "" //might be located in the .env file (process.env.MONGO_URI) //cloud
 //const mongoUri = "mongodb://localhost/LibraryDB"//might be located in the .env file (process.env.MONGO_LOCAL)
-const mongoUri = process.env.MONGO_URI; //Cloud server
-//const mongoUri = process.env.MONGO_LOCAL; //Local server
+//const mongoUri = process.env.MONGO_URI; //Cloud server
+const mongoUri = process.env.MONGO_LOCAL; //Local server
 //API Routes
 const contactRoutes = require('./routes/contactRoutes');
 const userRoutes = require('./routes/userRoutes');

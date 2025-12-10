@@ -38,8 +38,8 @@ const Navbar = () => {
                 {/* setView changes the state in AuthProvider, triggering a re-render */}
                 {/*onClick={() => setView('login')}
                 SetView is not necessary for this  Navbar setup*/}
-                <a href="/login.html">Login /</a>
-                <a href="/register.html"> Register</a>
+                <a href="./login.html">Login /</a>
+                <a href="./register.html"> Register</a>
             </li>
         </>
     );
@@ -49,14 +49,14 @@ const Navbar = () => {
         <>
             <li>
                 {/* Example link only available when authenticated */}
-                <a href="/profile.html">Profile</a>
+                <a href="./profile.html">Profile</a>
             </li>
 
             {/* Admin-Specific Link */}
             {/* Check if the user's role is exactly 'admin' (case-sensitive) */}
             {role === 'admin' && (
                 <li>
-                    <a href="/profile.html#admin" style={{ fontWeight: 'bold', color: 'red' }}>
+                    <a href="./profile.html#admin" style={{ fontWeight: 'bold', color: 'red' }}>
                         Admin Dashboard
                     </a>
                 </li>
@@ -81,10 +81,10 @@ const Navbar = () => {
                     <li><a href="./">Home</a>
 
                         {pageString}</li>
-                    <li><a href="/library.html">Library</a></li>
-                    <li><a href="/services.html">Services</a></li>
-                    <li><a href="/contact.html">Contact</a></li>
-                    <li><a href="/about.html">About</a></li>
+                    <li><a href="./Library.html">Library</a></li>
+                    <li><a href="./services.html">Services</a></li>
+                    <li><a href="./contact.html">Contact</a></li>
+                    <li><a href="./about.html">About</a></li>
                     {/* rendering based on authentication status */}
                     {isAuthenticated
                         ? renderAuthenticatedLinks()

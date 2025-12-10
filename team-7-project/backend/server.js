@@ -74,11 +74,11 @@ app.use((err, req, res, next) => {
 })
 
 app.listen(PORT, () => {
-    console.log(`Server is running at ${mongoUri}`);
-    console.log(`Contacts are visible at ${mongoUri}${'/api/contacts'}`);
-    console.log(`Users are visible at ${mongoUri}${'/api/users'}`);
-    console.log(`Books are visible at ${mongoUri}${'/api/books'}`);
-    console.log(`Authentications are visible at ${mongoUri}${'/api'}`);
+    console.log(`Server is running at http://localhost:${PORT}`);
+    console.log(`Contacts are visible at http://localhost:${PORT}${'/api/contacts'}`);
+    console.log(`Users are visible at http://localhost:${PORT}${'/api/users'}`);
+    console.log(`Books are visible at http://localhost:${PORT}${'/api/books'}`);
+    console.log(`Authentications are visible at http://localhost:${PORT}${'/api'}`);
 })
 
 

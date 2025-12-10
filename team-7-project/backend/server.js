@@ -72,13 +72,15 @@ app.use((err, req, res, next) => {
         console.log(err)
     }
 })
-
+const BASE_URL = process.env.MONGO_LOCAL ?
+    `${process.env.LOCAL_HOST}${PORT}` || `http://localhost:${PORT}`
+    : process.env.CLOUD_URL || 'undefined';
 app.listen(PORT, () => {
-    console.log(`Server is running at ${mongoUri}`);
-    console.log(`Contacts are visible at ${mongoUri}${'/api/contacts'}`);
-    console.log(`Users are visible at ${mongoUri}${'/api/users'}`);
-    console.log(`Books are visible at ${mongoUri}${'/api/books'}`);
-    console.log(`Authentications are visible at ${mongoUri}${'/api'}`);
+    console.log(`Server is running at ${BASE_URL}`);
+    console.log(`Contacts are visible at ${BASE_URL}${'/api/contacts'}`);
+    console.log(`Users are visible at ${BASE_URL}${'/api/users'}`);
+    console.log(`Books are visible at ${BASE_URL}${'/api/books'}`);
+    console.log(`Authentications are visible at ${BASE_URL}${'/api'}`);
 })
 
 

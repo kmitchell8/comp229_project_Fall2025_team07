@@ -76,11 +76,11 @@ const BASE_URL = process.env.MONGO_LOCAL ?
     `${process.env.LOCAL_HOST}${PORT}` || `http://localhost:${PORT}`
     : process.env.CLOUD_URL || 'undefined';
 app.listen(PORT, () => {
-    console.log(`Server is running at http://localhost:${PORT}`);
-    console.log(`Contacts are visible at http://localhost:${PORT}${'/api/contacts'}`);
-    console.log(`Users are visible at http://localhost:${PORT}${'/api/users'}`);
-    console.log(`Books are visible at http://localhost:${PORT}${'/api/books'}`);
-    console.log(`Authentications are visible at http://localhost:${PORT}${'/api'}`);
+    console.log(`Server is running at ${BASE_URL}`);
+    console.log(`Contacts are visible at ${BASE_URL}${'/api/contacts'}`);
+    console.log(`Users are visible at ${BASE_URL}${'/api/users'}`);
+    console.log(`Books are visible at ${BASE_URL}${'/api/books'}`);
+    console.log(`Authentications are visible at ${BASE_URL}${'/api'}`);
 })
 
 

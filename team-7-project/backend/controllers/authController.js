@@ -182,4 +182,3 @@ const hasAuthorization = (req, res, next) => {
 }
 */
 module.exports = { register, signin, signout, requireSignin, hasAuthorization, isAdmin }
-

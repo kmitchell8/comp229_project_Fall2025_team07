@@ -72,7 +72,7 @@ const CreateBook = (/*{parentSegment}*/) => {
         let coverFileName = null;
 
         try {
-            // 1. UPLOAD COVER FILE
+            // UPLOAD COVER FILE
             const uploadResult = await bookApi.uploadCover(coverFile, getToken);
             // Result holds the UUID filename (e.g., "5f0d3b.jpg")
             coverFileName = uploadResult.coverFileName;

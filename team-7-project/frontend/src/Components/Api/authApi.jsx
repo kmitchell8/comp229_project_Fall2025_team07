@@ -29,7 +29,7 @@ export const signIn = async (email, password) => {
             //generic message
             throw new Error(`Server error: ${response.status} ${response.statusText}`);
         }
-        //pecific error message from the backend
+        //specific error message from the backend
         throw new Error(errorData.error || errorData.message || 'Login failed.');
     }
 

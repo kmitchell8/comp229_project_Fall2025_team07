@@ -27,7 +27,7 @@ const config = {
 //register user//for later implimentation
 
 const register = async (req, res) => {
-    console.log(req.body);
+    //console.log(req.body);
     try {
         const newUser = new User(req.body);
         const savedUser = await newUser.save();

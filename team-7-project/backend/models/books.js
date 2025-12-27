@@ -25,22 +25,40 @@ const BookSchema = new mongoose.Schema({
         //unique: true, 
         validate: {//needed if both ISBNs are missing
             validator: async function (titleValue) {
-                //skip validation for new titles and titles already saved (saves time)
+                //skip validation for new titles and unchanged titles (saves time)
                 if (!this.isModified('title') && !this.isNew) {
                     return true;
                 }
-                const query = { title: titleValue };
-                //use query to check for unique ISBNs 
-                query.ISBN_10 = this.ISBN_10;
-                query.ISBN_13 = this.ISBN_13;
-                //exclude current document
-                if (this._id) {
-                    query._id = { $ne: this._id };
+                const Book = this.constructor;
+
+                // CASE A: If this entry HAS an ISBN
+                // Database Index handle uniqueness for ISBNs.
+                // only need to check if another entry has this SAME title AND SAME ISBN.
+                if (this.ISBN_10 || this.ISBN_13) {
+                    const query = {
+                        title: titleValue,
+                        _id: { $ne: this._id } // exclude self
+                    };
+                    if (this.ISBN_10) query.ISBN_10 = this.ISBN_10;
+                    if (this.ISBN_13) query.ISBN_13 = this.ISBN_13;
+
+                    const duplicate = await Book.findOne(query);
+                    return !duplicate;
                 }
-                const existingBook = await this.constructor.findOne(query);
-                // If existingBook is found, validation fails.
-                return !existingBook;
-            }
+
+                // CASE B: Entry HAS NO ISBN (Generic Media)
+                // ensure no other entry has this title AND also has NO ISBN.
+                const duplicateNoIsbn = await Book.findOne({
+                    title: titleValue,
+                    mediaType: this.mediaType,
+                    ISBN_10: { $exists: false },
+                    ISBN_13: { $exists: false },
+                    _id: { $ne: this._id }
+                });
+
+                return !duplicateNoIsbn;
+            },
+            message: 'A work with this title already exists in the library.'
         }
     },
     author: { type: String, required: true },
@@ -57,17 +75,30 @@ const BookSchema = new mongoose.Schema({
             return `/documents/description/${descString}.txt`;//default value 
         }
     },
+    mediaType: {
+        type: String,
+        required: true,
+        enum: ['book', 'movie', 'periodical', 'other'],
+        default: 'book'
+    },
     genre: { type: String, required: true },
     ratings: { type: Number, default: 0 }, //useRef
     rated: { type: Number, default: 0 }, //useRef
-    published: { type: Date },
-    ISBN_10: { type: String},
-    ISBN_13: { type: String}
+    ISBN_10: {
+        type: String,
+        default: undefined, // Ensure it doesn't default to ""
+        set: v => v === '' ? undefined : v // If empty string is sent, convert to undefined
+    },
+    ISBN_13: {
+        type: String,
+        default: undefined,
+        set: v => v === '' ? undefined : v
+    }
 }, {
     // Auto inputs the date in the correct format
     timestamps: { createdAt: 'created', updatedAt: 'updated' }
 });
-
-module.exports = mongoose.model("Book", BookSchema);
 BookSchema.index({ ISBN_10: 1 }, { unique: true, sparse: true }); //needed for other documents where ISBN does not exist or is optional
 BookSchema.index({ ISBN_13: 1 }, { unique: true, sparse: true });
+
+module.exports = mongoose.model("Book", BookSchema);

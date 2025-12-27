@@ -38,17 +38,33 @@ const fetchHelper = async (url, options) => {
     try {
         const response = await fetch(url, options);//url = api urls options = options for the data
 
-        // try parse JSON data regardless of response status for detailed error messages
-        const data = await response.json().catch(() => ({ message: 'No response body' }));
-
+        const contentType = response.headers.get("content-type");
+        // try parse JSON data / other data regardless of response status for detailed error messages
+        let data;
+        const isTextFile = (contentType && contentType.includes("text/plain")) || url.endsWith('.txt');
+        if (isTextFile) {
+            data = await response.text();
+        } else {
+            // Attempt JSON, but if it fails, get the raw text so we can see the error
+            data = await response.json().catch(async () => {
+                const raw = await response.text();
+                return { message: raw || 'No response body' };
+            });
+        }
+        /*
+        if (contentType && contentType.includes("text/plain")) {
+            data = await response.text();
+        } else {
+            data = await response.json().catch(() => ({ message: 'No response body' }));
+        }*/
 
         if (response.ok) {
             console.log('API call successful:', url, data);
             return data;
         } else {
 
-            const detailedMessage = data ||{};
-            const error = new Error(detailedMessage.error||detailedMessage.message ||`API request failed with status: ${response.status}.`);
+            const detailedMessage = data || {};
+            const error = new Error(detailedMessage.error || detailedMessage.message || `API request failed with status: ${response.status}.`);
             //const errorMessage = data.message || `API request failed with status: ${response.status}.`;
             error.payload = detailedMessage;
             console.error('API call failed:', response.status, data);
@@ -97,6 +113,14 @@ const removeCover = async (filename, getToken) => {
     });
 };
 
+const getCoverUrl = (filename) => {
+    if (!filename) return '../../assets/default_cover.png';
+    const domainName = BASE_URL.replace('/api/books', '');
+
+    return `${domainName}/images/cover/${filename}`;
+};
+
+
 //DESCRIPTION
 
 const uploadDescription = async (data, getToken) => {
@@ -105,14 +129,32 @@ const uploadDescription = async (data, getToken) => {
     return fetchHelper(`${BASE_URL}/description`, {
         method: 'POST',
         headers: headers,
-        body: JSON.stringify({ 
-            descriptionContent: data.descriptionContent, 
-            coverBaseName: data.coverBaseName 
+        body: JSON.stringify({
+            descriptionContent: data.descriptionContent,
+            coverBaseName: data.coverBaseName
         })
     });
 
 };
 
+const getDescriptionUrl = (descriptionPath) => {
+    if (!descriptionPath) return null;
+
+    const domainName = BASE_URL.replace('/api/books', '');
+    return `${domainName}${descriptionPath}`;
+
+}
+
+const getDescriptionText = async (descriptionPath) => {
+    const url = getDescriptionUrl(descriptionPath);
+    if (!url) return "No description available.";
+
+    return await fetchHelper(url,{
+        method: 'GET'
+    })
+
+
+}
 //List all books
 const list = async () => {
     return fetchHelper(BASE_URL, {
@@ -160,4 +202,17 @@ const remove = async (bookId, getToken) => {
         headers: headers,
     });
 };
-export default { create, uploadCover, removeCover, uploadDescription, list, deleteAll, read, update, remove };
+export default {
+    create,
+    uploadCover,
+    removeCover,
+    getCoverUrl,
+    uploadDescription,
+    getDescriptionUrl,
+    getDescriptionText,
+    list,
+    deleteAll,
+    read,
+    update,
+    remove
+};

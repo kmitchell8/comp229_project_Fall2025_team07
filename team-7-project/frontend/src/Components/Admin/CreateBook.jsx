@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '../authState/useAuth'; // Assumes useAuth is correctly exported
 import bookApi from '../Api/bookApi'; // Assumes path to bookApi
 import './Admin.css'
@@ -23,7 +23,32 @@ const CreateBook = (/*{parentSegment}*/) => {
     const [loading, setLoading] = useState(false);
     const [error, setErr] = useState(null);
     const [successMessage, setSuccessMessage] = useState(null);
+    const [genres, setGenres] = useState([]); // To store the list from the server
 
+
+    useEffect(() => {
+        const loadGenres = async () => {
+            try {
+                const list = await bookApi.getGenres();
+                //console.log(list);
+                // array before setting state
+                const genreList = Array.isArray(list) ? list : [];
+                setGenres(genreList);
+
+                // default selection ONLY if genre is currently empty
+                setEditedBookData(prev => {
+                    if (!prev.genre && genreList.length > 0) {
+                        return { ...prev, genre: genreList[0] };
+                    }
+                    return prev;
+                });
+            } catch (err) {
+                console.error("Failed to load genres:", err);
+                setErr("Could not load genre categories.");
+            }
+        };
+        loadGenres();
+    }, []); // Empty array means this runs ONLY on mount
 
     //Handlers (can mostly be resued in the UpdateBook component)
     const handleChange = name => event => {
@@ -192,6 +217,32 @@ const CreateBook = (/*{parentSegment}*/) => {
             </div>
         );
     };
+
+    const renderSelect = (name, label, options, required = false) => {
+        const isError = feedbackMessage[name];
+        const value = editedBookData[name];
+
+        return (
+            <div className="form-group">
+                <label htmlFor={name} className="form-label">
+                    {label} {required && <span className="required">*</span>}
+                </label>
+                <select
+                    id={name}
+                    name={name}
+                    value={value}
+                    onChange={handleChange(name)}
+                    disabled={loading}
+                    className={`form-input ${isError ? 'input-error' : ''}`}
+                >
+                    {options.map(g => (
+                        <option key={g} value={g}>{g}</option>
+                    ))}
+                </select>
+                {isError && <p className="field-feedback error-message">{isError}</p>}
+            </div>
+        );
+    };
     return (
         <div className="create-book-container">
             <h2 className="form-title">Add New Book</h2>
@@ -245,7 +296,8 @@ const CreateBook = (/*{parentSegment}*/) => {
                     {renderInput('title', 'Title', 'text', true)}
                     {renderInput('author', 'Author', 'text', true)}
                     {renderInput('publisher', 'Publisher', 'text', true)}
-                    {renderInput('genre', 'Genre', 'text', true)}
+                    {/* Swapped renderInput for renderSelect for Genre */}
+                    {renderSelect('genre', 'Genre', genres, true)}
                     {renderInput('ISBN_10', 'ISBN-10', 'text', false)}
                     {renderInput('ISBN_13', 'ISBN-13', 'text', false)}
                 </div>

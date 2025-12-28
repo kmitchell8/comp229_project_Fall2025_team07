@@ -30,38 +30,81 @@
 
 /* Base Body/Background */
 .library {
+    min-height: 100vh;
+    /* Ensures the page always has scrollable area */
+    position: relative;
     background-color: var(--bg-dark-primary);
     color: var(--primary-text);
     /* display: flex;
     flex-direction: column;
     align-items: flex-start;
     gap: 40px;*/
-    max-width: 1400px;
-    margin: 40px auto;
-    padding: 20px 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0px 20px;
     width: 100%;
+    /* This creates the 'fading out' effect at the top */
+    mask-image: linear-gradient(to bottom,
+            transparent -3%,
+            #000000 180px,
+            /* Adjust 180px to match your navbar height */
+            #000000 100%);
+    -webkit-mask-image: linear-gradient(to bottom,
+            transparent -3%,
+            #000000 180px,
+            #000000 100%);
+}
+
+.loading-state {
+height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: var(--secondary-text);
+}
+
+.shelf-container {
+    /* ensures the header doesn't touch the very top of the browser */
+    /*scroll-margin-top: 50px; */
+    scroll-margin-top: 180px;
+    width: 100%;
+    /* Reduced space between shelves */
+    margin-bottom: 40px;
+    position: relative;
+    padding-bottom: 10px;
+    content-visibility: auto;
 }
 
 /* Genre Headings */
-.genre-container h1 {
-    font-size: 2.5rem;
+.shelf-container h1 {
+    font-size: 1.5rem;
     font-weight: 700;
     color: var(--secondary-text);
     margin-bottom: 20px;
     border-left: 4px solid var(--accent-color);
     padding-left: 15px;
+    /* leaves space for the navbar or general padding */
+    scroll-margin-top: 40px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
 }
 
 /* The Shelf Grid */
 .books-container {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 20px;
+    gap: 30px;
     width: 100%;
-    margin-bottom: 60px;
-    padding-bottom: 200px;
+    margin-bottom: 20px;
+    padding-bottom: 100px;
     border-bottom: 2px solid var(--border-color);
     /* Shelf line using your border color */
+    /* This creates the 'floor' of the shelf */
+    border-bottom: 8px solid #2a2a2a;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 4px;
+    position: relative;
 }
 
 /* Individual Book Card */
@@ -94,7 +137,7 @@
     box-shadow: 0 8px 15px rgba(0, 0, 0, 0.5);
     transition: all 0.3s ease;
     cursor: pointer;
-    height: 150px; 
+    height: 150px;
     object-fit: cover;
 }
 
@@ -114,19 +157,22 @@
 
 /* Authors */
 .books-formatting h3 {
-    font-size: 0.9rem;      /* Slightly larger than metadata */
+    font-size: 0.9rem;
+    /* Slightly larger than metadata */
     font-weight: 600;
-    color: var(--secondary-text); 
+    color: var(--secondary-text);
     margin: 0;
     text-align: center;
 }
 
 /* Publisher & ISBN Metadata - The smallest, most subtle text */
 .books-formatting h4 {
-    font-size: 0.7rem;      /* Smallest text in the stack */
+    font-size: 0.7rem;
+    /* Smallest text in the stack */
     font-weight: 500;
     color: var(--primary-text);
-    opacity: 0.6;           /* Faded so it doesn't distract */
+    opacity: 0.6;
+    /* Faded so it doesn't distract */
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin: 2px 0 0 0;
@@ -134,7 +180,7 @@
 }
 
 /* Add a tiny bit of separation between Author and Publisher */
-.books-formatting h3 + h4 {
+.books-formatting h3+h4 {
     margin-top: 4px;
 }
 
@@ -177,19 +223,19 @@
 
 /* Hover Effect: Just the cover*/
 .books-formatting:hover img {
-   transform: translateY(-8px) scale(1.05);
+    transform: translateY(-8px) scale(1.05);
     /*box-shadow: 0 12px 25px rgba(0, 0, 0, 0.7);*/
-    
+
     /* Layered Box Shadow for the 'Glow' effect */
     /* The standard shadow for depth */
     /* A sharp glow near the edge */
     /* A soft, wide bloom of light */
-    box-shadow: 
-        0 15px 30px rgba(0, 0, 0, 0.8), 
-        0 0 10px var(--accent-color), 
-        0 0 20px rgba(121, 166, 255, 0.4);     
+    box-shadow:
+        0 15px 30px rgba(0, 0, 0, 0.8),
+        0 0 10px var(--accent-color),
+        0 0 20px rgba(121, 166, 255, 0.4);
     /* Makes the cover colors slightly more vibrant on hover */
-    filter: brightness(1.1) contrast(1.1);    
+    filter: brightness(1.1) contrast(1.1);
     /* Ensures the border glows */
     border-color: var(--accent-color);
 }
@@ -199,6 +245,59 @@
     filter: drop-shadow(0 0 5px var(--accent-color));
 }
 
+.back-to-top {
+    position: fixed;
+    bottom: 40px;
+    /* This calculates the position based on the center of the screen */
+    /* It moves it 600px (half of your 1200px max-width) + some padding */
+    /*left: calc(50% + 520px);*/
+    /*right: 200px;*/
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: var(--accent-color);
+    color: #1a1a1a;
+    border: none;
+    cursor: pointer;
+    font-size: 24px;
+    font-weight: bold;
+    box-shadow: 0 4px 15px #0000004d;
+    transition: all 0.3s ease;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    /* Ensure it ignores the mask-image of the parent */
+  transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+}
+
+.back-to-top:hover {
+    transform: translateY(-5px);
+    background-color: #fff;
+    box-shadow: 0 0 20px var(--accent-color);
+}
+
+/* Ensure smooth scrolling is enabled for the whole page */
+html {
+    scroll-behavior: smooth;
+}
+
+.clear-search-btn {
+    background: transparent;
+    border: 1px solid var(--accent-color);
+    color: var(--accent-color);
+    padding: 8px 16px;
+    margin-top: 15px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-family: inherit;
+}
+
+.clear-search-btn:hover {
+    background: rgba(121, 166, 255, 0.1);
+}
 /*
 .books-formatting button:hover {
     background-color: var(--color-primary-dark);
@@ -218,7 +317,14 @@
     transform: translateY(-5px);
 }
 */
-
+/* For screens wider than your 1200px max-width + some padding */
+@media (min-width: 1300px) {
+    .back-to-top {
+        /* Pin it to the center + half the width of your library */
+        right: auto;
+        left: calc(50% + 530px); 
+    }
+}
 
 /* Mobile Responsiveness */
 @media (max-width: 768px) {

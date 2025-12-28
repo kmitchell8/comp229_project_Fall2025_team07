@@ -6,6 +6,11 @@
  */
 
 const mongoose = require('mongoose'); // needed to connect to MongoDB (type: commonjs)
+//import mongoose from 'mongoose';
+const fs = require('fs');
+const path = require('path');
+const filePath = path.resolve(process.cwd(), 'public', 'documents', 'genres.json');
+const genres = JSON.parse(fs.readFileSync(filePath), 'utf8');
 
 const BookSchema = new mongoose.Schema({
     cover: {
@@ -81,7 +86,11 @@ const BookSchema = new mongoose.Schema({
         enum: ['book', 'movie', 'periodical', 'other'],
         default: 'book'
     },
-    genre: { type: String, required: true },
+    genre: {
+        type: String,
+        enum: genres, // Dynamically validates against the JSON file
+        default: "Other"
+    },
     ratings: { type: Number, default: 0 }, //useRef
     rated: { type: Number, default: 0 }, //useRef
     ISBN_10: {
@@ -101,4 +110,11 @@ const BookSchema = new mongoose.Schema({
 BookSchema.index({ ISBN_10: 1 }, { unique: true, sparse: true }); //needed for other documents where ISBN does not exist or is optional
 BookSchema.index({ ISBN_13: 1 }, { unique: true, sparse: true });
 
+//const Book = mongoose.model('Book', BookSchema);
+//Book.genresList = GENRES;
+
+//export {GENRES};
+//export default mongoose.model('Book', BookSchema);
 module.exports = mongoose.model("Book", BookSchema);
+//module.exports = Book;
+

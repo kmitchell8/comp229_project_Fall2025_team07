@@ -40,16 +40,19 @@ const fetchHelper = async (url, options) => {
 
         const contentType = response.headers.get("content-type");
         // try parse JSON data / other data regardless of response status for detailed error messages
+        const rawData = await response.text();//only checks the incoming stream once
         let data;
         const isTextFile = (contentType && contentType.includes("text/plain")) || url.endsWith('.txt');
         if (isTextFile) {
-            data = await response.text();
+            data = rawData;
         } else {
             // Attempt JSON, but if it fails, get the raw text so we can see the error
-            data = await response.json().catch(async () => {
-                const raw = await response.text();
-                return { message: raw || 'No response body' };
-            });
+            try {
+                data = JSON.parse(rawData);
+            // eslint-disable-next-line no-unused-vars
+            } catch (e) {
+                data = { message: rawData || 'No response body' };
+            }
         }
         /*
         if (contentType && contentType.includes("text/plain")) {
@@ -59,7 +62,7 @@ const fetchHelper = async (url, options) => {
         }*/
 
         if (response.ok) {
-            console.log('API call successful:', url, data);
+            //console.log('API call successful:', url, data);
             return data;
         } else {
 
@@ -149,7 +152,7 @@ const getDescriptionText = async (descriptionPath) => {
     const url = getDescriptionUrl(descriptionPath);
     if (!url) return "No description available.";
 
-    return await fetchHelper(url,{
+    return await fetchHelper(url, {
         method: 'GET'
     })
 
@@ -202,6 +205,16 @@ const remove = async (bookId, getToken) => {
         headers: headers,
     });
 };
+
+const getGenres = async () => {
+    const domainName = BASE_URL.replace('/api/books', '');
+    const url = `${domainName}/documents/genres.json`;
+
+    return fetchHelper(url, {
+        method: 'GET'
+    });
+};
+
 export default {
     create,
     uploadCover,
@@ -214,5 +227,6 @@ export default {
     deleteAll,
     read,
     update,
-    remove
+    remove,
+    getGenres
 };

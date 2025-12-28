@@ -10,7 +10,9 @@ const Book = require('../models/books');
 const _ = require('lodash'); // Used for cleaning up request bodies
 const fs = require('fs');
 const path = require('path');
+//const { GENRES } = require('../models/books');
 const { v4: uuidv4 } = require('uuid');
+
 
 //permanent storage path 
 const COVERS_DIR = path.join(__dirname, '..', 'public', 'images', 'cover'); //book cover storage
@@ -122,6 +124,31 @@ const list = async (req, res) => {
     }
 };
 
+//GET: list genres
+/*
+const listGenres = (req, res) => {
+    try {
+        // This looks for the file starting from your main project folder
+        const filePath = path.resolve(process.cwd(), 'public', 'documents', 'genres.json');
+        
+        console.log("Attempting to read genres from:", filePath); // Checkpoint log
+
+        if (!fs.existsSync(filePath)) {
+            console.error("File does not exist at path!");
+            return res.status(404).json({ error: "Genres file missing" });
+        }
+        //const filePath = path.join(__dirname, '..', 'public', 'documents', 'genres.json');
+        const fileData = fs.readFileSync(filePath, 'utf8');
+        const genres = JSON.parse(fileData);
+        
+        return res.json(genres);
+    } catch (err) {
+        console.error("Error reading genres JSON:", err);
+        return res.status(500).json({ error: "Could not load genres file" });
+    }
+};
+*/
+
 // DELETE: Delete all books
 const removeAll = async (req, res) => {
     try {
@@ -226,6 +253,7 @@ module.exports = {
     remove,
     create,
     list,
+    //listGenres,
     removeAll,
     uploadCover,
     uploadDescription,

@@ -53,8 +53,12 @@ app.use(express.json());
 app.use(cookieParser());
 //app.use(bodyParser.json());  //handled by express.json
 //enabling the API routes
-app.use('/documents/description', express.static(path.join(__dirname, 'public', 'documents', 'description')));
+//STATIC
+
+app.use('/documents', express.static(path.join(__dirname, 'public', 'documents')));
+//app.use('/documents/description', express.static(path.join(__dirname, 'public', 'documents', 'description')));
 app.use('/images/cover', express.static(path.join(__dirname, 'public', 'images', 'cover')))
+//JSON
 app.use('/api/contacts', contactRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/books', bookRoutes);

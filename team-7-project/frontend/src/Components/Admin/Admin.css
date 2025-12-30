@@ -693,14 +693,17 @@ Refined Update Layout
 .user-table td:last-child {
     position: sticky;
     right: 0;
-    background-color: var(--bg-dark-secondary); /* Match background */
-    z-index: 2;
-    box-shadow: -5px 0 10px rgba(0,0,0,0.2); /* Visual separation */
+    z-index: 5; /* This keeps them above the scrolling text */
+    box-shadow: -5px 0 10px var(--shadow-main);
 }
 
 .user-table th:last-child {
     background-color: var(--table-header-bg);
-    z-index: 3;
+    z-index: 6; /* Header must be slightly higher than cells to stay on top */
+}
+
+.user-table td:last-child {
+    background-color: var(--bg-dark-secondary);
 }
 /*============================
 Dropdown & Select Styling

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import './LogOrReg.css'
-import { signIn, signUp } from '../Api/authApi';
-import { useAuth } from '../authState/useAuth';
+//import './LogOrReg.css'
+import './Access.css';
+import { signIn, signUp } from '../Api/authApi.jsx';
+import { useAuth } from '../authState/useAuth.jsx';
 import {getPage} from '../Api/getPage.jsx'
 
 
@@ -10,6 +11,10 @@ const LogOrReg = () => {
   const { isAuthenticated } = useAuth();
   //const { register } = useAuth();
   const { login } = useAuth();
+
+  // Added mode state for button toggle logic
+  const [mode, setMode] = useState('signin');
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -76,6 +81,17 @@ const LogOrReg = () => {
       setLoading(false);
     }
   };
+  const handleButtonClick = (e, targetMode) => {
+    // If the user clicks the button that ISN'T active, 
+    // we switch the mode and prevent the form from submitting.
+    if (mode !== targetMode) {
+      e.preventDefault(); 
+      setMode(targetMode);
+      setError(null); // Clear errors when switching modes for a clean start
+    }
+    // If mode === targetMode, we do nothing and let the 'type="submit"' 
+    // trigger the handleSubmit normally.
+  };
 
 
   /*
@@ -92,10 +108,6 @@ const LogOrReg = () => {
     <div className='form-container'>
       <div className="form-card">
 
-        {/*<h1 className="form-header">
-          Sign Up
-        </h1>*/}
-
         {error && (
           <div className="form-error" role="alert">
             <span className="error-message">{error}</span>
@@ -104,21 +116,22 @@ const LogOrReg = () => {
 
         <form onSubmit={handleSubmit} className="form">
 
-          {/*input fields laid out for ease of view and debugging / do not change*/}
-          {/*name/username input field*/}
-          <div className="input-group">
-            <label htmlFor="name" className="input-label">Username</label>
-            <input
-              type="text"
-              id="name"
-              placeholder="Type your username"
-              className="input-field"
-              value={name}
-              onChange={(e) => setName(e.target.value)}//updates the 'value" as the user enters
-              //details in the input field in a synchronised way
-              disabled={loading}
-            />
-          </div>
+          {/*name/username input field - Visible only in register mode*/}
+          {mode === 'register' && (
+            <div className="input-group">
+              <label htmlFor="name" className="input-label">Username</label>
+              <input
+                type="text"
+                id="name"
+                placeholder="Type your username"
+                className="input-field"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                disabled={loading}
+                required
+              />
+            </div>
+          )}
 
           {/* email input field*/}
           <div className="input-group">
@@ -149,33 +162,37 @@ const LogOrReg = () => {
               disabled={loading}
             />
           </div>
+          
           <div className='button-container'>
             {/*Login Button*/}
             <button
               type="submit"
-              className="login-button split-left"
+              className={`login-button split-left ${mode === 'signin' ? 'active' : ''}`}
               disabled={loading}
               name="action"
               value="signin"
+              onClick={(e) => handleButtonClick(e, 'signin')}
             >
-              {loading ? 'Signing In...' : 'Sign In'}
+              {loading && mode === 'signin' ? 'Signing In...' : 'Sign In'}
             </button>
 
             {/*Signup Button*/}
-            <button type="submit"
-              className="register-button split-right"
+            <button 
+              type="submit"
+              className={`register-button split-right ${mode === 'register' ? 'active' : ''}`}
               disabled={loading}
               name="action"
               value="register"
+              onClick={(e) => handleButtonClick(e, 'register')}
             >
-              {loading ? 'Regiseter...' : 'Sign Up'}
+              {loading && mode === 'register' ? 'Registering...' : 'Sign Up'}
             </button>
           </div>
 
         </form>
       </div>
-
-    </div>)
+    </div>
+  )
 }
 
-export default LogOrReg
+export default LogOrReg;

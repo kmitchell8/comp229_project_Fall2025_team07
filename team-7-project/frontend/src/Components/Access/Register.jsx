@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../authState/useAuth.jsx';
 import { signUp } from '../Api/authApi.jsx';
 import {getPage} from '../Api/getPage.jsx'
-import './Register.css'
+//import './Register.css'
+import './Access.css';
 
 
 

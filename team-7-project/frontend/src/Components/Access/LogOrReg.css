@@ -7,6 +7,36 @@
  */
 
 /*page container - contains the form card*/
+:root {
+    /* --- LogOrReg Unified Auth Palette --- */
+    /* Backgrounds & Containers */
+    --auth-bg-page: transparent;
+    --auth-bg-card: #ffffff;              /* Pure White */
+    --auth-border-card: #e5e7eb;          /* Soft Gray Border */
+    --auth-shadow: rgba(0, 0, 0, 0.1);    /* 0.1 opacity shadow */
+    
+    /* Input Fields */
+    --auth-input-bg: #ffffff;             
+    --auth-input-border: #cccccc;         /* #ccc border */
+    --auth-input-focus-ring: rgba(0, 123, 255, 0.25); 
+    --auth-input-focus-border: #007bff;   
+    
+    /* Typography */
+    --auth-header-text: #1f2937;          /* Charcoal */
+    --auth-label-text: #555555;           /* #555 gray */
+    --auth-text-muted: #6b7280;
+    
+    /* Error Handling */
+    --auth-error-bg: #fef2f2;             
+    --auth-error-text: #ef4444;           
+    --auth-error-border: #fca5a5;         
+    
+    /* Specialized Buttons (Split Design) */
+    --auth-btn-grad: linear-gradient(to right, #00c6ff, #6f59ff, #7f00ff);
+    --auth-btn-shadow: #0000001a;         /* Button specific shadow */
+    --auth-btn-hover-left: #0056b3;       /* Blue hover fallback */
+    --auth-btn-hover-right: #1e7e34;      /* Green hover fallback */
+}
 
 .form-container {
     display: flex;
@@ -18,7 +48,6 @@
     /*gap: 80px;
     margin: 80px 170px;*/
     box-sizing: border-box;
-
 }
 
 /*form card container inside main container*/
@@ -26,28 +55,27 @@
     width: 100%;
     /*max-width: 24rem;*/
     max-width: 18.75rem;
-    background-color: white;
+    background-color: var(--auth-bg-card);
     /*padding: 3rem 2rem;*/
     padding: 1.5625rem;
     border-radius: 1.5rem;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    border: 1px solid #e5e7eb;
+    box-shadow: 0 4px 20px var(--auth-shadow);
+    border: 1px solid var(--auth-border-card);
     text-align: center;
 }
-
 
 .form-header {
     font-size: 2.25rem;
     font-weight: 800;
-    color: #1f2937;
+    color: var(--auth-header-text);
     margin-bottom: 3rem;
 }
 
 /*error handling*/
 .form-error {
-    background-color: #fef2f2;
-    color: #ef4444;
-    border: 1px solid #fca5a5;
+    background-color: var(--auth-error-bg);
+    color: var(--auth-error-text);
+    border: 1px solid var(--auth-error-border);
     /*border-radius: 0.5rem;
     padding: 0.75rem;
     margin-bottom: 1.5rem;*/
@@ -85,7 +113,7 @@
     /*font-size: 0.875rem;
     margin-bottom: 0.25rem;*/
     font-weight: 600;
-    color: #555;
+    color: var(--auth-label-text);
     margin-bottom: 0.25rem;
     text-align: left;
 }
@@ -96,16 +124,17 @@
     /*padding: 0.75rem;*/
     padding: 0.5rem; 
     font-size: 0.8em;
-    border: 1px solid #ccc;
+    border: 1px solid var(--auth-input-border);
     border-radius: 0.25rem;
     box-sizing: border-box;
     transition: all 0.15s ease-in-out;
     outline: none;
+    background-color: var(--auth-input-bg);
 }
 
 .input-field:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+    border-color: var(--auth-input-focus-border);
+    box-shadow: 0 0 0 3px var(--auth-input-focus-ring);
 }
 
 /*button container*/
@@ -126,16 +155,11 @@
     font-size: 1em;
     font-weight: 600;
     border-radius: 0;
-    /* padding: 0.75rem;
-    border: none;
-    border-radius: 0.5rem;
-    font-weight: bold;    
-    width: 100%; */
     color: white;
     font-size: 1.125rem;
     cursor: pointer;
-    background: linear-gradient(to right, #00c6ff, #6f59ff, #7f00ff);
-    box-shadow: 0 4px 6px -1px #0000001a, 0 2px 4px -2px #0000000f;
+    background: var(--auth-btn-grad);
+    box-shadow: 0 4px 6px -1px var(--auth-btn-shadow), 0 2px 4px -2px rgba(0,0,0,0.06);
     transition: background-color 0.3s, opacity 0.3s, transform 0.1s;
     width: 35%;
     flex-grow: 1;
@@ -151,7 +175,7 @@
 }
 
 .split-left:hover:not(:disabled) {
-    background-color: #0056b3;
+    background-color: var(--auth-btn-hover-left);
     transform: translateX(3px) scale(1.01);
 }
 
@@ -164,8 +188,19 @@
 }
 
 .split-right:hover:not(:disabled) {
-    background-color: #1e7e34;
+    background-color: var(--auth-btn-hover-right);
     transform: translateX(-3px) scale(1.01);
+}
+
+/* Interaction States for Toggle Logic */
+.login-button.active, .register-button.active {
+    filter: brightness(1.1);
+    z-index: 20;
+}
+
+.login-button:not(.active), .register-button:not(.active) {
+    opacity: 0.7;
+    filter: saturate(0.8);
 }
 
 .login-button:disabled,
@@ -174,9 +209,6 @@
     cursor: not-allowed;
     transform: none;
 }
-
-
-
 
 /* Responsive adjustments */
 @media (max-width: 600px) {

@@ -1,0 +1,364 @@
+/*
+ * File Name: Register.css
+ * Student’s Name: Kevon Mitchell
+ * Date: Dec 30, 2025
+ * Note: See code in Login.css/Register.css/LogOrReg.css
+ */
+
+:root {
+    /* --- Unified Access Palette --- */
+    /* Backgrounds & Containers */
+    --auth-bg-page: transparent;
+    --auth-bg-card: #ffffff;
+    /* Pure White */
+    --auth-border-card: #e5e7eb;
+    /* Soft Gray Border */
+    --auth-shadow: rgba(0, 0, 0, 0.1);
+    /* 0.1 opacity shadow */
+
+    /* Input Fields */
+    --auth-input-bg: #ffffff;
+    --auth-input-bg-login: #fffacd;
+    /* Lemon Chiffon for Login specifically */
+    --auth-input-border: #cccccc;
+    /* #ccc border */
+    --auth-input-focus-ring: rgba(59, 130, 246, 0.5);
+    /* Unified Blue Ring */
+    --auth-input-focus-ring-alt: rgba(0, 123, 255, 0.25);
+    /* LogOrReg specific ring */
+    --auth-input-focus-border: #3b82f6;
+    --auth-input-focus-border-alt: #007bff;
+
+    /* Typography */
+    --auth-header-text: #1f2937;
+    /* Charcoal Black */
+    --auth-label-text: #374151;
+    /* Dark Gray */
+    --auth-label-text-alt: #555555;
+    /* #555 gray */
+    --auth-muted-text: #6b7280;
+    /* Medium Gray */
+
+    /* States (Error/Loading) */
+    --auth-error-bg: #fef2f2;
+    /* Very Light Red */
+    --auth-error-text: #ef4444;
+    /* Alert Red */
+    --auth-error-border: #fca5a5;
+    /* Soft Red Border */
+
+    /* Action Buttons & Gradients */
+    --auth-btn-grad-start: #00c6ff;
+    /* Bright Blue */
+    --auth-btn-grad-mid: #6f59ff;
+    /* Purple/Indigo */
+    --auth-btn-grad-end: #7f00ff;
+    /* Violet */
+    --auth-btn-grad: linear-gradient(to right, var(--auth-btn-grad-start), var(--auth-btn-grad-mid), var(--auth-btn-grad-end));
+    --auth-btn-text: #ffffff;
+    --auth-btn-shadow: #0000001a;
+    --auth-btn-hover-left: #0056b3;
+    /* Blue hover fallback */
+    --auth-btn-hover-right: #1e7e34;
+    /* Green hover fallback */
+}
+
+/* ============================================================
+   LOGIN COMPONENT STYLES
+   ============================================================ */
+
+/*page container - contains the form card*/
+.login {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 80px;
+    margin: 80px 170px;
+}
+
+/*form card container inside main container*/
+.login-card {
+    width: 100%;
+    max-width: 24rem;
+    background-color: var(--auth-bg-card);
+    padding: 3rem 2rem;
+    border-radius: 1.5rem;
+    box-shadow: 0 4px 20px var(--auth-shadow);
+    border: 1px solid var(--auth-border-card);
+    text-align: center;
+}
+
+.login-header {
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: var(--auth-header-text);
+    margin-bottom: 3rem;
+}
+
+/*error handling*/
+.login-error {
+    background-color: var(--auth-error-bg);
+    color: var(--auth-error-text);
+    border: 1px solid var(--auth-error-border);
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    margin-bottom: 1.5rem;
+    text-align: left;
+    font-size: 0.875rem;
+}
+
+/* ============================================================
+   REGISTER COMPONENT STYLES
+   ============================================================ */
+
+/*page container - contains the form card*/
+.register {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 80px;
+    margin: 80px 170px;
+}
+
+/*form card container inside main container*/
+.register-card {
+    width: 100%;
+    max-width: 24rem;
+    background-color: var(--auth-bg-card);
+    padding: 3rem 2rem;
+    border-radius: 1.5rem;
+    box-shadow: var(--auth-shadow);
+    border: 1px solid var(--auth-border-card);
+    text-align: center;
+}
+
+.register-header {
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: var(--auth-header-text);
+    margin-bottom: 3rem;
+}
+
+/*error handling*/
+.register-error {
+    background-color: var(--auth-error-bg);
+    color: var(--auth-error-text);
+    border: 1px solid var(--auth-error-border);
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    margin-bottom: 1.5rem;
+    text-align: left;
+    font-size: 0.875rem;
+}
+
+/* ============================================================
+   LOGORREG (UNIFIED) COMPONENT STYLES
+   ============================================================ */
+
+.form-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 1.25rem;
+    /*gap: 80px;
+    margin: 80px 170px;*/
+    box-sizing: border-box;
+}
+
+/*form card container inside main container*/
+.form-card {
+    width: 100%;
+    /*max-width: 24rem;*/
+    max-width: 18.75rem;
+    background-color: var(--auth-bg-card);
+    /*padding: 3rem 2rem;*/
+    padding: 1.5625rem;
+    border-radius: 1.5rem;
+    box-shadow: 0 4px 20px var(--auth-shadow);
+    border: 1px solid var(--auth-border-card);
+    text-align: center;
+}
+
+.form-header {
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: var(--auth-header-text);
+    margin-bottom: 3rem;
+}
+
+/*error handling*/
+.form-error {
+    background-color: var(--auth-error-bg);
+    color: var(--auth-error-text);
+    border: 1px solid var(--auth-error-border);
+    /*border-radius: 0.5rem;
+    padding: 0.75rem;
+    margin-bottom: 1.5rem;*/
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+    margin-bottom: 0.9375rem;
+    text-align: left;
+    /*font-size: 0.875rem;*/
+    font-weight: 500;
+    font-size: 0.85em;
+}
+
+/*button container*/
+.button-container {
+    display: flex;
+    width: 100%;
+    margin-top: 15px;
+    margin-bottom: 5px;
+}
+
+/*login button / register button*/
+.login-button,
+.register-button {
+    padding: 0.625rem 0.9375rem;
+    border: none;
+    font-weight: 600;
+    border-radius: 0;
+    color: white;
+    font-size: 1.125rem;
+    cursor: pointer;
+    background: var(--auth-btn-grad);
+    box-shadow: 0 4px 6px -1px var(--auth-btn-shadow), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
+    transition: background-color 0.3s, opacity 0.3s, transform 0.1s;
+    width: 35%;
+    flex-grow: 1;
+    z-index: 10;
+}
+
+/* left button*/
+.split-left {
+    clip-path: polygon(0 0, 100% 0, 100% 50%, 0 100%);
+    transform: translateX(3px);
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
+}
+
+.split-left:hover:not(:disabled) {
+    background-color: var(--auth-btn-hover-left);
+    transform: translateX(3px) scale(1.01);
+}
+
+/* right button */
+.split-right {
+    clip-path: polygon(0 50%, 100% 0, 100% 100%, 0 100%);
+    transform: translateX(-3px);
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+.split-right:hover:not(:disabled) {
+    background-color: var(--auth-btn-hover-right);
+    transform: translateX(-3px) scale(1.01);
+}
+
+/* Interaction States for Toggle Logic */
+.login-button.active,
+.register-button.active {
+    filter: brightness(1.1);
+    z-index: 20;
+}
+
+.login-button:not(.active),
+.register-button:not(.active) {
+    opacity: 0.7;
+    filter: saturate(0.8);
+}
+
+/* ============================================================
+   SHARED UTILITY STYLES (Used by all)
+   ============================================================ */
+
+.error-message {
+    font-weight: 700;
+}
+
+/*input label*/
+.input-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--auth-label-text);
+    margin-bottom: 0.5rem;
+    text-align: left;
+}
+
+/* input field*/
+.input-field {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--auth-input-border);
+    box-sizing: border-box;
+    transition: all 0.15s ease-in-out;
+    outline: none;
+    background-color: var(--auth-input-bg);
+}
+
+.login .input-field {
+    background-color: var(--auth-input-bg-login);
+}
+
+.input-field:focus {
+    border-color: var(--auth-input-focus-border);
+    box-shadow: 0 0 0 3px var(--auth-input-focus-ring);
+}
+
+.switch-text {
+    font-size: 0.875rem;
+    color: var(--auth-muted-text);
+    margin-top: 1.5rem;
+    text-align: center;
+}
+
+/* ============================================================
+   CONSOLIDATED RESPONSIVE LOGIC
+   ============================================================ */
+
+@media (max-width: 768px) {
+
+    .login,
+    .register {
+        margin: 40px 20px;
+        gap: 40px;
+    }
+
+    .login-card,
+    .register-card {
+        padding: 2rem 1.5rem;
+        border-radius: 1rem;
+    }
+
+    .login-header,
+    .register-header {
+        font-size: 1.75rem;
+        margin-bottom: 2rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .form-card {
+        padding: 25px;
+        margin: 10px;
+    }
+
+    /* revert to stacked buttons for tiny screens */
+    .button-container {
+        flex-direction: column;
+    }
+
+    .login-button,
+    .register-button {
+        width: 100%;
+        border-radius: 8px;
+        clip-path: none;
+        transform: none;
+        margin: 5px 0;
+    }
+}

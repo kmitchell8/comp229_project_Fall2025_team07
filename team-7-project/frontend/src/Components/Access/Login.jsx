@@ -2,8 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../authState/useAuth.jsx';
 import {signIn } from '../Api/authApi.jsx';
-import {getPage} from '../Api/getPage.jsx'
-import './Login.css'
+import {getPage} from '../Api/getPage.jsx';
+//import './Login.css';
+import './Access.css';
 
 
 function Login() {

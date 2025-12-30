@@ -1,8 +1,8 @@
-import React from 'react'
+import { React, useState, useEffect } from 'react'
 import './Navbar.css'
 //import logo from '/images/team_7_logo.png'
-import { useAuth } from '../../Components/authState/useAuth.jsx';
-import { getPage} from '../Api/getPage.jsx'
+import { useAuth } from '../authState/useAuth.jsx';
+import { getPage, getHash } from '../Api/getPage.jsx'
 
 
 
@@ -10,6 +10,20 @@ import { getPage} from '../Api/getPage.jsx'
 
 const Navbar = () => {
     const { _view, isAuthenticated, role, logout, _setView } = useAuth();
+    const [currentHash, setCurrentHash] = useState(getHash());
+
+    useEffect(() => {
+        const handleHashChange = () => {
+            setCurrentHash(getHash());
+        };
+
+        // Listen for hash changes (e.g., clicking the link or browser back/forward)
+        window.addEventListener('hashchange', handleHashChange);
+
+        // Clean up listener on unmount
+        return () => window.removeEventListener('hashchange', handleHashChange);
+    }, []);
+
     const currentPath = window.location.pathname;
     const isLogOrReg = currentPath.endsWith('/login.html') || currentPath.endsWith('/register.html');
 
@@ -45,29 +59,36 @@ const Navbar = () => {
     );
 
     //function to render links for authenticated users
-    const renderAuthenticatedLinks = () => (
-        <>
-            <li>
-                {/* Example link only available when authenticated */}
-                <a href="./profile.html">Profile</a>
-            </li>
+    const renderAuthenticatedLinks = () => {
+        const isAdminActive = currentHash === '#admin' || currentHash === 'admin';
+        return (
 
-            {/* Admin-Specific Link */}
-            {/* Check if the user's role is exactly 'admin' (case-sensitive) */}
-            {role === 'admin' && (
+            <>
                 <li>
-                    <a href="./profile.html#admin" style={{ fontWeight: 'bold', color: 'red' }}>
-                        Admin Dashboard
-                    </a>
+                    {/* Example link only available when authenticated */}
+                    <a href="./profile.html">Profile</a>
                 </li>
-            )}
 
-            {/* Universal Authenticated Links */}
-            <li>
-                <a onClick={logout} >Sign Out</a>
-            </li>
-        </>
-    );
+                {/* Admin-Specific Link */}
+                {/* Check if the user's role is exactly 'admin' (case-sensitive) */}
+                {role === 'admin' && (
+                    <li>
+                        <a
+                            href="./profile.html#admin"
+                            className={`admin-btn ${isAdminActive ? 'is-active' : 'pulse-glow'}`}
+                        >
+                            Admin Dashboard
+                        </a>
+                    </li>
+                )}
+
+                {/* Universal Authenticated Links */}
+                <li>
+                    <a onClick={logout} className="sign-out-btn">Sign Out</a>
+                </li>
+            </>
+        )
+    };
 
     return (
         <nav className="navbar">
@@ -80,7 +101,8 @@ const Navbar = () => {
                     {/* Common link for all views */}
                     <li><a href="./">Home</a>
 
-                        {pageString}</li>
+                        {pageString}
+                    </li>
                     <li><a href="./library.html">Library</a></li>
                     <li><a href="./services.html">Services</a></li>
                     <li><a href="./contact.html">Contact</a></li>

@@ -1,8 +1,18 @@
 import React from 'react';
-import './NavBar.css';
+import './Navbar.css';
 
 
-const LibraryNavBar = ({ viewMode, setViewMode, sortBy, setSortBy, searchTerm, setSearchTerm, shelfNames }) => {
+const LibraryNavBar = ({
+    isScrolled,
+    viewMode,
+    setViewMode,
+    sortBy,
+    setSortBy,
+    searchTerm,
+    setSearchTerm,
+    filterType,
+    setFilterType,
+    shelfNames }) => {
 
 
     const handleJump = (e, name) => {
@@ -17,29 +27,39 @@ const LibraryNavBar = ({ viewMode, setViewMode, sortBy, setSortBy, searchTerm, s
             const elementPosition = element.getBoundingClientRect().top + window.scrollY;
             element.scrollIntoView({ behavior: 'smooth' });
             window.scrollTo({
-            top: elementPosition - navHeight,
-            behavior: 'smooth'
-        });
+                top: elementPosition - navHeight,
+                behavior: 'smooth'
+            });
             // Update URL bar without reloading the component
             //window.history.pushState(null, null, `#${targetId}`);
         }
     };
     return (
-        <nav className="library-nav-container">
+        <nav className={`library-nav-container ${isScrolled ? 'scrolled' : ''}`}>
             {/* Main Controls Row */}
             <div className="navbar library-nav">
                 <ul className="nav-menu">
+                    {/* View Modes */}
                     <li>
                         <a onClick={() => setViewMode('genre')} className={viewMode === 'genre' ? 'active-link' : ''}>
-                            Genre View
+                            Genre
                         </a>
                     </li>
                     <li>
                         <a onClick={() => setViewMode('alphabetical')} className={viewMode === 'alphabetical' ? 'active-link' : ''}>
-                            A - Z View
+                            A - Z
                         </a>
                     </li>
                     <li className="nav-divider">|</li>
+                    {/* NEW: Media Type Filters */}
+                    <li className="nav-label-container"><span className="nav-label">Show:</span></li>
+                    <li><a onClick={() => setFilterType('all')} className={filterType === 'all' ? 'active-link' : ''}>All</a></li>
+                    <li><a onClick={() => setFilterType('book')} className={filterType === 'book' ? 'active-link' : ''}>Books</a></li>
+                    <li><a onClick={() => setFilterType('movie')} className={filterType === 'movie' ? 'active-link' : ''}>Movies</a></li>
+                    <li><a onClick={() => setFilterType('game')} className={filterType === 'game' ? 'active-link' : ''}>Games</a></li>
+
+                    <li className="nav-divider">|</li>
+
                     <li className="nav-label-container"><span className="nav-label">Sort By:</span></li>
                     <li><a onClick={() => setSortBy('title')} className={sortBy === 'title' ? 'active-sort' : ''}>Title</a></li>
                     <li><a onClick={() => setSortBy('author')} className={sortBy === 'author' ? 'active-sort' : ''}>Author</a></li>

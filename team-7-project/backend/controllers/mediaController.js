@@ -1,22 +1,22 @@
 /*
- * File Name: bookController.js
+ * File Name: mediaController.js
  * Author(s): Kevon Mitchell    
  * Student ID (s): 301508202
  * Date: November 11, 2025
- * Note: using code from bookController.js
+ * Note: using code from mediaController.js //updated to be universal 
  */
 
-const Book = require('../models/books');
+const { Media, Book, Movie, Game } = require('../models/media');
 const _ = require('lodash'); // Used for cleaning up request bodies
 const fs = require('fs');
 const path = require('path');
-//const { GENRES } = require('../models/books');
+//const { GENRES } = require('../models/medias');
 const { v4: uuidv4 } = require('uuid');
 
 
 //permanent storage path 
-const COVERS_DIR = path.join(__dirname, '..', 'public', 'images', 'cover'); //book cover storage
-const DESCRIPTIONS_DIR = path.join(__dirname, '..', 'public', 'documents', 'description'); //book documents storage
+const COVERS_DIR = path.join(__dirname, '..', 'public', 'images', 'cover'); //media cover storage
+const DESCRIPTIONS_DIR = path.join(__dirname, '..', 'public', 'documents', 'description'); //media documents storage
 
 if (!fs.existsSync(COVERS_DIR)) {
     fs.mkdirSync(COVERS_DIR, { recursive: true });
@@ -26,136 +26,126 @@ if (!fs.existsSync(DESCRIPTIONS_DIR)) {
     fs.mkdirSync(DESCRIPTIONS_DIR, { recursive: true });
 
 }
-// Middleware to pre-load a book profile based on the 'bookId' parameter in the route
-const bookByID = async (req, res, next, id) => {
+// Middleware to pre-load a media profile based on the 'mediaId' parameter in the route
+const mediaByID = async (req, res, next, id) => {
     try {
-        const book = await Book.findById(id);
-        if (!book) {
+        const media = await Media.findById(id);
+        if (!media) {
             return res.status(404).json({
-                error: "Book not found"
+                error: "Media not found"
             });
         }
-        //req.loadedBook=book; //stored mongoose document for update/remove operations
-        req.book = book;
+        //req.loadedMedia=media; //stored mongoose document for update/remove operations
+        req.media = media;
         next();
     } catch (err) {
         return res.status(400).json({
-            error: "Could not retrieve book"
+            error: "Could not retrieve media"
         });
     }
 };
 
-//SINGLE BOOK 
+//SINGLE MEDIA 
 
-// GET: Reads all the book info
+// GET: Reads all the media info
 const read = (req, res) => {
-    // req.book contains the book data loaded by router.param
-    return res.json(req.book.toObject());
+    // req.media contains the media data loaded by router.param
+    return res.json(req.media.toObject());
 };
 
-// PUT: Update book data
-const update = async (req, res, next) => {
+// PUT: Update media data
+const update = async (req, res, _next) => {
     try {
 
-        //Use the Mongoose Document pre-loaded by bookByID (req.loadedBook)
-        //let book = req.loadedBook;        
-        // Find the book by ID
-        //let book = await Book.findById(req.book._id);
+        //Use the Mongoose Document pre-loaded by mediaByID (req.loadedMedia)
+        //let media = req.loadedMedia;        
+        // Find the media by ID
+        //let media = await Media.findById(req.media._id);
 
-        let book = req.book;
-        if (!book) return res.status(404).json({ error: "Book not found during update." });
+        let media = req.media;
+        if (!media) return res.status(404).json({ error: "Media not found during update." });
 
-        // Update the book object with new data from the request body
+        // Update the media object with new data from the request body
         // We use lodash's extend method to merge the changes
-        book = _.extend(book, req.body);
-        book.updatedAt = Date.now();
-        await book.save();
+        media = _.extend(media, req.body);
+        //media.updatedAt = Date.now(); //handled in Schema
+        await media.save();
 
-        res.json(book.toObject());
+        res.json(media/*.toObject()*/);
 
     } catch (err) {
         // Handle validation or save errors
         return res.status(400).json({
-            error: "Could not update book: " + err.message
+            error: "Could not update media: " + err.message
         });
     }
 };
 
-// DELETE: Remove the book
-const remove = async (req, res, next) => {
+// DELETE: Remove the media
+const remove = async (req, res, _next) => {
     try {
-        const book = req.book; // Book object from req.book
-        //await book.remove(); //depricated
-        await book.deleteOne();
-
-
-        res.json({ message: "Book successfully deleted." });
-
+        const media = req.media; // Media object from req.media
+        //await media.remove(); //depricated
+        await media.deleteOne();
+        res.json({ message: "Media successfully deleted." });
     } catch (err) {
         return res.status(400).json({
-            error: "Could not delete book: " + err.message
+            error: "Could not delete media: " + err.message
         });
     }
 };
 
 
 //GENERAL 
-
-
+//POST: create media
 const create = async (req, res) => {
     try {
-        const newBook = new Book(req.body);
-        const savedBook = await newBook.save();
-        //restricted in bookRoutes        
-        res.status(201).json(savedBook);
+
+        const { mediaType } = req.body;
+        let Model;
+
+        // Ensure mediaType is set if the frontend hasn't updated yet
+        // Determine which discriminator to use
+        switch (mediaType) {
+            case 'movie': Model = Movie; break;
+            case 'game': Model= Game; break;
+            default: Model = Book; break;
+        }
+
+        const newMedia = new Model(req.body);
+        const savedMedia = await newMedia.save();
+        //restricted in mediaRoutes  
+        res.status(201).json(savedMedia);
     } catch (err) {
         // Handle validation errors or duplicate keys
         res.status(400).json({ error: err.message });
     }
+
 };
 
-// GET: List all books
+// GET: List all medias
 const list = async (req, res) => {
     try {
-        const books = await Book.find().select('cover title author publisher ISBN_10 ISBN_13 description rated genre created'); //selects fields I would like to display
-        res.status(200).json(books);
+        const { type } = req.query; // e.g., /api/media?type=movie
+        const query = type ? { mediaType: type } : {};
+        const medias = await Media.find(query)
+            .sort({ created: -1 });
+        //selects fields I would like to display (older code - left as reminder)
+        res.status(200).json(medias);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
 };
 
-//GET: list genres
-/*
-const listGenres = (req, res) => {
-    try {
-        // This looks for the file starting from your main project folder
-        const filePath = path.resolve(process.cwd(), 'public', 'documents', 'genres.json');
-        
-        console.log("Attempting to read genres from:", filePath); // Checkpoint log
-
-        if (!fs.existsSync(filePath)) {
-            console.error("File does not exist at path!");
-            return res.status(404).json({ error: "Genres file missing" });
-        }
-        //const filePath = path.join(__dirname, '..', 'public', 'documents', 'genres.json');
-        const fileData = fs.readFileSync(filePath, 'utf8');
-        const genres = JSON.parse(fileData);
-        
-        return res.json(genres);
-    } catch (err) {
-        console.error("Error reading genres JSON:", err);
-        return res.status(500).json({ error: "Could not load genres file" });
-    }
-};
-*/
-
-// DELETE: Delete all books
+// DELETE: Delete all medias
 const removeAll = async (req, res) => {
     try {
         //should be restricted to 'admin' roles and avoided in production.
-        //will be restricted in bookRoutes
-        const result = await Book.deleteMany({});
-        res.status(200).json({ message: `You deleted ${result.deletedCount} book(s)` });
+        //will be restricted in mediaRoutes
+        const { type } = req.query;
+        const query = type ? { mediaType: type } : {};
+        const result = await Media.deleteMany(query);
+        res.status(200).json({ message: `You deleted ${result.deletedCount} items(s)` });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
@@ -163,15 +153,16 @@ const removeAll = async (req, res) => {
 
 const uploadCover = async (req, res) => {
     try {
-        const bookCover = req.file;
-        if (!bookCover) {
+        
+        const mediaCover = req.file;
+        if (!mediaCover) {
             return res.status(400).json({ error: "No file provided." });
         }
 
-        const fileExtension = bookCover.originalname.split('.').pop();
+        const fileExtension = mediaCover.originalname.split('.').pop();
         const fileName = `${uuidv4()}.${fileExtension}`;
         const savePath = path.join(COVERS_DIR, fileName);
-        fs.writeFileSync(savePath, bookCover.buffer);//save to disk
+        fs.writeFileSync(savePath, mediaCover.buffer);//save to disk
         return res.status(200).json({ coverFileName: fileName });//sends filename back to front end
 
     } catch (error) {
@@ -247,7 +238,7 @@ const deleteCover = async (req, res) => {
 };
 
 module.exports = {
-    bookByID, // The crucial parameter middleware
+    mediaByID, // The crucial parameter middleware
     read,
     update,
     remove,

@@ -1,6 +1,6 @@
 //import React from 'react';
 import { API_URL } from "../../../config";
-const BASE_URL = `${API_URL}/books`;
+const BASE_URL = `${API_URL}/medias`;
 
 
 //getting the header and making it global for all modules
@@ -49,7 +49,7 @@ const fetchHelper = async (url, options) => {
             // Attempt JSON, but if it fails, get the raw text so we can see the error
             try {
                 data = JSON.parse(rawData);
-            // eslint-disable-next-line no-unused-vars
+                // eslint-disable-next-line no-unused-vars
             } catch (e) {
                 data = { message: rawData || 'No response body' };
             }
@@ -79,19 +79,19 @@ const fetchHelper = async (url, options) => {
     }
 };
 
-//Create a book entry
-const create = async (bookData, getToken) => {//
+//Create a media entry
+const create = async (mediaData, getToken) => {//
     const headers = await getAuthHeaders(getToken);
 
     return fetchHelper(BASE_URL, {
         method: 'POST',
         headers: headers,
-        body: JSON.stringify(bookData),//includes data to be created
+        body: JSON.stringify(mediaData),//includes data to be created
     });
 
 };
 
-//BOOK COVER
+//MEDIA COVER
 
 const uploadCover = async (coverFile, getToken) => {
     const headers = await getAuthHeadersNoJson(getToken);
@@ -118,7 +118,7 @@ const removeCover = async (filename, getToken) => {
 
 const getCoverUrl = (filename) => {
     if (!filename) return '../../assets/default_cover.png';
-    const domainName = BASE_URL.replace('/api/books', '');
+    const domainName = BASE_URL.replace('/api/medias', '');
 
     return `${domainName}/images/cover/${filename}`;
 };
@@ -143,7 +143,7 @@ const uploadDescription = async (data, getToken) => {
 const getDescriptionUrl = (descriptionPath) => {
     if (!descriptionPath) return null;
 
-    const domainName = BASE_URL.replace('/api/books', '');
+    const domainName = BASE_URL.replace('/api/medias', '');
     return `${domainName}${descriptionPath}`;
 
 }
@@ -158,48 +158,53 @@ const getDescriptionText = async (descriptionPath) => {
 
 
 }
-//List all books
-const list = async () => {
-    return fetchHelper(BASE_URL, {
-        method: 'GET'
+//List all medias
+const list = async (type = null, getToken=null) => {
+    // Handle 'all' or null to return the base URL
+    const isFiltered = type && type !== 'all';
+    const url = isFiltered ? `${BASE_URL}?type=${type}` : BASE_URL;
+    const headers = getToken ? await getAuthHeaders(getToken) : {};
+    return fetchHelper(url, {
+        method: 'GET',
+        headers: headers
     });
 };
 
-//Delete all books
+//Delete all medias
 const deleteAll = async (getToken) => {
     const headers = await getAuthHeaders(getToken);
 
     return fetchHelper(BASE_URL, {
         method: 'DELETE',
-        headers: headers,
+        headers: headers
     });
 };
 
-//List one book
-const read = async (bookId) => {
-    const url = `${BASE_URL}/${bookId}`
+//List one media
+const read = async (mediaId) => {
+    const url = `${BASE_URL}/${mediaId}`
 
     return fetchHelper(url, {
         method: 'GET'
     });
 };
 
-//Update book entry
-const update = async (bookData, bookId, getToken) => {
+//Update media entry
+const update = async (mediaData, mediaId, getToken) => {
     const headers = await getAuthHeaders(getToken);
-    const url = `${BASE_URL}/${bookId}`
+    const url = `${BASE_URL}/${mediaId}`
 
     return fetchHelper(url, {
         method: 'PUT',
         headers: headers,
-        body: JSON.stringify(bookData) //needed to update book data          
+        body: JSON.stringify(mediaData) //needed to update media data          
     });
 };
 
-//Delete one book
-const remove = async (bookId, getToken) => {
+//Delete one media
+const remove = async (mediaId, getToken) => {
     const headers = await getAuthHeaders(getToken);
-    const url = `${BASE_URL}/${bookId}`
+    const url = `${BASE_URL}/${mediaId}`
     return fetchHelper(url, {
         method: 'DELETE',
         headers: headers,
@@ -207,7 +212,7 @@ const remove = async (bookId, getToken) => {
 };
 
 const getGenres = async () => {
-    const domainName = BASE_URL.replace('/api/books', '');
+    const domainName = BASE_URL.replace('/api/medias', '');
     const url = `${domainName}/documents/genres.json`;
 
     return fetchHelper(url, {
@@ -215,6 +220,14 @@ const getGenres = async () => {
     });
 };
 
+const getMediaTypes = async () => {
+    const domainName = BASE_URL.replace('/api/medias', '');
+    const url = `${domainName}/documents/mediaTypes.json`;
+
+    return fetchHelper(url, {
+        method: 'GET'
+    });
+};
 export default {
     create,
     uploadCover,
@@ -228,5 +241,6 @@ export default {
     read,
     update,
     remove,
-    getGenres
+    getGenres,
+    getMediaTypes
 };

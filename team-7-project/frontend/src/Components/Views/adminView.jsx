@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../authState/useAuth';
 //import { getHash } from '../Api/getPage';
-import CreateBook from '../Admin/CreateBook';
-import UpdateBook from '../Admin/UpdateBook';
+import CreateMedia from '../Admin/CreateMedia';
+import UpdateMedia from '../Admin/UpdateMedia';
 import UpdateUser from '../Admin/UpdateUser';
 //import './Admin.css'
 
@@ -12,12 +12,12 @@ const AdminView = ({ pathSegments: parentSegments = [] }) => {
   const { role: userRole } = useAuth(); //use the Auth hook to access role of the user
   const internalSegment = parentSegments[1];
 
-  //const adminViews = useMemo(() => ['createbook', 'updatebook', 'updateuser'], []);//recommended but not necessary keep for future reference
+  //const adminViews = useMemo(() => ['createmedia', 'updatemedia', 'updateuser'], []);//recommended but not necessary keep for future reference
 
 
   // logic to determine the initial view based on the URL hash
   const getInternalView = useCallback(() => {
-    const adminViews = ['createbook', 'updatebook', 'updateuser'];
+    const adminViews = ['createmedia', 'updatemedia', 'updateuser'];
 
 
     if (userRole !== 'admin') {//safety check
@@ -41,7 +41,7 @@ const AdminView = ({ pathSegments: parentSegments = [] }) => {
 
     //const segments = parentSegments.split('/').filter(s => s !== '');
     //const internalSegment = segments[1];
-    //const adminViews = ['admin', 'createbook', 'updatebook', 'updateuser']
+    //const adminViews = ['admin', 'createmedia', 'updatemedia', 'updateuser']
 
     //if (adminViews.includes(internalSegment)) {
     //If no hash or just 'profile', ensure hash is set correctly for clean routing
@@ -49,10 +49,10 @@ const AdminView = ({ pathSegments: parentSegments = [] }) => {
     //return { view: internalSegment, segments };
     //}
 
-    //Assign value to primary segment that is either createupdate,updatebook, andupdateuser
+    //Assign value to primary segment that is either createupdate,updatemedia, andupdateuser
     //makes the adminView resuable for all pages that have a nested view inside the
     //parent admin view
-    /* if (['createbook', 'updatebook', 'updateuser'].includes(primarySegment)) {
+    /* if (['createmedia', 'updatemedia', 'updateuser'].includes(primarySegment)) {
        return { view: primarySegment, segments };
      }
      if (primarySegment ==='admin'){
@@ -108,10 +108,10 @@ const AdminView = ({ pathSegments: parentSegments = [] }) => {
   const itemId = parentSegments[2];
   const renderView = () => {
     switch (currentView) {
-      case 'createbook':
-        return <CreateBook /*pathSegments={parentSegments}*//>;
-      case 'updatebook':
-        return <UpdateBook pathId={itemId}/*pathSegments={parentSegments}*//>;
+      case 'createmedia':
+        return <CreateMedia /*pathSegments={parentSegments}*//>;
+      case 'updatemedia':
+        return <UpdateMedia pathId={itemId}/*pathSegments={parentSegments}*//>;
       case 'updateuser':
         return <UpdateUser pathId={itemId}/*pathSegments={parentSegments}*//>;
       case 'admin':
@@ -120,12 +120,12 @@ const AdminView = ({ pathSegments: parentSegments = [] }) => {
           <div className='admin-container'>
             <div className='admin'>
               <h3>
-                <a href="#/admin/createbook">create book</a>
+                <a href="#/admin/createmedia">create media</a>
               </h3>
             </div>
             <div className='admin'>
               <h3>
-                <a href="#/admin/updatebook">update book</a>
+                <a href="#/admin/updatemedia">update media</a>
               </h3>
             </div>
             <div className='admin'>

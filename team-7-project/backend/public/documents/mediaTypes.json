@@ -1,0 +1,68 @@
+{
+  "book": [
+    {
+      "name": "author",
+      "label": "Author",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "publisher",
+      "label": "Publisher",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "ISBN_10",
+      "label": "ISBN 10",
+      "type": "text",
+      "required": false
+    },
+    {
+      "name": "ISBN_13",
+      "label": "ISBN 13",
+      "type": "text",
+      "required": false
+    }
+  ],
+  "movie": [
+    {
+      "name": "director",
+      "label": "Director",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "runtime",
+      "label": "Runtime",
+      "type": "number",
+      "required": false
+    },
+    {
+      "name": "studio",
+      "label": "Studio",
+      "type": "text",
+      "required": false
+    }
+  ],
+  "game": [
+    {
+      "name": "developer",
+      "label": "Developer",
+      "type": "text",
+      "required": false
+    },
+    {
+      "name": "platforms",
+      "label": "Platforms",
+      "type": "list",
+      "required": false
+    },
+    {
+      "name": "multiplayer",
+      "label": "Multiplayer",
+      "type": "checkbox",
+      "required": false
+    }
+  ]
+}

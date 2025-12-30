@@ -56,7 +56,7 @@
 }
 
 .loading-state {
-height: 100vh;
+    height: 100vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -91,7 +91,7 @@ height: 100vh;
 }
 
 /* The Shelf Grid */
-.books-container {
+.media-container {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     gap: 30px;
@@ -107,11 +107,12 @@ height: 100vh;
     position: relative;
 }
 
-/* Individual Book Card */
-.books-formatting {
+/* Individual Media Card */
+.media-formatting {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    /* align-items: flex-start;*/
+    text-align: center;
     gap: 8px;
     padding: 10px;
     /*background-color: var(--bg-dark-secondary); */
@@ -125,24 +126,63 @@ height: 100vh;
         ease;
 }
 
-/* Book Cover - THE FOCAL POINT */
-.books-formatting img {
+/* image container */
+.media-cover-wrapper {
     width: 100%;
-    /* Fill the grid column width */
     max-width: 150px;
-    /* Keep them from getting too huge */
     aspect-ratio: 2 / 3;
-    object-fit: cover;
+    /* Forces consistent media shape */
+    background-color: var(--bg-dark-secondary);
+    /* Uses your palette */
     border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 15px #00000080;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+/* Media Cover - THE FOCAL POINT */
+.media-formatting img {
+    width: 100%;
+    height: 100%;
+    /* Fill the grid column width */
+    /*max-width: 150px;*/
+    /* Keep them from getting too huge */
+    /*aspect-ratio: 2 / 3;*/
+    /*object-fit: cover;*/
+    object-fit: contain;
+    /*border-radius: 4px;
     box-shadow: 0 8px 15px rgba(0, 0, 0, 0.5);
     transition: all 0.3s ease;
     cursor: pointer;
-    height: 150px;
-    object-fit: cover;
+    height: 150px;*/
+
 }
 
-/* Book Titles (keeping your unique gradient) */
-.books-formatting h2 {
+/* Hover Effect: Just the cover (cover wrapper)*/
+.media-formatting:hover .media-cover-wrapper {
+    transform: translateY(-8px) scale(1.05);
+    /*box-shadow: 0 12px 25px rgba(0, 0, 0, 0.7);*/
+
+    /* Layered Box Shadow for the 'Glow' effect */
+    /* The standard shadow for depth */
+    /* A sharp glow near the edge */
+    /* A soft, wide bloom of light */
+    box-shadow:
+        0 15px 30px #000000cc,
+        0 0 10px var(--accent-color),
+        0 0 20px #79a6ff66;
+    /* Makes the cover colors slightly more vibrant on hover */
+    filter: brightness(1.1) contrast(1.1);
+    /* Ensures the border glows */
+    border-color: var(--accent-color);
+}
+
+/* Media Titles (keeping your unique gradient) */
+.media-formatting h2 {
     font-size: 1rem;
     font-weight: 700;
     text-align: center;
@@ -156,7 +196,7 @@ height: 100vh;
 }
 
 /* Authors */
-.books-formatting h3 {
+.media-formatting h3 {
     font-size: 0.9rem;
     /* Slightly larger than metadata */
     font-weight: 600;
@@ -166,7 +206,7 @@ height: 100vh;
 }
 
 /* Publisher & ISBN Metadata - The smallest, most subtle text */
-.books-formatting h4 {
+.media-formatting h4 {
     font-size: 0.7rem;
     /* Smallest text in the stack */
     font-weight: 500;
@@ -176,71 +216,69 @@ height: 100vh;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin: 2px 0 0 0;
-    text-align: left;
+    text-align: center;
 }
 
 /* Add a tiny bit of separation between Author and Publisher */
-.books-formatting h3+h4 {
+.media-formatting h3+h4 {
     margin-top: 4px;
 }
 
 /*
-.books-formatting h4 span {
+.media-formatting h4 span {
     color: var(--accent-color);
     font-weight: 400;
 }*/
 
 /* Description Text */
-.books-description {
+.media-description {
     font-size: 0.8rem;
     color: var(--primary-text);
     opacity: 0.8;
-    text-align: left;
+    align-items: center;
+    text-align: justify;
     /* Keeps everything centered under cover */
     margin-top: 5px;
 }
 
-/* Read More / Link Style */
-.books-readmore {
+.media-description p {
+    margin-bottom: 5px;
+    line-height: 1.4;
+}
+
+/* Style for your new placeholder link */
+.media-readmore {
     background: transparent;
     border: none;
-    color: var(--accent-color);
-    cursor: pointer;
+    color: var(--secondary-text);
+    /* Use a more subtle color than accent */
     font-size: 0.75rem;
+    cursor: pointer;
+    margin-top: 5px;
+    padding: 0;
+    font-family: inherit;
+}
+
+.media-readmore:hover {
+    color: var(--primary-text);
     text-decoration: underline;
 }
 
 /* Action Button - Scaled down */
-.books-formatting button:not(.books-readmore) {
+/*
+.media-formatting button:not(.media-readmore) {
     background-color: var(--view-color);
-    color: white;
+    color: #ffffff;
     border: none;
     padding: 4px 12px;
     font-size: 0.75rem;
     border-radius: 4px;
     margin-top: 5px;
 }
+*/
 
-/* Hover Effect: Just the cover*/
-.books-formatting:hover img {
-    transform: translateY(-8px) scale(1.05);
-    /*box-shadow: 0 12px 25px rgba(0, 0, 0, 0.7);*/
 
-    /* Layered Box Shadow for the 'Glow' effect */
-    /* The standard shadow for depth */
-    /* A sharp glow near the edge */
-    /* A soft, wide bloom of light */
-    box-shadow:
-        0 15px 30px rgba(0, 0, 0, 0.8),
-        0 0 10px var(--accent-color),
-        0 0 20px rgba(121, 166, 255, 0.4);
-    /* Makes the cover colors slightly more vibrant on hover */
-    filter: brightness(1.1) contrast(1.1);
-    /* Ensures the border glows */
-    border-color: var(--accent-color);
-}
-
-.books-formatting:hover h2 {
+.media-formatting:hover h2 {
     filter: brightness(1.2);
     filter: drop-shadow(0 0 5px var(--accent-color));
 }
@@ -269,7 +307,7 @@ height: 100vh;
     justify-content: center;
     transition: all 0.3s ease;
     /* Ensure it ignores the mask-image of the parent */
-  transform: translateZ(0);
+    transform: translateZ(0);
     -webkit-transform: translateZ(0);
 }
 
@@ -283,35 +321,181 @@ height: 100vh;
 html {
     scroll-behavior: smooth;
 }
+/* EMPTY search */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 100px 20px;
+    text-align: center;
+    color: var(--secondary-text);
+}
+
+.empty-state h2 {
+    font-size: 1.8rem;
+    margin-bottom: 10px;
+    color: var(--primary-text);
+    opacity: 0.9;
+}
+
+.empty-state p {
+    font-size: 1rem;
+    max-width: 400px;
+    margin-bottom: 25px;
+    opacity: 0.7;
+    line-height: 1.5;
+}
+
+/* BUTTON - clear search */
 
 .clear-search-btn {
-    background: transparent;
+    background: var(--bg-dark-secondary);
     border: 1px solid var(--accent-color);
     color: var(--accent-color);
-    padding: 8px 16px;
-    margin-top: 15px;
+    padding: 10px 24px;
     cursor: pointer;
     border-radius: 4px;
-    font-family: inherit;
+    font-weight: 600;
+    transition: all 0.3s ease;
 }
 
 .clear-search-btn:hover {
-    background: rgba(121, 166, 255, 0.1);
+    background: var(--accent-color);
+    color: var(--bg-dark-primary);
+    box-shadow: 0 0 15px var(--accent-color);
+}
+
+/*POP out preview*/
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* Use a gradient instead of flat black */
+    background: radial-gradient(
+        circle, 
+        #0d0249b3 0%, 
+        #000000e6 100%
+    );
+    /* Darken the background */
+    /* Increase the blur for a "frosted glass" feel */
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px); /* Safari support */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+
+.modal-content {
+    background: var(--bg-dark-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    width: 90%;
+    max-width: 800px;
+    padding: 30px;
+    position: relative;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+}
+
+.modal-body {
+    display: flex;
+    gap: 30px;
+}
+
+.modal-image img {
+    width: 200px;
+    aspect-ratio: 2/3;
+    object-fit: cover;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+.modal-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-description {
+    max-height: 300px;
+    overflow-y: auto;
+    margin: 15px 0;
+    line-height: 1.6;
+    color: var(--primary-text);
+}
+
+.close-button {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    color: var(--secondary-text);
+    font-size: 2rem;
+    cursor: pointer;
+}
+
+/* Styling the Scrollbar inside the Modal Description */
+.modal-description::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal-description::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 10px;
+}
+
+/* The Placeholder "View Media" Button */
+.modal-read-more {
+    margin-top: auto; /* Pushes button to the bottom of the info column */
+    background-color: var(--accent-color);
+    color: var(--bg-dark-primary);
+    border: none;
+    padding: 10px 20px;
+    font-weight: 700;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    align-self: flex-start;
+}
+
+.modal-read-more:hover {
+    background-color: #fff;
+    box-shadow: 0 0 15px var(--accent-color);
+    transform: translateY(-2px);
+}
+
+/* Horizontal Rule in Modal */
+.modal-info hr {
+    border: 0;
+    border-top: 1px solid var(--border-color);
+    margin: 15px 0;
+    opacity: 0.5;
 }
 /*
-.books-formatting button:hover {
+.media-formatting button:hover {
     background-color: var(--color-primary-dark);
 }
 
 
 
-.books-readmore:hover {
+.media-readmore:hover {
     color: var(--dark-accent-hover);
 }
 */
 /* Hover Interaction for Cards */
 /*
-.books-formatting:hover {
+.media-formatting:hover {
     border-color: var(--accent-color);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
     transform: translateY(-5px);
@@ -322,92 +506,13 @@ html {
     .back-to-top {
         /* Pin it to the center + half the width of your library */
         right: auto;
-        left: calc(50% + 530px); 
+        left: calc(50% + 530px);
     }
 }
 
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
-    .books-container {
+    .media-container {
         grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     }
 }
-
-/*
-.library__section {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.library__section h4 {
-    margin: 0;
-    padding: 0;
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #ffffff;
-    border-bottom: 2px solid #e0e0e0;
-    padding-bottom: 8px;
-}
-
-.library__list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    width: 100%;
-}
-
-.library__book-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    background-color: #f9f9f9;
-    border-radius: 6px;
-    border: 1px solid #e8e8e8;
-    transition: background-color 0.2s ease;
-}
-
-.library__book-item:hover {
-    background-color: #f5f5f5;
-}
-
-.library__book-title {
-    flex: 0 1 auto;
-    min-width: 0;
-    font-weight: 500;
-    color: #333;
-    overflow-wrap: break-word;
-    word-break: break-word;
-}
-
-.library__book-author {
-    flex: 0 0 auto;
-    color: #666;
-    font-size: 0.95em;
-    white-space: nowrap;
-}
-
-.library__delete-button, .library__view-button {
-    cursor: pointer;
-    color: #d32f2f;
-    margin-left: auto;
-    flex-shrink: 0;
-    padding: 4px 12px;
-    font-size: 0.9em;
-    border: 1px solid #d32f2f;
-    border-radius: 4px;
-    background-color: transparent;
-    transition: all 0.2s ease;
-    white-space: nowrap;
-    font-family: inherit;
-    font-weight: inherit;
-    outline: none;
-}
-
-.library__delete-button:hover, .library__view-button:hover {
-    background-color: #d32f2f;
-    color: white;
-}
-*/

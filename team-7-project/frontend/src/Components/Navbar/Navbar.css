@@ -3,47 +3,145 @@
  * Student’s Name: Kevon Mitchell
  * Student ID: 301508202
  * Date: November 16, 2025
- * Modeled with tutorial: https://www.youtube.com/watch?v=hkHHwA-vEyQ
+ * Originally Modeled with tutorial: https://www.youtube.com/watch?v=hkHHwA-vEyQ 
  */
 
+ :root {
+    /* Main Backgrounds */
+    --nav-bg: #0f172a;           /* Deep Midnight */
+    --nav-bg-scrolled: #1e293b;  /* Slate Blue/Grey */
+    --nav-secondary: #111827;    /* Near Black */
+    
+    /* Accents & States */
+    --accent-primary: #38bdf8;   /* Sky Blue */
+    --accent-hover: #7dd3fc;    /* Light Sky */
+    --active-bg: rgba(56, 189, 248, 0.15);
+    
+    /* Text & Borders */
+    --text-main: #f8fafc;        /* Off-white */
+    --text-muted: #94a3b8;       /* Slate Gray */
+    --nav-border: #334155;       /* Steel Border */
+    --divider: rgba(148, 163, 184, 0.3);
+
+    
+    /* Admin Red Palette - Added */
+    --admin-red: #ef4444;
+    --admin-glow: #ef444480;
+    --admin-glow-soft: #ef444433;
+}
+/*=================
+Navbar.jsx
+=================*/
 .navbar {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    /*justify-content: space-between;*/
-    justify-content: flex-start;
-    margin: 20px 150px;
-    gap: 30px;
+    padding: 0.75rem 5%;
+    background-color: var(--nav-bg);
+    border-bottom: 1px solid var(--nav-border);
+    position: relative;
+    z-index: 1100;
+    box-sizing: border-box;
+}
 
+.logo a img {
+    transition: transform 0.3s ease;
+}
+
+.logo a:hover img {
+    transform: scale(1.05);
 }
 
 .nav-menu {
     display: flex;
+    flex-wrap: wrap; /* Allows links to wrap internally if needed */
     align-items: center;
     list-style: none;
-    gap: 30px;
-    font-size: 20px;
-
+    margin: 0;
+    padding: 0;
+    /* Dynamically scales gap between 10px and 30px */
+    /*width: 100%;
+    flex: 1 1 auto; */
+    gap: clamp(10px, 2vw, 30px);
 }
 
-a {
+.nav-menu li {
+    display: flex;
+    align-items: center;
+    white-space: nowrap; /* Prevents text breaking */
+    flex-shrink: 0;
+}
+
+.nav-menu li a {
+    text-decoration: none;
+    color: var(--text-muted);
+    font-weight: 500;
+    /* Font shrinks from 17px to 13px automatically */
+    font-size: clamp(0.85rem, 1.25vw, 2.0rem);
+    transition: all 0.3s ease;
     cursor: pointer;
 }
 
-a:hover {
-    transform: scale(1.06);
-    transition: 0.5;
+.nav-menu li a:hover {
+    color: var(--accent-primary);
 }
-
-.nav-menu a:link {
-    color: #f5deb3;
+/* Admin Dashboard Button */
+.nav-menu li a.admin-btn {
+    color: var(--admin-red); 
+    border: 1px solid var(--admin-red); /* Keep the outline as requested */
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-weight: bold;
     text-decoration: none;
+    transition: all 0.3s ease-in-out;
 }
 
-.nav-menu a:visited {
-    color: #f5f5f5;
-    text-decoration: none;
+/* Pulsing Glow - Only applies when NOT active */
+.nav-menu li a.admin-btn.pulse-glow {
+    animation: admin-glow 2s infinite alternate;
 }
 
+.nav-menu li a.admin-btn.pulse-glow:hover {
+    background-color: var(--admin-red);
+    color: var(--text-main) !important;
+    box-shadow: 0 0 15px var(--admin-red);
+}
+
+/* Deactivated State - User is currently on #admin */
+.nav-menu li a.admin-btn.is-active {
+    opacity: 0.6;
+    cursor: default;
+    pointer-events: none; 
+    border: 1px solid var(--admin-red) !important; /* Forces outline to stay */
+    animation: none !important; 
+    box-shadow: none !important;
+    filter: saturate(0.5);
+}
+
+@keyframes admin-glow {
+    from {
+        box-shadow: 0 0 4px var(--admin-glow-soft);
+    }
+    to {
+        box-shadow: 0 0 12px var(--admin-glow);
+    }
+}
+
+/* Universal Sign Out Styling */
+.nav-menu li a.sign-out-btn {
+    color: var(--text-muted);
+    border: 1px solid transparent; /* Hidden until hover */
+    padding: 4px 12px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.nav-menu li a.sign-out-btn:hover {
+    color: var(--admin-red);
+    border: 1px solid var(--admin-red);
+    background-color: rgba(239, 68, 68, 0.05); /* Very subtle red tint */
+    cursor: pointer;
+}
 /*===========================
 LibraryNavBar
 ===========================*/
@@ -53,8 +151,9 @@ LibraryNavBar
     top: 20px;
     z-index: 1000;
     backdrop-filter: blur(10px);
+    height: auto;
     transition: all 0.4s;
-    background: #141414d9;
+    background: var(--nav-bg);
     display: flex;
     flex-direction: column;
     /* Use the same max-width and margins as your book container */
@@ -66,113 +165,133 @@ LibraryNavBar
     padding: 20px 30px;
     border: 1px solid #f5deb326;
     box-sizing: border-box;
+    overflow: hidden;
+
 }
 
 /* When the user scrolls, reduce padding and background opacity */
 .library-nav-container.scrolled {
-    padding: 10px 30px;
-    background: #0f0f0ff2;
-    box-shadow: 0 10px 30px #00000080;
+    background-color: var(--nav-bg-scrolled);
+    box-shadow: 0 4px 15px #00000066;
 }
 
-.library-nav-container.scrolled .library-nav {
-    padding-bottom: 10px;
-}
-.library-nav-container .library-nav {
-
-    margin: 0;
-    /* Remove the 150px margin here */
-    padding-bottom: 20px;
-    width: 100%;
-}
-
-/* Primary Navbar Layout */
+/* Row 1: Controls */
 .library-nav {
     display: flex;
+    flex-wrap: wrap; /* Key: Allows items to drop to the next line */
+    justify-content: space-between;
     align-items: center;
+    /*padding: 10px 5%;*/
+    min-height: 60px;
     width: 100%;
-    padding-bottom: 20px;
+    max-width: 100%;
+    padding: 10px 20px;
+    box-sizing: border-box;
+    gap: 10px; /* Space between rows when they wrap */
 }
 
 .library-nav .nav-menu {
+    width: 100%;
     display: flex;
     align-items: center;
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    gap: 30px;
-    width: 100%;
-    /* Allows the search-placeholder to push to the right */
+    flex-wrap: wrap; /* Important for "squishing" */
+    justify-content: flex-start;
 }
 
-/* Secondary Nav (Jump Links) */
+.nav-menu li a {
+    white-space: nowrap;
+}
+.active-link, .active-sort {
+    color: var(--accent-primary) !important;
+    font-weight: 700 !important;
+    border-bottom: 2px solid var(--accent-primary);
+}
+
+.nav-label {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-right: 5px;
+}
+
+.nav-divider {
+    color: var(--divider);
+    padding: 0 5px;
+}
+
+/* Search Input Enhancement */
+.search-container {
+    flex: 1 0 250px;
+    max-width: 400px;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 8px 0x;
+    /*margin-left: auto;*/ /* Pushes search to the right */
+    /*min-width: 180px;*/
+    margin-left: auto;
+}
+
+.search-input {
+    width: 100%;
+    min-width: 0; /* Prevents the browser default 'size' from overflowing */
+    box-sizing: border-box; 
+    display: block;
+    background: var(--nav-secondary);
+    border: 1px solid var(--nav-border);
+    color: var(--text-main);
+    padding: 8px 15px;
+    border-radius: 20px;
+    outline: none;
+    transition: border-color 0.3s ease;
+}
+
+.search-input:focus {
+    border-color: var(--accent-primary);
+}
+
+/* Row 2: Jump Links */
 .secondary-nav {
     display: flex;
-    align-items: flex-start;
-    gap: 20px;
-    padding-top: 15px;
-    border-top: 1px solid #f5deb31a;
+    align-items: center;
+    background-color: var(--nav-secondary);
+    padding: 8px 5%;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    /* Crucial: allows scrolling genres on small screens instead of bunching */
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+.secondary-nav::-webkit-scrollbar {
+    height: 4px;
+}
+
+.secondary-nav::-webkit-scrollbar-thumb {
+    background: var(--nav-border);
+    border-radius: 10px;
+}
+
+.jump-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-right: 15px;
+    font-weight: bold;
 }
 
 .jump-links {
     display: flex;
-    flex-wrap: wrap;
-    gap: 10px 25px;
-    /* Wider gap between links */
-}
-
-/* Link States */
-.library-nav a,
-.jump-link {
-    font-family: inherit;
-    /* Respects your universal font */
-    color: #f5deb3;
-    transition: 0.3s ease;
-}
-
-.active-link {
-    color: var(--accent-color) !important;
-    border-bottom: 2px solid var(--accent-color);
-    padding-bottom: 5px;
+    gap: 20px;
 }
 
 .jump-link {
-    font-size: 14px;
-    text-transform: capitalize;
-    opacity: 0.7;
+    text-decoration: none;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    transition: color 0.2s;
 }
 
 .jump-link:hover {
-    opacity: 1;
-    color: #fff;
-}
-
-/* Visual divider between Alphabet/Genre blocks */
-.nav-divider {
-    color: #ffffff33;
-    user-select: none;
-}
-.search-input {
-    background: #ffffff0d;
-    border: 1px solid #f5deb34d;
-    border-radius: 4px;
-    color: #ffffff;
-    padding: 6px 12px;
-    outline: none;
-    font-family: inherit;
-    width: 200px;
-    transition: all 0.3s ease;
-}
-
-.search-input:focus {
-    border-color: var(--accent-color);
-    background: #ffffff1a;
-    width: 250px; /* Expands slightly on focus */
-}
-.search-text {
-    font-size: 14px;
-    color: #888;
-    font-style: italic;
+    color: var(--accent-hover);
 }
 
 /* Responsive adjustments */
@@ -203,14 +322,10 @@ LibraryNavBar
     }
 
     .library-nav .nav-menu {
-        flex-direction: column;
+        /*flex-direction: column;
         align-items: flex-start;
-        gap: 10px;
+        gap: 10px;*/
+        align-items: stretch;
     }
 
-    .search-placeholder {
-        margin-left: 0;
-        width: 100%;
-        text-align: center;
-    }
 }

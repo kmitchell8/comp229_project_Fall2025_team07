@@ -914,6 +914,10 @@ select.editable-input option,
         border-radius: 12px;
         padding: 15px;
         box-shadow: 0 4px 15px var(--shadow-main); /* Updated to variable */
+        margin: 0 auto 25px auto !important; /* <--- CENTERING */
+        max-width: 500px;                    /* <--- PREVENT STRETCHING */
+    box-sizing: border-box;              /* <--- FOR ACCURATE WIDTH */
+
     }
 
     /* Style each Cell as a labeled row */
@@ -963,5 +967,6 @@ select.editable-input option,
         background-color: transparent;
         box-shadow: none;
         margin: 10px auto;
+        min-width: unset !important;         /* <--- TO CLEAR DESKTOP 800px */
     }
 }

@@ -538,7 +538,7 @@ html {
         /* Fix 2 & 3: Stop the width leak and the masking jump */
         padding: 0 15px;
         box-sizing: border-box;
-        overflow-x: hidden; 
+        overflow-x: clip; 
         mask-image: none; 
         -webkit-mask-image: none;
     }

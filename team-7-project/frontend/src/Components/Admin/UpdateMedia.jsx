@@ -199,6 +199,13 @@ const UpdateMedia = (/*{pathId}/*{parentSegment}*/) => {
         }
     };
 
+    // RESTORED: Placeholder handler for View action (matching UpdateUser style)
+    const handleViewMedia = (mediaId, mediaTitle) => {
+        console.log(`[NAVIGATION PLACEHOLDER] Navigating to detail page for Media ID: ${mediaId} (${mediaTitle})`);
+        // use React Router here:
+        // navigate(`admin/updatemedia/${mediaId}`);
+    };
+
     const renderTableCell = (item, col) => {
         const currentValue = item[col.fieldKey];
         if (col.fieldKey === 'updated') return formatDate(currentValue);
@@ -263,6 +270,14 @@ const UpdateMedia = (/*{pathId}/*{parentSegment}*/) => {
                                 <tr>
                                     {columns.map(col => <td key={col.key}>{renderTableCell(item, col)}</td>)}
                                     <td className="action-button-group-cell">
+                                        {/* RESTORED: View button matching UpdateUser.jsx */}
+                                        <button 
+                                            className="button-group view-button" 
+                                            onClick={() => handleViewMedia(item._id, item.title)}
+                                            disabled={loading}
+                                        >
+                                            View
+                                        </button>
                                         <button className={`button-group update-button ${mediaHasChanges ? 'has-changes' : ''}`} disabled={!mediaHasChanges || loading} onClick={() => handleUpdate(item._id, item.title)}>Update</button>
                                         <button className="delete-button" onClick={() => handleDelete(item._id, item.title)} disabled={loading}>Delete</button>
                                     </td>

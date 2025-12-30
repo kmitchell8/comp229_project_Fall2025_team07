@@ -11,7 +11,7 @@ import { getPage, getHash } from '../Api/getPage.jsx'
 const Navbar = () => {
     const { _view, isAuthenticated, role, logout, _setView } = useAuth();
     const [currentHash, setCurrentHash] = useState(getHash());
-
+    const [menuOpen, setMenuOpen] = useState(false) //toggle mobile view
     useEffect(() => {
         const handleHashChange = () => {
             setCurrentHash(getHash());
@@ -61,12 +61,18 @@ const Navbar = () => {
     //function to render links for authenticated users
     const renderAuthenticatedLinks = () => {
         const isAdminActive = currentHash === '#admin' || currentHash === 'admin';
+        const currentPage = getPage().toLowerCase();
+        const isProfileActive = (currentPage !== 'profile' || currentPage !== 'profile.html') && !isAdminActive;
+
         return (
 
-            <>
+            <div className="user-actions-group">
                 <li>
-                    {/* Example link only available when authenticated */}
-                    <a href="./profile.html">Profile</a>
+                    {/* Example of link only available when authenticated */}
+                    <a
+                        href="./profile.html"
+                        className={`profile-btn ${isProfileActive ? 'is-active' : ''}`}
+                    >Profile</a>
                 </li>
 
                 {/* Admin-Specific Link */}
@@ -86,7 +92,7 @@ const Navbar = () => {
                 <li>
                     <a onClick={logout} className="sign-out-btn">Sign Out</a>
                 </li>
-            </>
+            </div>
         )
     };
 
@@ -95,9 +101,16 @@ const Navbar = () => {
             <div className="logo">
                 <a href="./"><img src="/images/team_7_logo.png" height="50px" width="50px" alt="" /></a>
             </div>
+            {/* Hamburger Button */}
+            {!isLogOrReg && (
+                <button className="menu-toggle" onClick={() => setMenuOpen(!menuOpen)}>
+                    {menuOpen ? '✕' : '☰'}
+                </button>
+            )}
+
             {isLogOrReg ?
                 renderLoginOrRegister()
-                : <ul className="nav-menu">
+                : <ul className={`nav-menu ${menuOpen ? 'open' : ''}`}>
                     {/* Common link for all views */}
                     <li><a href="./">Home</a>
 

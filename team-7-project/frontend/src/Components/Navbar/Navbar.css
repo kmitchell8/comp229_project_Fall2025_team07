@@ -5,8 +5,7 @@
  * Date: November 16, 2025
  * Originally Modeled with tutorial: https://www.youtube.com/watch?v=hkHHwA-vEyQ 
  */
-
- :root {
+:root {
     /* Main Backgrounds */
     --nav-bg: #0f172a;           /* Deep Midnight */
     --nav-bg-scrolled: #1e293b;  /* Slate Blue/Grey */
@@ -14,7 +13,7 @@
     
     /* Accents & States */
     --accent-primary: #38bdf8;   /* Sky Blue */
-    --accent-hover: #7dd3fc;    /* Light Sky */
+    --accent-hover: #7dd3fc;     /* Light Sky */
     --active-bg: rgba(56, 189, 248, 0.15);
     
     /* Text & Borders */
@@ -23,12 +22,19 @@
     --nav-border: #334155;       /* Steel Border */
     --divider: rgba(148, 163, 184, 0.3);
 
-    
-    /* Admin Red Palette - Added */
+    /* Admin Red Palette */
     --admin-red: #ef4444;
     --admin-glow: #ef444480;
     --admin-glow-soft: #ef444433;
+
+    /* Specific Library Mappings */
+    --lib-bg-glass: #14141499;   
+    --lib-border-wheat: #f5deb326;
+    --lib-scrolled-shadow: #00000066;
+    --lib-secondary-border: rgba(255, 255, 255, 0.05);
+    --signout-hover-bg: rgba(239, 68, 68, 0.05);
 }
+
 /*=================
 Navbar.jsx
 =================*/
@@ -54,21 +60,18 @@ Navbar.jsx
 
 .nav-menu {
     display: flex;
-    flex-wrap: wrap; /* Allows links to wrap internally if needed */
+    flex-wrap: wrap; 
     align-items: center;
     list-style: none;
     margin: 0;
     padding: 0;
-    /* Dynamically scales gap between 10px and 30px */
-    /*width: 100%;
-    flex: 1 1 auto; */
     gap: clamp(10px, 2vw, 30px);
 }
 
 .nav-menu li {
     display: flex;
     align-items: center;
-    white-space: nowrap; /* Prevents text breaking */
+    white-space: nowrap; 
     flex-shrink: 0;
 }
 
@@ -76,7 +79,6 @@ Navbar.jsx
     text-decoration: none;
     color: var(--text-muted);
     font-weight: 500;
-    /* Font shrinks from 17px to 13px automatically */
     font-size: clamp(0.85rem, 1.25vw, 2.0rem);
     transition: all 0.3s ease;
     cursor: pointer;
@@ -85,10 +87,11 @@ Navbar.jsx
 .nav-menu li a:hover {
     color: var(--accent-primary);
 }
+
 /* Admin Dashboard Button */
 .nav-menu li a.admin-btn {
     color: var(--admin-red); 
-    border: 1px solid var(--admin-red); /* Keep the outline as requested */
+    border: 1px solid var(--admin-red); 
     padding: 4px 12px;
     border-radius: 4px;
     font-weight: bold;
@@ -112,7 +115,7 @@ Navbar.jsx
     opacity: 0.6;
     cursor: default;
     pointer-events: none; 
-    border: 1px solid var(--admin-red) !important; /* Forces outline to stay */
+    border: 1px solid var(--admin-red) !important; 
     animation: none !important; 
     box-shadow: none !important;
     filter: saturate(0.5);
@@ -130,7 +133,7 @@ Navbar.jsx
 /* Universal Sign Out Styling */
 .nav-menu li a.sign-out-btn {
     color: var(--text-muted);
-    border: 1px solid transparent; /* Hidden until hover */
+    border: 1px solid transparent; 
     padding: 4px 12px;
     border-radius: 4px;
     transition: all 0.3s ease;
@@ -139,9 +142,45 @@ Navbar.jsx
 .nav-menu li a.sign-out-btn:hover {
     color: var(--admin-red);
     border: 1px solid var(--admin-red);
-    background-color: rgba(239, 68, 68, 0.05); /* Very subtle red tint */
+    background-color: var(--signout-hover-bg); 
     cursor: pointer;
 }
+
+/* Profile Link Styling  */
+.nav-menu li a.profile-btn {
+    color: var(--text-muted);
+    border: 1px solid transparent;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-weight: 500;
+    transition: all 0.3s ease-in-out;
+    text-decoration: none;
+}
+
+.nav-menu li a.profile-btn:hover {
+    color: var(--accent-primary);
+    border: 1px solid var(--accent-primary);
+    background-color: var(--active-bg); 
+    box-shadow: 0 2px 8px rgba(56, 189, 248, 0.2);
+}
+
+/* Keep Profile Highlighted if on Profile Page but NOT Admin */
+.nav-menu li a.profile-btn.is-active {
+    color: var(--accent-primary);
+    border: 1px solid var(--accent-primary);
+    opacity: 0.8;
+}
+
+/* --- User Actions Grouping --- */
+.user-actions-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-left: 20px;
+    margin-left: 10px;
+    border-left: 1px solid var(--divider);
+}
+
 /*===========================
 LibraryNavBar
 ===========================*/
@@ -156,45 +195,42 @@ LibraryNavBar
     background: var(--nav-bg);
     display: flex;
     flex-direction: column;
-    /* Use the same max-width and margins as your book container */
     max-width: 1200px;
     margin: 20px auto;
 
-    background: #14141499;
+    background: var(--lib-bg-glass);
     border-radius: 12px;
     padding: 20px 30px;
-    border: 1px solid #f5deb326;
+    border: 1px solid var(--lib-border-wheat);
     box-sizing: border-box;
     overflow: hidden;
-
 }
 
 /* When the user scrolls, reduce padding and background opacity */
 .library-nav-container.scrolled {
     background-color: var(--nav-bg-scrolled);
-    box-shadow: 0 4px 15px #00000066;
+    box-shadow: 0 4px 15px var(--lib-scrolled-shadow);
 }
 
 /* Row 1: Controls */
 .library-nav {
     display: flex;
-    flex-wrap: wrap; /* Key: Allows items to drop to the next line */
+    flex-wrap: nowrap; 
     justify-content: space-between;
     align-items: center;
-    /*padding: 10px 5%;*/
     min-height: 60px;
     width: 100%;
     max-width: 100%;
     padding: 10px 20px;
     box-sizing: border-box;
-    gap: 10px; /* Space between rows when they wrap */
+    gap: 10px; 
 }
 
 .library-nav .nav-menu {
     width: 100%;
     display: flex;
     align-items: center;
-    flex-wrap: wrap; /* Important for "squishing" */
+    flex-wrap: wrap; 
     justify-content: flex-start;
 }
 
@@ -222,19 +258,17 @@ LibraryNavBar
 
 /* Search Input Enhancement */
 .search-container {
-    flex: 1 0 250px;
+    flex: 1 0 150px;
     max-width: 400px;
     min-width: 0;
     box-sizing: border-box;
-    padding: 8px 0x;
-    /*margin-left: auto;*/ /* Pushes search to the right */
-    /*min-width: 180px;*/
+    padding: 8px 0;
     margin-left: auto;
 }
 
 .search-input {
     width: 100%;
-    min-width: 0; /* Prevents the browser default 'size' from overflowing */
+    min-width: 0; 
     box-sizing: border-box; 
     display: block;
     background: var(--nav-secondary);
@@ -256,8 +290,7 @@ LibraryNavBar
     align-items: center;
     background-color: var(--nav-secondary);
     padding: 8px 5%;
-    border-top: 1px solid rgba(255,255,255,0.05);
-    /* Crucial: allows scrolling genres on small screens instead of bunching */
+    border-top: 1px solid var(--lib-secondary-border);
     overflow-x: auto;
     white-space: nowrap;
 }
@@ -293,39 +326,72 @@ LibraryNavBar
 .jump-link:hover {
     color: var(--accent-hover);
 }
+/*===========================
+Responsive Refinements
+===========================*/
 
-/* Responsive adjustments */
-@media (max-width: 1024px) {
+/* Toggle Button - Hidden on Desktop */
+/* --- Hamburger Button Logic --- */
+.menu-toggle {
+    display: none;
+    background: transparent;
+    border: 1px solid var(--nav-border);
+    color: var(--text-main);
+    font-size: 1.5rem;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+/*===========================
+Responsive Logic (Mobile)
+===========================*/
+/* 1. Mobile Fix (768px) */
+@media (max-width: 768px) {
+    body { padding-bottom: 110px; }
+    
+    .menu-toggle { display: block; }
+
+    /* Main Nav Slide-down */
+    .navbar .nav-menu {
+        display: none;
+        position: absolute;
+        top: 60px; left: 0; width: 100%;
+        background-color: var(--nav-bg);
+        flex-direction: column;
+        padding: 20px;
+    }
+    .navbar .nav-menu.open { display: flex; }
+
+    /* Library Bottom Dock */
     .library-nav-container {
-        margin: 20px 50px;
+        position: fixed !important;
+        bottom: 0 !important; top: auto !important;
+        left: 0; width: 100% !important;
+        margin: 0 !important; border-radius: 15px 15px 0 0;
+        padding: 10px 15px; /* Reduced for mobile space */
+    }
+
+    .desktop-links-only { display: none !important; }
+    .mobile-library-triggers { display: flex !important; gap: 5px; flex: 2; }
+    
+    .lib-select-trigger {
+        width: 100%; background: var(--nav-secondary);
+        color: var(--text-main); border: 1px solid var(--nav-border);
+        padding: 6px 2px; border-radius: 4px; font-size: 10px;
     }
 }
 
+/* 2. Tablet "No Man's Land" (769px - 1100px) */
+@media (min-width: 769px) and (max-width: 1100px) {
+    .library-nav-container { max-width: 95%; padding: 10px 20px; }
+    .nav-menu { gap: 12px; }
+    .nav-menu li a { font-size: 13px !important; }
+    .search-container { flex: 0 0 200px; }
+}
 
-@media (max-width: 768px) {
-    .navbar {
-        flex-direction: column;
-        align-items: flex-start;
-        padding: 1rem;
-    }
-
-    .nav-menu {
-        flex-direction: column;
-        width: 100%;
-        gap: 0.5rem;
-        margin-top: 1rem;
-    }
-
-    .library-nav-container {
-        margin: 10px;
-        padding: 10px;
-    }
-
-    .library-nav .nav-menu {
-        /*flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;*/
-        align-items: stretch;
-    }
-
+/* 3. Visibility Safety */
+@media (min-width: 769px) {
+    .mobile-library-triggers { display: none !important; }
+    .desktop-links-only { display: flex !important; }
 }

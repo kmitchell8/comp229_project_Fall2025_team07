@@ -7,6 +7,7 @@
  */
 
 :root {
+    /* --- Primary Palette --- */
     --primary-text: #ffffff;
     --secondary-text: #bdbdff;
     --bg-dark-primary: #0d0249;
@@ -26,6 +27,22 @@
     --color-success-dark: #1e7e34;
     --color-danger: #dc3545;
     --color-danger-dark: #c82333;
+
+    /* --- Consolidated Colors from Structure --- */
+    --mask-black: #000000;
+    --shelf-floor-color: #2a2a2a;
+    --shelf-bg-tint: rgba(255, 255, 255, 0.02);
+    --shadow-light: #00000080;
+    --shadow-heavy: #000000cc;
+    --glow-accent-soft: #79a6ff66;
+    --back-to-top-bg: #1a1a1a;
+    --shadow-button: #0000004d;
+    --modal-overlay-inner: #0d0249b3;
+    --modal-overlay-outer: #000000e6;
+    --modal-shadow: rgba(0, 0, 0, 0.5);
+    --hr-opacity-color: rgba(56, 18, 177, 0.5); /* Based on border-color opacity */
+    --title-gradient-mid: #6ce96c;
+    --title-gradient-end: #bdbd6e;
 }
 
 /* Base Body/Background */
@@ -46,13 +63,13 @@
     /* This creates the 'fading out' effect at the top */
     mask-image: linear-gradient(to bottom,
             transparent -3%,
-            #000000 180px,
+            var(--mask-black) 180px,
             /* Adjust 180px to match your navbar height */
-            #000000 100%);
+            var(--mask-black) 100%);
     -webkit-mask-image: linear-gradient(to bottom,
             transparent -3%,
-            #000000 180px,
-            #000000 100%);
+            var(--mask-black) 180px,
+            var(--mask-black) 100%);
 }
 
 .loading-state {
@@ -101,8 +118,8 @@
     border-bottom: 2px solid var(--border-color);
     /* Shelf line using your border color */
     /* This creates the 'floor' of the shelf */
-    border-bottom: 8px solid #2a2a2a;
-    background: rgba(255, 255, 255, 0.02);
+    border-bottom: 8px solid var(--shelf-floor-color);
+    background: var(--shelf-bg-tint);
     border-radius: 4px;
     position: relative;
 }
@@ -139,7 +156,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 8px 15px #00000080;
+    box-shadow: 0 8px 15px var(--shadow-light);
     cursor: pointer;
     transition: all 0.3s ease;
 }
@@ -172,9 +189,9 @@
     /* A sharp glow near the edge */
     /* A soft, wide bloom of light */
     box-shadow:
-        0 15px 30px #000000cc,
+        0 15px 30px var(--shadow-heavy),
         0 0 10px var(--accent-color),
-        0 0 20px #79a6ff66;
+        0 0 20px var(--glow-accent-soft);
     /* Makes the cover colors slightly more vibrant on hover */
     filter: brightness(1.1) contrast(1.1);
     /* Ensures the border glows */
@@ -188,7 +205,7 @@
     text-align: center;
     margin: 8px 0 2px;
     line-height: 1.2;
-    background: linear-gradient(110deg, var(--accent-color) 15%, #6ce96c 25%, #bdbd6e 60%);
+    background: linear-gradient(110deg, var(--accent-color) 15%, var(--title-gradient-mid) 25%, var(--title-gradient-end) 60%);
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -294,12 +311,12 @@
     height: 50px;
     border-radius: 50%;
     background-color: var(--accent-color);
-    color: #1a1a1a;
+    color: var(--back-to-top-bg);
     border: none;
     cursor: pointer;
     font-size: 24px;
     font-weight: bold;
-    box-shadow: 0 4px 15px #0000004d;
+    box-shadow: 0 4px 15px var(--shadow-button);
     transition: all 0.3s ease;
     z-index: 9999;
     display: flex;
@@ -313,7 +330,7 @@
 
 .back-to-top:hover {
     transform: translateY(-5px);
-    background-color: #fff;
+    background-color: var(--primary-text);
     box-shadow: 0 0 20px var(--accent-color);
 }
 
@@ -376,8 +393,8 @@ html {
     /* Use a gradient instead of flat black */
     background: radial-gradient(
         circle, 
-        #0d0249b3 0%, 
-        #000000e6 100%
+        var(--modal-overlay-inner) 0%, 
+        var(--modal-overlay-outer) 100%
     );
     /* Darken the background */
     /* Increase the blur for a "frosted glass" feel */
@@ -404,7 +421,7 @@ html {
     max-width: 800px;
     padding: 30px;
     position: relative;
-    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 30px var(--modal-shadow);
 }
 
 .modal-body {
@@ -417,7 +434,7 @@ html {
     aspect-ratio: 2/3;
     object-fit: cover;
     border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 4px 15px var(--modal-shadow);
 }
 
 .modal-info {
@@ -470,7 +487,7 @@ html {
 }
 
 .modal-read-more:hover {
-    background-color: #fff;
+    background-color: var(--primary-text);
     box-shadow: 0 0 15px var(--accent-color);
     transform: translateY(-2px);
 }
@@ -512,7 +529,59 @@ html {
 
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
+    /* Refinement: Back to Top Button */
+    .back-to-top {
+        bottom: 20px;
+        right: 20px;
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+        opacity: 0.7; /* Semi-transparent to prevent blocking content */
+    }
+
+    .back-to-top:active {
+        opacity: 1; /* Fully visible when tapped */
+    }
+
+    /* Refinement: Shelf Grid (2 items across) */
     .media-container {
-        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 15px; /* Tighter gaps for small screens */
+        padding-bottom: 50px;
+    }
+
+    /* Refinement: Card Details */
+    .media-formatting h2 {
+        font-size: 0.9rem; /* Slightly smaller titles */
+    }
+
+    .media-formatting h3 {
+        font-size: 0.8rem;
+    }
+
+    /* Refinement: Modal Layout (Vertical Stack) */
+    .modal-body {
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .modal-content {
+        width: 95%;
+        padding: 20px;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .modal-image img {
+        width: 140px; /* Smaller image in pop-up for mobile */
+    }
+
+    .modal-info {
+        text-align: center;
+    }
+
+    .modal-read-more {
+        align-self: center; /* Center the button on mobile */
     }
 }

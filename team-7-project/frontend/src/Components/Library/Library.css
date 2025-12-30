@@ -318,7 +318,7 @@
     font-weight: bold;
     box-shadow: 0 4px 15px var(--shadow-button);
     transition: all 0.3s ease;
-    z-index: 9999;
+    z-index: 11000;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -326,6 +326,10 @@
     /* Ensure it ignores the mask-image of the parent */
     transform: translateZ(0);
     -webkit-transform: translateZ(0);
+    /* Layer promotion to ignore the parent .library mask-image */
+    transform: translate3d(0, 0, 0);
+    -webkit-transform: translate3d(0, 0, 0);
+    pointer-events: auto;
 }
 
 .back-to-top:hover {
@@ -531,12 +535,13 @@ html {
 @media (max-width: 768px) {
     /* Refinement: Back to Top Button */
     .back-to-top {
-        bottom: 20px;
+        bottom: 30x;
         right: 20px;
         width: 40px;
         height: 40px;
         font-size: 18px;
-        opacity: 0.7; /* Semi-transparent to prevent blocking content */
+        opacity: 0.9; /* Semi-transparent to prevent blocking content */
+        position: fixed !important; /* Forces it to ignore layout shifts */
     }
 
     .back-to-top:active {

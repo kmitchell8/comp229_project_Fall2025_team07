@@ -171,6 +171,48 @@ adminView.jsx Styles
   }
 }
 
+/*======================
+Profile.jsx (Temporary Cover)
+=========================*/
+
+/* Targets the main container in Profile.jsx */
+.profile {
+  background-color: transparent;
+  padding: 20px;
+}
+
+/* Styles the test messages at the top of Profile */
+.profile > p {
+  font-size: 1.1em;
+  color: var(--primary-color);
+  text-align: center;
+  margin-top: 30px;
+  padding: 10px;
+}
+/* Styles the details box (User ID, Username, etc) */
+.profile > div {
+  max-width: 600px;
+  margin: 20px auto;
+  padding: 15px;
+  background-color: #1a0867; /* var(--admin-bg-color) */
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+  border-top: 1px solid #3812b1; /* var(--border-color) */
+}
+
+/* Styles the specific detail lines inside the box */
+.profile > div p {
+  font-size: 0.9em;
+  color: #bdbdff;
+  text-align: left; /* Changed to left for better readability of ID/Name */
+  margin-bottom: 8px;
+}
+
+/* Strong tags for the labels */
+.profile > div p strong {
+  color: #79a6ff; /* var(--accent-color) */
+}
+
 /*===========================*/
 /*:root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;

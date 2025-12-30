@@ -5,7 +5,6 @@
  * Date: December 07, 2025
  * Note: AI assisted styling (Gemini) 
  */
-
 .admin {
     display: flex;
     flex-direction: column;
@@ -13,8 +12,6 @@
     justify-content: center;*/
     gap: 60px;
     margin: 60px 5%;
-
-
 }
 
 :root {
@@ -25,23 +22,20 @@
     /* Card/Container background */
     --accent-color: #79a6ff;
     --dark-accent-hover: #5070ff;
-    --success-color: #4CAF50;
-    --error-color: #F44336;
+    --success-color: #28a745;
+    --error-color: #dc3545;
     --border-color: #3812b1;
     --table-header-bg: #1a0867;
     --input-bg: #1a0867;
     /* Input background */
     --update-color: #ffc107;
     /* Yellow/Amber for active Update button */
-    --view-color: #007bff;
-    /* Blue for View button */
-    --update-color: #ffc107;
-    /* Yellow/Amber for active Update button */
+    --view-color: #79a6ff;
+    /* Matches accent for View button */
 
     /* Primary Action Colors (General UI) */
-    --color-primary: #007bff;
-    --color-primary-dark: #0056b3;
-
+    --color-primary: #79a6ff;
+    --color-primary-dark: #5070ff;
 
     /* Success/Update Action Colors  */
     --color-success: #28a745;
@@ -49,14 +43,13 @@
 
     /* Destructive Action Colors (Delete) */
     --color-danger: #dc3545;
-    --color-danger-dark: #c82333;
-    --color-danger-border: #bd2130;
-    --color-danger-disabled: #f1a9b1;
-
-
-
+    --color-danger-dark: #a12323;
+    --color-danger-border: #801b1b;
+    --color-danger-disabled: #663333;
+    
+    /* Variable for delete text specifically */
+    --color-text-light: #ffffff;
 }
-
 /*============================
 CreateMedia.jsx
 =============================*/
@@ -66,14 +59,13 @@ CreateMedia.jsx
     box-sizing: border-box;
 }
 
-/* General Form Container  */
 .create-media-container {
     max-width: 800px;
     margin: 50px auto;
     padding: 30px;
     background-color: var(--bg-dark-secondary);
     border-radius: 12px;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 8px 30px var(--shadow-main);
     font-family: 'Outfit', sans-serif;
     color: var(--primary-text);
 }
@@ -86,17 +78,14 @@ CreateMedia.jsx
     text-align: center;
 }
 
-/* Form Layout and Groups  */
 .media-form {
     display: flex;
     flex-direction: column;
     gap: 20px;
-    /* Space between main sections */
 }
 
 .form-section-group {
     display: grid;
-    /* Create a responsive 2 or 3 column layout */
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 20px;
     padding: 15px;
@@ -121,7 +110,6 @@ CreateMedia.jsx
     margin-left: 2px;
 }
 
-/* Inputs and Textareas */
 .form-input {
     padding: 10px 12px;
     border: 1px solid var(--border-color);
@@ -131,12 +119,11 @@ CreateMedia.jsx
     background-color: var(--bg-dark-secondary);
     transition: border-color 0.2s, box-shadow 0.2s;
     box-sizing: border-box;
-    /* padding/width calculation */
 }
 
 .form-input:focus {
     border-color: var(--accent-color);
-    box-shadow: 0 0 0 3px rgba(121, 166, 255, 0.4);
+    box-shadow: 0 0 0 3px var(--shadow-accent);
     outline: none;
     background-color: var(--input-bg);
 }
@@ -144,13 +131,6 @@ CreateMedia.jsx
 .large-textarea textarea.form-input {
     resize: vertical;
     min-height: 100px;
-}
-
-/* Error/Feedback Styling */
-.field-feedback {
-    margin-top: 5px;
-    font-size: 0.85em;
-    font-style: italic;
 }
 
 .error-message {
@@ -161,8 +141,6 @@ CreateMedia.jsx
     border-color: var(--error-color);
 }
 
-
-/* Action Group and Button */
 .form-action-group {
     padding: 15px 0;
     text-align: center;
@@ -176,7 +154,6 @@ CreateMedia.jsx
     border-radius: 8px;
     cursor: pointer;
     background-color: var(--success-color);
-    /* Use success color for creation button */
     color: var(--primary-text);
     transition: background-color 0.2s ease, transform 0.1s ease;
     width: 100%;
@@ -184,18 +161,16 @@ CreateMedia.jsx
 }
 
 .button-primary:hover:not(:disabled) {
-    background-color: #388e3c;
+    background-color: var(--success-hover);
     transform: translateY(-2px);
 }
 
 .button-primary:disabled {
-    background-color: #4a4a4a;
+    background-color: var(--disabled-bg);
     cursor: not-allowed;
     opacity: 0.7;
 }
 
-
-/* Info/Global Feedback Boxes */
 .info-box {
     padding: 15px;
     margin-bottom: 20px;
@@ -205,15 +180,13 @@ CreateMedia.jsx
 }
 
 .error-box {
-    background-color: #4a1c1c;
-    /* Dark Red Background */
+    background-color: var(--error-bg-dark);
     border: 1px solid var(--error-color);
     color: var(--error-color);
 }
 
 .success-box {
-    background-color: #1c4a1c;
-    /* Dark Green Background */
+    background-color: var(--success-bg-dark);
     border: 1px solid var(--success-color);
     color: var(--success-color);
 }
@@ -238,12 +211,80 @@ CreateMedia.jsx
 .media-type-selector button.active {
     background: var(--accent-color);
     color: var(--bg-dark-primary);
-    border-color: #fff;
+    border-color: var(--primary-text);
     font-weight: bold;
     box-shadow: 0 0 10px var(--accent-color);
 }
 
-/* Hide the default input */
+.file-upload-label {
+    display: block;
+    width: 100%;
+    padding: 12px 15px;
+    background-color: var(--bg-dark-secondary);
+    color: var(--secondary-text);
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-upload-label:hover {
+    border-color: var(--accent-color);
+    color: var(--primary-text);
+    background-color: var(--hover-overlay-light);
+    box-shadow: 0 0 15px var(--shadow-accent-light);
+}
+
+.file-preview-zone {
+    margin-top: 10px;
+    padding: 8px;
+    background: var(--preview-bg);
+    border-radius: 4px;
+    border-left: 3px solid var(--success-color);
+}
+
+.file-preview-zone strong {
+    color: var(--accent-color);
+}
+
+.form-checkbox {
+    width: 18px;
+    height: 18px;
+    margin: 0 10px 0 0;
+    cursor: pointer;
+    accent-color: var(--view-color);
+}
+
+/* RESTORED: Default file input interaction */
+.custom-file-upload {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Removed 'hidden-file-input' styles that were hiding the browser default */
+.form-input[type="file"] {
+    padding: 8px;
+    background-color: var(--input-bg);
+    border: 1px solid var(--border-color);
+    color: var(--secondary-text);
+    cursor: pointer;
+    width: 100%;
+}
+
+/* Refined label to work WITH the input, not hide it */
+.file-upload-label {
+    display: block;
+    font-weight: 500;
+    color: var(--secondary-text);
+    margin-bottom: 5px;
+}
+
 .hidden-file-input {
     width: 0.1px;
     height: 0.1px;
@@ -258,15 +299,12 @@ CreateMedia.jsx
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    /* Keeps things aligned to the left */
 }
 
-/* Style the label as the button */
+/* Style the label as the button - REVERTED to original functionality */
 .file-upload-label {
     display: block;
-    /* Changed from inline-block */
     width: 100%;
-    /* Now respects border-box */
     padding: 12px 15px;
     background-color: var(--bg-dark-secondary);
     color: var(--secondary-text);
@@ -275,8 +313,6 @@ CreateMedia.jsx
     cursor: pointer;
     transition: all 0.3s ease;
     text-align: center;
-
-    /* Ensure no text overflows if the filename is long */
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -285,68 +321,17 @@ CreateMedia.jsx
 .file-upload-label:hover {
     border-color: var(--accent-color);
     color: var(--primary-text);
-    background-color: rgba(121, 166, 255, 0.1);
-    box-shadow: 0 0 15px rgba(121, 166, 255, 0.2);
+    background-color: var(--hover-overlay-light);
+    box-shadow: 0 0 15px var(--shadow-accent-light);
 }
 
 .upload-icon {
     margin-right: 10px;
     font-size: 1.2rem;
 }
-
-.file-preview-zone {
-    margin-top: 10px;
-    padding: 8px;
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 4px;
-    border-left: 3px solid var(--success-color);
-}
-
-.file-preview-zone strong {
-    color: var(--accent-color);
-}
-
-/* Container for the checkbox to keep it aligned with other form-groups */
-.checkbox-inline-group {
-    display: flex;
-    align-items: center;
-    min-height: 40px;
-    /* Aligns visually with the height of your text inputs */
-    margin-top: 10px;
-}
-
-.checkbox-wrapper {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    user-select: none;
-}
-
-/* The actual box */
-.form-checkbox {
-    width: 18px;
-    height: 18px;
-    margin: 0 10px 0 0;
-    /* Space between box and text */
-    cursor: pointer;
-    accent-color: #007bff;
-    /* Optional: matches primary button color */
-}
-
-/* The text next to the box */
-.checkbox-label-text {
-    font-size: 1rem;
-    font-weight: 500;
-    color: #333;
-    cursor: pointer;
-    margin: 0;
-    /* Removes default label margins */
-}
-
 /*===================
 UpdateUser.jsx/UpdateBook.jsx
 ====================*/
-
 
 .user-table-container {
     width: 95%;
@@ -358,7 +343,7 @@ UpdateUser.jsx/UpdateBook.jsx
     padding: 25px;
     background-color: var(--bg-dark-secondary);
     border-radius: 12px;
-    box-shadow: 0 10px 40px #00000099;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6); /* Replaced #00000099 with rgba */
     font-family: 'Outfit', sans-serif;
     color: var(--primary-text);
     overflow-x: auto;
@@ -432,7 +417,7 @@ h1 {
 /* Usually Email or Genre */
 
 .user-table tbody tr:hover {
-    background-color: #3812b150;
+    background-color: rgba(56, 18, 177, 0.31); /* Replaced #3812b150 with rgba */
 }
 
 /* Editable Field Styling (Inputs) */
@@ -452,7 +437,7 @@ h1 {
     border-color: var(--accent-color);
     background-color: var(--bg-dark-primary);
     /* Darker on focus for contrast */
-    box-shadow: 0 0 0 4px #79a6ff26;
+    box-shadow: 0 0 0 4px rgba(121, 166, 255, 0.15); /* Replaced #79a6ff26 with rgba */
 }
 
 /* Role Radio Buttons in Table */
@@ -517,8 +502,7 @@ h1 {
     color: var(--success-color);
 }
 
-
-/*  Buttons  */
+/* Buttons  */
 .button-group {
     padding: 8px 12px;
     font-size: 0.9em;
@@ -612,7 +596,6 @@ h1 {
     border-color: var(--color-danger-dark);
 }
 
-
 .delete-button:disabled {
     background-color: var(--color-danger-disabled);
     border-color: var(--color-danger-disabled);
@@ -641,6 +624,78 @@ h1 {
     color: var(--secondary-text);
 }
 
+/*===================
+Refined Update Layout
+====================*/
+
+/* Alignment Fix for Action Buttons */
+.action-button-group-cell {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end; /* Align buttons to the right */
+    align-items: center;
+    min-width: 220px !important; /* Fixed width to prevent jumping */
+    padding-right: 20px !important;
+}
+
+/* Compact Table Cells */
+.user-table td {
+    padding: 10px 12px; /* Reduced vertical padding */
+    font-size: 0.95rem;
+    white-space: nowrap; /* Prevent text wrapping from stretching rows */
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Restricted Widths for Data Columns */
+.user-table td:first-child {
+    min-width: 150px;
+    max-width: 200px;
+}
+
+.user-table td:nth-child(2) {
+    min-width: 180px;
+    max-width: 250px;
+}
+
+/* Inputs that fill the cell without stretching it */
+.editable-input {
+    width: 100%;
+    padding: 6px 10px; /* Slimmer inputs */
+    font-size: 0.9rem;
+    background-color: var(--input-bg);
+}
+
+/* Improve the Table Container Scrollbar */
+.user-table-container {
+    padding: 15px; /* Tighter padding */
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-color) var(--bg-dark-primary);
+}
+
+.user-table-container::-webkit-scrollbar {
+    height: 8px;
+}
+
+.user-table-container::-webkit-scrollbar-thumb {
+    background: var(--accent-color);
+    border-radius: 10px;
+}
+
+/* Sticky Actions Column (Optional - Keep buttons visible while scrolling) */
+.user-table th:last-child,
+.user-table td:last-child {
+    position: sticky;
+    right: 0;
+    background-color: var(--bg-dark-secondary); /* Match background */
+    z-index: 2;
+    box-shadow: -5px 0 10px rgba(0,0,0,0.2); /* Visual separation */
+}
+
+.user-table th:last-child {
+    background-color: var(--table-header-bg);
+    z-index: 3;
+}
 /*============================
 Dropdown & Select Styling
 =============================*/
@@ -696,4 +751,211 @@ select.editable-input option,
     font-size: 0.9em;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+}
+
+/* Mobile View Extension */
+@media screen and (max-width: 768px) {
+    .create-media-container {
+        margin: 20px 10px;
+        padding: 15px;
+    }
+
+    .form-section-group {
+        grid-template-columns: 1fr;
+        padding: 12px;
+        gap: 15px;
+    }
+
+    .form-input, 
+    .file-upload-label,
+    .button-primary {
+        width: 100%;
+        max-width: none;
+    }
+    
+    .user-table-container {
+        width: 100%;
+        margin: 20px 0;
+        border-radius: 0;
+    }
+}
+/* ============================================================
+   Mobile View (Max-width: 768px)
+   ============================================================ */
+@media screen and (max-width: 768px) {
+    .create-media-container {
+        margin: 20px 10px;
+        padding: 15px;
+        width: auto;
+    }
+
+    .form-title {
+        font-size: 1.6em;
+        margin-bottom: 20px;
+    }
+
+    .form-section-group {
+        grid-template-columns: 1fr;
+        padding: 12px;
+        gap: 15px;
+    }
+
+    .form-input, 
+    .file-upload-label,
+    .button-primary {
+        width: 100%;
+        max-width: none;
+        font-size: 16px; 
+    }
+
+    .user-table-container {
+        width: 100%;
+        margin: 20px 0;
+        border-radius: 0;
+        min-width: unset;
+    }
+}
+/* ============================================================
+   Mobile View (Max-width: 768px)
+   ============================================================ */
+@media screen and (max-width: 768px) {
+    .create-media-container {
+        margin: 20px 10px;
+        padding: 15px;
+        width: auto;
+    }
+
+    .form-title {
+        font-size: 1.6em;
+        margin-bottom: 20px;
+    }
+
+    .media-type-selector {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .media-type-selector button {
+        flex: 1 1 40%;
+        padding: 12px 10px;
+        font-size: 0.9em;
+    }
+
+    .form-section-group {
+        grid-template-columns: 1fr;
+        padding: 12px;
+        gap: 15px;
+    }
+
+    .form-input, 
+    .file-upload-label,
+    .button-primary {
+        width: 100%;
+        max-width: none;
+        font-size: 16px; 
+    }
+
+    .checkbox-inline-group {
+        padding: 10px 0;
+    }
+
+    .form-checkbox {
+        width: 22px;
+        height: 22px;
+    }
+
+    .checkbox-label-text {
+        font-size: 1.1rem;
+    }
+
+    .file-upload-label {
+        padding: 20px 10px;
+    }
+
+    .form-action-group {
+        padding: 15px 0;
+        text-align: center;
+    }
+
+    .button-primary {
+        width: 100%;
+    }
+/* ============================================================
+   Mobile View: Table-to-Card Transformation (Max-width: 768px)
+   ============================================================ */
+
+    /* Remove the table structure */
+    .user-table, 
+    .user-table thead, 
+    .user-table tbody, 
+    .user-table th, 
+    .user-table td, 
+    .user-table tr {
+        display: block;
+        width: 100%;
+    }
+
+    /* Hide the header row (we will use labels instead) */
+    .user-table thead {
+        display: none;
+    }
+
+    /* Turn each Row into a Card */
+    .user-table tr {
+        margin-bottom: 25px;
+        background-color: var(--input-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Style each Cell as a labeled row */
+    .user-table td {
+        display: flex;
+        flex-direction: column;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        white-space: normal; /* Allow text wrapping */
+        min-width: unset !important;
+        max-width: unset !important;
+    }
+
+    .user-table td:last-child {
+        border-bottom: none;
+        position: static; /* Disable sticky on mobile */
+        background-color: transparent;
+        box-shadow: none;
+        padding-top: 20px;
+    }
+
+    /* "pseudo-labels" for context since headers are hidden */
+    /* Example: Add data labels via CSS if you have data-attributes, 
+       otherwise, the inputs themselves serve as the guide */
+    
+    .editable-input {
+        max-width: 100% !important;
+        margin-top: 5px;
+    }
+
+    /* Action Buttons: Stack them or keep them side-by-side */
+    .action-button-group-cell {
+        justify-content: center;
+        gap: 15px;
+        width: 100%;
+    }
+
+    .button-group {
+        flex: 1; /* Make buttons equal width on mobile */
+        text-align: center;
+        padding: 12px;
+    }
+
+    /* Adjust container for mobile edge-to-edge look */
+    .user-table-container {
+        padding: 10px;
+        background-color: transparent;
+        box-shadow: none;
+        margin: 10px auto;
+    }
 }

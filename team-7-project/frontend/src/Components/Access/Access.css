@@ -259,19 +259,34 @@
     transform: translateX(-3px) scale(1.01);
 }
 
-/* Interaction States for Toggle Logic */
-.login-button.active,
-.register-button.active {
+/* Interaction States for Toggle Logic -- context aware*/
+
+/* Logic for the Unified LogOrReg component ONLY */
+/* target buttons specifically inside .form-card */
+.form-card .login-button.active, 
+.form-card .register-button.active {
     filter: brightness(1.1);
+    opacity: 1;
     z-index: 20;
 }
 
-.login-button:not(.active),
-.register-button:not(.active) {
+.form-card .login-button:not(.active), 
+.form-card .register-button:not(.active) {
     opacity: 0.7;
     filter: saturate(0.8);
 }
 
+/* Logic for Standalone Pages (Login.jsx / Register.jsx) */
+/* When the buttons are inside .login-card or .register-card, they are always 100% visible */
+.login-card .login-button,
+.register-card .register-button {
+    opacity: 1;
+    filter: none;
+    width: 100%; /* Ensures standalone buttons stay full width */
+    clip-path: none; /* Removes the split-button shape for standalone pages */
+    transform: none;
+    border-radius: 0.5rem;
+}
 /* ============================================================
    SHARED UTILITY STYLES (Used by all)
    ============================================================ */

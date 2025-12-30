@@ -35,9 +35,8 @@ authContext.jsx
   color: #374151;
   padding: 2rem;
 }
-
 /*======================
-adminView.jsx
+adminView.jsx Styles
 =========================*/
 
 :root {
@@ -48,18 +47,16 @@ adminView.jsx
   --primary-color: #ffffff;
   /* White text, consistent with body */
   --accent-color: #79a6ff;
-  /* Bright, light blue for links/accents (pops on dark background) */
+  /* Bright, light blue for links/accents */
   --dark-accent-hover: #5070ff;
   /* Deeper blue for hover state */
   --border-color: #3812b1;
   /* Subtle border color */
   --shadow-color: rgba(0, 0, 0, 0.4);
-  /* Darker, more pronounced shadow */
 }
 
 /* Global Admin Container Styling */
 .admin {
-
   background-color: transparent;
   padding: 20px;
 }
@@ -69,7 +66,7 @@ adminView.jsx
   padding-top: 20px;
 }
 
-/* Default Admin Dashboard (The list of links) */
+/* Dashboard Navigation Links Container */
 .admin-container {
   display: flex;
   flex-direction: column;
@@ -83,16 +80,17 @@ adminView.jsx
   border-left: 5px solid var(--accent-color);
 }
 
-.admin-container>.admin {
+/* Individual Link Blocks */
+.admin-item {
   padding: 0;
   margin: 0;
 }
 
-.admin-container>.admin h3 {
+.admin-item h3 {
   margin: 0;
 }
 
-.admin-container>.admin a {
+.admin-item a {
   display: block;
   padding: 15px 20px;
   font-size: 1.1em;
@@ -101,29 +99,49 @@ adminView.jsx
   background-color: var(--admin-bg-color);
   text-decoration: none;
   border-radius: 8px;
-  transition: background-color 0.3s ease, transform 0.1s ease, color 0.3s ease;
+  transition: all 0.3s ease;
   border: 1px solid var(--border-color);
 }
 
-.admin-container>.admin a:hover {
+.admin-item a:hover {
   background-color: var(--accent-color);
   color: var(--card-bg-color);
   transform: translateY(-2px);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
-/* Test Messages and Footer Content */
-.admin>p,
-.profile>p {
+/* "Go Back" Navigation Styles */
+.admin-nav-footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.admin-go-back {
+  background-color: var(--admin-bg-color);
+  color: var(--primary-color);
+  border: 1px solid var(--border-color);
+  padding: 10px 25px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.admin-go-back:hover {
+  background-color: var(--accent-color);
+  color: var(--card-bg-color);
+}
+
+/* Footer / Info Text */
+.admin .test-message {
   font-size: 1.1em;
   color: var(--primary-color);
   text-align: center;
   margin-top: 30px;
-  padding: 10px;
 }
 
-.admin>div:last-child,
-.profile>div:last-child {
+.admin-footer-info {
   max-width: 600px;
   margin: 20px auto;
   padding: 15px;
@@ -133,16 +151,10 @@ adminView.jsx
   border-top: 1px solid var(--border-color);
 }
 
-.admin>div:last-child p,
-.profile>div:last-child p {
+.admin-footer-info p {
   font-size: 0.9em;
   color: #bdbdff;
   text-align: center;
-}
-
-/*  Content Views (CreateBook, UpdateBook, etc.) */
-.render-view>* {
-  max-width: 100%;
 }
 
 /* Responsive Adjustments */
@@ -150,9 +162,10 @@ adminView.jsx
   .admin-container {
     margin: 20px auto;
     padding: 20px;
+    width: 90%;
   }
 
-  .admin-container>.admin a {
+  .admin-item a {
     font-size: 1em;
     padding: 12px 15px;
   }

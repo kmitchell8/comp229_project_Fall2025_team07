@@ -41,8 +41,8 @@
     --modal-overlay-outer: #000000e6;
     --modal-shadow: rgba(0, 0, 0, 0.5);
     --hr-opacity-color: rgba(56, 18, 177, 0.5); /* Based on border-color opacity */
-    --title-gradient-mid: #6ce96c;
-    --title-gradient-end: #bdbd6e;
+    --title-gradient-mid: /*#6ce96c*/#4facfe;
+    --title-gradient-end: /*#bdbd6e*/#00f2fe;
 }
 
 /* Base Body/Background */
@@ -318,7 +318,7 @@
     font-weight: bold;
     box-shadow: 0 4px 15px var(--shadow-button);
     transition: all 0.3s ease;
-    z-index: 11000;
+    z-index: 9999;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -535,7 +535,7 @@ html {
 @media (max-width: 768px) {
     /* Refinement: Back to Top Button */
     .back-to-top {
-        bottom: 30x;
+        bottom: 30px;
         right: 20px;
         width: 40px;
         height: 40px;

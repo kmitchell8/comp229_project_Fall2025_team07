@@ -6,6 +6,56 @@
  * Note: AI assisted styling (Gemini) 
  */
 
+:root {
+    /* Login/Register Palette  */
+    /* Backgrounds & Containers */
+    --auth-bg-page: transparent;
+    --auth-bg-card: #ffffff;
+    /* Pure White */
+    --auth-border-card: #e5e7eb;
+    /* Soft Gray Border */
+    --auth-shadow: rgba(0, 0, 0, 0.1);
+    /* #0000001a */
+
+    /* Input Fields */
+    --auth-input-bg: #fffacd;
+    /* Lemon Chiffon (Inactive) */
+    --auth-input-bg-focus: #ffffff;
+    /* White (Active) */
+    --auth-input-border: #d1d5db;
+    /* Gray */
+    --auth-input-focus-ring: #3b82f680;
+    /* Blue with 50% opacity */
+    --auth-input-focus-border: #3b82f6;
+    /* Strong Blue */
+    --auth-label-text: #374151;
+    /* Dark Gray */
+
+    /* Typography */
+    --auth-header-text: #1f2937;
+    /* Charcoal Black */
+    --auth-muted-text: #6b7280;
+    /* Medium Gray */
+
+    /* States (Error/Loading) */
+    --auth-error-bg: #fef2f2;
+    /* Very Light Red */
+    --auth-error-text: #ef4444;
+    /* Alert Red */
+    --auth-error-border: #fca5a5;
+    /* Soft Red Border */
+
+    /* Primary Login Button (Gradient) */
+    --auth-btn-grad-start: #00c6ff;
+    /* Bright Blue */
+    --auth-btn-grad-mid: #6f59ff;
+    /* Purple/Indigo */
+    --auth-btn-grad-end: #7f00ff;
+    /* Violet */
+    --auth-btn-text: #ffffff;
+    /* White */
+}
+
 /*page container - contains the form card*/
 .login {
     display: flex;
@@ -13,45 +63,43 @@
     align-items: center;
     justify-content: center;
     gap: 80px;
-    margin: 80px 170px;    
+    margin: 80px 170px;
 }
 
 /*form card container inside main container*/
-.login-card{
+.login-card {
     width: 100%;
     max-width: 24rem;
-    background-color: white;
+    background-color: var(--auth-bg-card);
     padding: 3rem 2rem;
     border-radius: 1.5rem;
-    box-shadow: 0 4px 20px #0000001a;
-    border: 1px solid #e5e7eb;
+    box-shadow: 0 4px 20px var(--auth-shadow);
+    border: 1px solid var(--auth-border-card);
     text-align: center;
 }
 
 .login-header {
-    font-size: 2.25rem; 
-    font-weight: 800; 
-    color: #1f2937; 
-    margin-bottom: 3rem; 
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: var(--auth-header-text);
+    margin-bottom: 3rem;
 }
 
 /*error handling*/
 .login-error {
-    background-color: #fef2f2; 
-    color: #ef4444; 
-    border: 1px solid #fca5a5;
+    background-color: var(--auth-error-bg);
+    color: var(--auth-error-text);
+    border: 1px solid var(--auth-error-border);
     border-radius: 0.5rem;
     padding: 0.75rem;
-    margin-bottom: 1.5rem; 
+    margin-bottom: 1.5rem;
     text-align: left;
     font-size: 0.875rem;
 }
 
 .error-message {
-    font-weight: 700; 
+    font-weight: 700;
 }
-
-
 
 /*form layout*/
 .form-layout {
@@ -65,7 +113,7 @@
     display: block;
     font-size: 0.875rem;
     font-weight: 600;
-    color: #374151;
+    color: var(--auth-label-text);
     margin-bottom: 0.5rem;
     text-align: left;
 }
@@ -74,17 +122,17 @@
 .input-field {
     width: 100%;
     padding: 0.75rem;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--auth-input-border);
     box-sizing: border-box;
     transition: all 0.15s ease-in-out;
     outline: none;
-    background-color: #fffacd;
+    background-color: var(--auth-input-bg);
 }
 
 .input-field:focus {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px #3b82f680;
-    background-color: #fff;
+    border-color: var(--auth-input-focus-border);
+    box-shadow: 0 0 0 3px var(--auth-input-focus-ring);
+    background-color: var(--auth-input-bg-focus);
 }
 
 /*login button*/
@@ -93,19 +141,18 @@
     padding: 0.75rem;
     border: none;
     border-radius: 0.5rem;
-    color: white;
+    color: var(--auth-btn-text);
     font-weight: bold;
     font-size: 1.125rem;
     cursor: pointer;
-    background: linear-gradient(to right, #00c6ff, #6f59ff, #7f00ff);
-    box-shadow: 0 4px 6px -1px #0000001a, 0 2px 4px -2px #0000000f;
+    background: linear-gradient(to right, var(--auth-btn-grad-start), var(--auth-btn-grad-mid), var(--auth-btn-grad-end));
+    box-shadow: 0 4px 6px -1px var(--auth-shadow), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
     transition: transform 0.2s ease;
 }
 
-.login-button:hover:not(:disabled)  {
+.login-button:hover:not(:disabled) {
     transform: scale(1.01);
-    box-shadow: 0 10px 15px -3px #0000001a, 0 4px 6px -4px #0000001a;
-
+    box-shadow: 0 10px 15px -3px var(--auth-shadow), 0 4px 6px -4px var(--auth-shadow);
 }
 
 .login-button:disabled {
@@ -116,7 +163,40 @@
 /* switch-text */
 .switch-text {
     font-size: 0.875rem;
-    color: #6b7280;
+    color: var(--auth-muted-text);
     margin-top: 1.5rem;
     text-align: center;
+}
+
+/*===========================
+Responsive Logic (Mobile)
+===========================*/
+@media (max-width: 768px) {
+    .login {
+        /* Remove the massive 170px side margins so the card can breathe */
+        margin: 40px 20px;
+        gap: 40px; /* Reduced gap between elements */
+    }
+
+    .login-card {
+        /* Reduce internal padding so the form isn't too tall on small screens */
+        padding: 2rem 1.5rem;
+        border-radius: 1rem;
+    }
+
+    .login-header {
+        font-size: 1.75rem;
+        margin-bottom: 2rem;
+    }
+
+    .input-field {
+        /* Ensure inputs are easy to tap on mobile */
+        padding: 0.875rem;
+        font-size: 1rem; 
+    }
+
+    .login-button {
+        padding: 0.875rem;
+        font-size: 1rem;
+    }
 }

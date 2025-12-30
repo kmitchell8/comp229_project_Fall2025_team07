@@ -5,104 +5,141 @@
  * Date: November 16, 2025
  * Note: See code in Login.css
  */
+:root {
+    /* --- Auth Flow (Login & Register) Palette --- */
+    /* Backgrounds & Containers */
+    --auth-bg-page: transparent;
+    --auth-bg-card: #ffffff;
+    /* Pure White */
+    --auth-border-card: #e5e7eb;
+    /* Soft Gray Border */
+    --auth-shadow: rgba(0, 0, 0, 0.1);
+
+    /* Input Fields */
+    --auth-input-bg: #ffffff;
+    /* Register defaults to white, Login used #fffacd */
+    --auth-input-border: #cccccc;
+    /* #ccc from Register CSS */
+    --auth-input-focus-ring: rgba(0, 123, 255, 0.25);
+    --auth-input-focus-border: #007bff;
+    --auth-label-text: #555555;
+    /* #555 from Register CSS */
+
+    /* Typography */
+    --auth-header-text: #1f2937;
+    /* Charcoal Black */
+    --auth-muted-text: #6b7280;
+    /* Medium Gray */
+
+    /* States (Error/Loading) */
+    --auth-error-bg: #fef2f2;
+    --auth-error-text: #ef4444;
+    --auth-error-border: #fca5a5;
+
+    /* Action Button (Gradient) */
+    --auth-btn-grad-start: #00c6ff;
+    --auth-btn-grad-mid: #6f59ff;
+    --auth-btn-grad-end: #7f00ff;
+    --auth-btn-text: #ffffff;
+}
 
 /*page container - contains the form card*/
-.register{
+.register {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 80px;
-    margin: 80px 170px;    
-    
+    margin: 80px 170px;
 }
+
 /*form card container inside main container*/
 .register-card {
     width: 100%;
-    max-width: 24rem; 
-    background-color: white;
-    padding: 3rem 2rem; 
-    border-radius: 1.5rem; 
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    border: 1px solid #e5e7eb; 
+    max-width: 24rem;
+    background-color: var(--auth-bg-card);
+    padding: 3rem 2rem;
+    border-radius: 1.5rem;
+    box-shadow: var(--auth-shadow);
+    border: 1px solid var(--auth-border-card);
     text-align: center;
 }
 
-
 .register-header {
-    font-size: 2.25rem; 
-    font-weight: 800; 
-    color: #1f2937; 
-    margin-bottom: 3rem; 
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: var(--auth-header-text);
+    margin-bottom: 3rem;
 }
 
 /*error handling*/
 .register-error {
-    background-color: #fef2f2; 
-    color: #ef4444; 
-    border: 1px solid #fca5a5;
+    background-color: var(--auth-error-bg);
+    color: var(--auth-error-text);
+    border: 1px solid var(--auth-error-border);
     border-radius: 0.5rem;
     padding: 0.75rem;
-    margin-bottom: 1.5rem; 
+    margin-bottom: 1.5rem;
     text-align: left;
     font-size: 0.875rem;
 }
 
 .error-message {
-    font-weight: 700; 
+    font-weight: 700;
 }
 
 /* form Layout */
 .register-form {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem; 
+    gap: 1.5rem;
 }
 
 /*input label*/
 .input-label {
     display: block;
-    font-size: 0.875rem; 
-    font-weight: 600; 
-    color: #555; 
-    margin-bottom: 0.25rem; 
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--auth-label-text);
+    margin-bottom: 0.25rem;
     text-align: left;
 }
 
 /*input field*/
 .input-field {
     width: 100%;
-    padding: 0.75rem; 
-    border: 1px solid #ccc; 
-    border-radius: 0.25rem; 
+    padding: 0.75rem;
+    border: 1px solid var(--auth-input-border);
+    border-radius: 0.25rem;
     box-sizing: border-box;
-    transition: all 0.15s ease-in-out; 
+    transition: all 0.15s ease-in-out;
     outline: none;
+    background-color: var(--auth-input-bg);
 }
 
 .input-field:focus {
-    border-color: #007bff; 
-    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25); 
+    border-color: var(--auth-input-focus-border);
+    box-shadow: 0 0 0 3px var(--auth-input-focus-ring);
 }
 
 /*register button*/
 .register-button {
     width: 100%;
     padding: 0.8rem;
-    margin-top: 1rem; 
+    margin-top: 1rem;
     border: none;
     border-radius: 0.4rem;
-    color: white;
+    color: var(--auth-btn-text);
     font-weight: 700;
     font-size: 1.125rem;
     cursor: pointer;
-    background: linear-gradient(to right, #00c6ff, #6f59ff, #7f00ff);     
+    background: linear-gradient(to right, var(--auth-btn-grad-start), var(--auth-btn-grad-mid), var(--auth-btn-grad-end));
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     transition: transform 0.2s ease;
 }
 
-.register-button:hover:not(:disabled)  {
-    transform: scale(1.02); 
+.register-button:hover:not(:disabled) {
+    transform: scale(1.02);
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15);
 }
 
@@ -113,7 +150,26 @@
 
 .switch-text {
     font-size: 0.875rem;
-    color: #6b7280;
-    margin-bottom: 0.5rem; /* Space below the link text */
+    color: var(--auth-muted-text);
+    margin-bottom: 0.5rem;
 }
 
+/*===========================
+Responsive Logic (Mobile)
+===========================*/
+@media (max-width: 768px) {
+    .register {
+        /* Relax margins for mobile */
+        margin: 40px 20px;
+        gap: 40px;
+    }
+
+    .register-card {
+        padding: 2rem 1.5rem;
+    }
+
+    .register-header {
+        font-size: 1.85rem;
+        margin-bottom: 2rem;
+    }
+}

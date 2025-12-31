@@ -3,6 +3,7 @@ import React, { useEffect, useState, useMemo } from 'react'
 import './Library.css'
 import mediaApi from '../Api/mediaApi'
 import LibraryNavBar from '../Navbar/LibraryNavBar';
+import Media from '../Media/Media';
 //import { useAuth } from '../authState/useAuth'
 //import {useNavigate} from 'react-router-dom'
 
@@ -11,7 +12,7 @@ const truncateText = (text, limit) => {
   return text.length > limit ? text.substring(0, limit) + "..." : text;
 };
 
-const Library = () => {
+const Library = ({pathId}) => {
   //const [mediaShelves, setMediaShelves] = useState({});
   const [media, setMedia] = useState([]);
   const [descriptions, setDescriptions] = useState({}); // { [mediaId]: "Text content..." }
@@ -28,10 +29,15 @@ const Library = () => {
   //const { getToken } = useAuth()
   //const navigate = useNavigate();
 
+// If pathId exists (passed from LibraryView via hash parsing), 
+  // render the Media detail component instead of the library grid.
 
+  // Merged Scroll Listener for performance
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
+      const scrollPos = window.scrollY;
+      setIsScrolled(scrollPos > 50);
+      setShowButton(scrollPos > 400);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -99,8 +105,6 @@ const Library = () => {
     loadMedia();
   }, []);
 
-  // Derive grouped and sorted data (The "Shelves")
-  // recalculates only when the 'media' array changes
   // Derive grouped and sorted data (The "Shelves")
   // recalculates only when the 'media' array changes
   const shelfData = useMemo(() => {
@@ -188,26 +192,8 @@ const Library = () => {
     return { grouped, sortedNames };
   }, [media, viewMode, sortBy, searchTerm, filterType]);
 
-
-  // Scroll listener logic
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 400) {
-        setShowButton(true);
-      } else {
-        setShowButton(false);
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    /* if (window.location.hash) {
-       window.history.pushState(null, null, window.location.pathname);
-     }*/
   };
 
   useEffect(() => {
@@ -221,7 +207,6 @@ const Library = () => {
 
         if (element) {
           // Use 'auto' instead of 'smooth' for the refresh jump. 
-          // 'smooth' can be canceled by the browser if images are still loading.
           const navHeight = 180;
           const elementPosition = element.getBoundingClientRect().top + window.scrollY;
 
@@ -234,20 +219,28 @@ const Library = () => {
         }
       };
 
-      // use requestAnimationFrame to wait for the very next 
-      // browser "paint" after the media are added to the DOM.
       const timer = setTimeout(() => {
         requestAnimationFrame(() => {
           scrollToTarget();
         });
-      }, 500); // Increased to 500ms to account for image layout shifts
+      }, 500); 
 
       return () => clearTimeout(timer);
     }
   }, [media, shelfData.sortedNames]);
 
-  return (
+  const handleViewDetails = (mediaId) => {
+        // Architecture: Directly updating hash to library/[id] 
+        // matches the getPathSegments() logic in LibraryView.jsx
+        window.location.hash = `library/${mediaId}`;
+    };
 
+  // Final Guard for detail view
+  if (pathId) {
+    return <Media mediaId={pathId} viewContext="library" />;
+  }
+  
+  return (
     <div className="library">
       <LibraryNavBar
         isScrolled={isScrolled}
@@ -261,6 +254,7 @@ const Library = () => {
         setFilterType={setFilterType}
         shelfNames={shelfData.sortedNames}
       />
+
       {shelfData.sortedNames.length === 0 ? (
         <div className="empty-state">
           {searchTerm ? (
@@ -275,67 +269,55 @@ const Library = () => {
           )}
         </div>
       ) : (
-
         shelfData.sortedNames.map((shelf) => (
           <div key={shelf} id={`shelf-${shelf.replace(/\s+/g, '-')}`} className='shelf-container'>
             <h1>{shelf}</h1>
             <div className='media-container' >
-              {/*media.map((media)*/
-                shelfData.grouped[shelf].map((media) => (
-                  <div key={media.id} className='media-formatting'>
-                    <div
-                      className="media-cover-wrapper"
-                      onClick={() => handleOpenPreview(media)}
-                      title="Click to view description">
-                      <img
-                        src={mediaApi.getCoverUrl(media.cover)}
-                        alt={media.title}
-                      // Safety check for broken image paths
-                      // onError={(e) => { e.target.src = '/default-media-cover.png'; }}
-                      />
-                    </div>
-                    <h2>{media.title}</h2>
-                    <h3>
-                      {media.mediaType === 'book' && media.author}
-                      {media.mediaType === 'movie' && `Directed by: ${media.director}`}
-                      {media.mediaType === 'game' && `Developed by: ${media.developer}`}
-                    </h3>
-                    {/* <h4>
-                      {media.publisher}
-                      {media.ISBN_13 ? ` . ${media.ISBN_13}` : ''}
-                      {media.ISBN_10 ? ` . ${media.ISBN_10}` : ''}
-                    </h4>*/}
-                    <h4>{/*media.rating*/}</h4>
-                    {/* Metadata and the In-line Toggle Link */}
-                    <button
-                      className="media-readmore"
-                      onClick={() => handleShowDescription(media)}
-                    >
-                      {expandedId === media._id ? 'Close Summary ↑' : 'Quick Summary ↓'}
-                    </button>
-
-                    {/* IN-LINE FALLBACK DISPLAY */}
-                    {expandedId === media._id && descriptions[media._id] && (
-                      <p className='media-description'>
-                        {truncateText(descriptions[media._id], 150)}
-                        <br />
-                        <span
-                          className="media-readmore"
-                          onClick={() => handleOpenPreview(media)}
-                        >
-                          Read More
-                        </span>
-                      </p>
-                    )}
-
+              {shelfData.grouped[shelf].map((media) => (
+                <div key={media.id} className='media-formatting'>
+                  <div
+                    className="media-cover-wrapper"
+                    onClick={() => handleOpenPreview(media)}
+                    title="Click to view description">
+                    <img
+                      src={mediaApi.getCoverUrl(media.cover)}
+                      alt={media.title}
+                    />
                   </div>
+                  <h2>{media.title}</h2>
+                  <h3>
+                    {media.mediaType === 'book' && media.author}
+                    {media.mediaType === 'movie' && `Directed by: ${media.director}`}
+                    {media.mediaType === 'game' && `Developed by: ${media.developer}`}
+                  </h3>
+                  
+                  <button
+                    className="media-readmore"
+                    onClick={() => handleShowDescription(media)}
+                  >
+                    {expandedId === media._id ? 'Close Summary ↑' : 'Quick Summary ↓'}
+                  </button>
 
-                ))}
+                  {/* IN-LINE FALLBACK DISPLAY */}
+                  {expandedId === media._id && descriptions[media._id] && (
+                    <p className='media-description'>
+                      {truncateText(descriptions[media._id], 150)}
+                      <br />
+                      <span
+                        className="media-readmore"
+                        onClick={() => handleOpenPreview(media)}
+                      >
+                        Read More
+                      </span>
+                    </p>
+                  )}
+                </div>
+              ))}
             </div>
-
           </div>
         ))
       )}
+
       {/* Back to Top Button */}
       {showButton && (
         <button className="back-to-top" onClick={scrollToTop} title="Back to Top">
@@ -380,12 +362,14 @@ const Library = () => {
                 <div className="modal-description">
                   {descriptions[selectedMedia._id] || "Loading description..."}
                 </div>
-                {/*place holder*/}
                 <button
                   className="modal-read-more"
-                  onClick={() => console.log(`Maps to /media/${selectedMedia._id}`)}
+                  onClick={() => {
+                    handleViewDetails(selectedMedia._id);
+                    setSelectedMedia(null);
+                  }}
                 >
-                  View Media
+                  View Full Details
                 </button>
               </div>
             </div>
@@ -396,4 +380,4 @@ const Library = () => {
   );
 };
 
-export default Library
+export default Library;

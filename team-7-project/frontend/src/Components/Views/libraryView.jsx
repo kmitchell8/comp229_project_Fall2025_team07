@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react'
-//import { useAuth } from '../authState/useAuth.jsx'//authentication isn't needed for viewing books in a library
+//import { useAuth } from '../authState/useAuth.jsx'//authentication isn't needed for viewing medias in a library
 import { getHash } from '../Api/getPage.jsx'
 import Library from '../Library/Library.jsx'
 import Media from '../Media/Media.jsx'
 import Navbar from '../Navbar/Navbar.jsx'
 //import LibraryNavBar from '../Navbar/LibraryNavBar.jsx'
-
-
 
 export const LibraryView = () => {
     //const { loading } = useAuth(); //use the Auth hook to access role of the user
@@ -20,7 +18,7 @@ export const LibraryView = () => {
               return null;
           }
           
-          //redirect guard logic currently not needed to list books butmay be need in the future
+          //redirect guard logic currently not needed to list medias butmay be need in the future
           if (!isAuthenticated) {
               console.log("User not signed in. Redirecting to home page.");
               window.location.replace('./'); 
@@ -39,53 +37,94 @@ export const LibraryView = () => {
   
       }, [isAuthenticated,loading]);//isAuthenticated dependency
   */
-        // logic to determine the initial view based on the URL hash
-        const getInitialView = useCallback(() => {
-            const hash = getHash(); //see getPage.jsx
 
-            //initial view is the the library page
-            if (hash === 'library' || hash == '') {
-                // renders the library view
+    // Robust routing arrangement with segments mirroring AdminView
+    const getPathSegments = useCallback(() => {
+        const hash = getHash(); // see getPage.jsx
+        // Split the hash into an array. For #library/itemId, segments[0] is 'library', segments[1] is 'itemId'
+        // Preserving logic: filter ensures no empty strings if hash ends in /
+        return hash.split('/').filter(s => s !== '');
+    }, []);
+
+    // logic to determine the initial view based on the URL hash segments
+    const getInitialView = useCallback(() => {
+        const segments = getPathSegments();
+        const primarySegment = segments[0];
+
+        // initial view is the library page
+        if (primarySegment === 'library' || !primarySegment) {
+            // Check if an itemId exists in the second segment
+            // This mirrors the itemId = parentSegments[2] logic in AdminView
+            if (segments[1]) {
+                return 'media';
+            }
+            
+            // Defaulting hash to library if empty
+            if (!primarySegment) {
                 window.location.hash = 'library';
-                return 'library';
             }
-            return 'book';
-            // routing for valid users/paths
-            // return hash === 'admin' ? 'admin' : 'profile';
-        }, []); // userRole dependency: ensures a re-run if role changes (set dependency for useCallback)
+            return 'library';
+        }
 
-        const [currentView, setCurrentView] = useState(getInitialView);
+        // routing for valid users/paths
+        // return hash === 'admin' ? 'admin' : 'profile';
+        return 'media'; 
+    }, [getPathSegments]);
 
-        // listen for hash changes and update the state
-        useEffect(() => {
-            const handleHashChange = () => {
-                setCurrentView(getInitialView());
-            };
+    const [currentView, setCurrentView] = useState(() => getInitialView());
+    const [pathSegments, setPathSegments] = useState(() => getPathSegments());
 
-            window.addEventListener('hashchange', handleHashChange);
-
-            return () => {
-                window.removeEventListener('hashchange', handleHashChange);
-            };
-        }, [getInitialView]);
-
-        // conditional rendering
-        const renderView = () => {
-            switch (currentView) {
-                case 'book':
-                    return <Book />;
-                case 'library':
-                default:
-                    return <Library />;
-            }
+    // listen for hash changes and update the state
+    useEffect(() => {
+        const handleHashChange = () => {
+            const newSegments = getPathSegments();
+            setPathSegments(newSegments);
+            setCurrentView(getInitialView());
         };
 
-        return (
-            <div className="min-h-screen"> {/*tail-wind css min-h(min-height) and screen(100vh)*/}
-                <Navbar />
-                <main className="render-view">
-                    {renderView()}
-                </main>
-            </div>
-        );
+        window.addEventListener('hashchange', handleHashChange);
+
+        return () => {
+            window.removeEventListener('hashchange', handleHashChange);
+        };
+    }, [getInitialView, getPathSegments]);
+
+    // conditional rendering
+    const renderView = () => {
+        // itemId is the second segment: #library/itemId
+        // Preserving architecture: extracting ID from the stateful pathSegments
+        const itemId = pathSegments[1];
+
+        switch (currentView) {
+            case 'media':
+                return (
+                    <Media 
+                        mediaId={itemId } 
+                        viewContext="library"
+                        /*onBack={() => window.location.hash = 'library'*} */
+                    />
+                );
+            case 'library':
+            default:
+                return <Library mediaId={itemId} />;
+        }
     };
+
+    return (
+        <div className="min-h-screen"> {/*tail-wind css min-h(min-height) and screen(100vh)*/}
+            <Navbar />
+            <main className="render-view">
+                {renderView()}
+            </main>
+
+            {/* Do not lose code: Segment tracking for debugging/future robust routing */}
+            <div className="library-footer-info" style={{padding: '20px', opacity: 0.6}}>
+                <p>
+                    Hash Routing: {pathSegments[0]} {pathSegments[1] ? `/ ${pathSegments[1]}` : ''}
+                </p>
+            </div>
+        </div>
+    );
+};
+
+export default LibraryView;

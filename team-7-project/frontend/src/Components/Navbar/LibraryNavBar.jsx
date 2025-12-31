@@ -43,9 +43,9 @@ const LibraryNavBar = ({
         if (element) {
             const navHeight = 180;
             const elementPosition = element.getBoundingClientRect().top + window.scrollY;
-            element.scrollIntoView({ behavior: 'smooth' });
+            
             window.scrollTo({
-                top: elementPosition - navHeight,
+                top: elementPosition - navHeight - 10,
                 behavior: 'smooth'
             });
             // Update URL bar without reloading the component

@@ -432,7 +432,7 @@ Responsive Logic (Mobile)
     }
 }
 
-/* 2. Tablet "No Man's Land" (769px - 1100px) */
+/* Tablet "No Man's Land" (769px - 1100px) */
 @media (min-width: 769px) and (max-width: 1100px) {
     .library-nav-container {
         max-width: 95%;
@@ -452,7 +452,7 @@ Responsive Logic (Mobile)
     }
 }
 
-/* 3. Visibility Safety */
+/* Visibility Safety */
 @media (min-width: 769px) {
     .mobile-library-triggers {
         display: none !important;

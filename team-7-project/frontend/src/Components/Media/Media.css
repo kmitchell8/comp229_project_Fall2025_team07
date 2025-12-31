@@ -1,11 +1,330 @@
+ /*
+ * File Name: Media.css
+ * Student’s Name: 
+ * Student ID: 
+ * Date: December 31, 2025
+ * Note: AI assisted styling (Gemini) 
+ */
 
+/* ============================================================
+   1. :root Colour Palette (Strict Theme Followed)
+   ============================================================ */
+:root {
+    /* Main Palette */
+    --primary-text: #ffffff;
+    --secondary-text: #bdbdff;
+    --bg-dark-primary: #0d0249;
+    --bg-dark-secondary: #240c83;
+    --accent-color: #79a6ff;
+    --dark-accent-hover: #5070ff;
+    --success-color: #28a745;
+    --error-color: #dc3545;
+    --border-color: #3812b1;
+    --table-header-bg: #1a0867;
+    --input-bg: #1a0867;
+    --update-color: #ffc107;
+    --view-color: #79a6ff;
 
+    /* Action Colors */
+    --color-primary: #79a6ff;
+    --color-primary-dark: #5070ff;
+    --color-success: #28a745;
+    --color-success-dark: #1e7e34;
+    --color-danger: #dc3545;
+    --color-danger-dark: #a12323;
+    --color-danger-border: #801b1b;
+    --color-danger-disabled: #663333;
+    --color-text-light: #ffffff;
 
-.book{
+    /* Feedback & Interaction */
+    --success-hover: #218838;
+    --disabled-bg: #4a4a4a;
+    --error-bg-dark: #4a1c1c;
+    --success-bg-dark: #1c4a1c;
+    --view-btn-hover: #0056b3;
+    --update-btn-hover: #e6b200;
+
+    /* RGBA values for shadows/transparency */
+    --shadow-main: #00000080;
+    --shadow-table: rgba(0, 0, 0, 0.6);
+    --shadow-accent: rgba(121, 166, 255, 0.15);
+    --shadow-accent-light: rgba(121, 166, 255, 0.2);
+    --hover-overlay-light: rgba(121, 166, 255, 0.1);
+    --preview-bg: rgba(0, 0, 0, 0.2);
+    --table-row-hover: rgba(56, 18, 177, 0.31);
+}
+
+/* ============================================================
+   Outer Container & Layout Logic
+   ============================================================ */
+
+.media {
+    min-height: 100vh;
+    background-color: var(--bg-dark-primary);
+    padding-top: 120px;
+    display: flex;
+    justify-content: center;
+    /* Centering the card */
+}
+
+.media-type {
     display: flex;
     flex-direction: column;
-    align-items: left;
+    align-items: flex-start;
     justify-content: center;
-    gap: 80px;
-    margin: 80px 170px;    
+    gap: 60px;
+    margin: 40px auto;
+    width: 90%;
+    max-width: 1200px;
+    /* Limits width to prevent field stretch */
+    background-color: var(--bg-dark-secondary);
+    padding: 60px;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 10px 40px var(--shadow-main);
+}
+
+.media-split-container {
+    display: flex;
+    width: 100%;
+    gap: 60px;
+    align-items: flex-start;
+}
+
+/* ============================================================
+   Left Pane: Visuals & Navigation
+   ============================================================ */
+
+.media-visual-pane {
+    flex: 0 0 350px;
+    /* Fixed width to stabilize layout */
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.media-cover-frame img {
+    width: 100%;
+    border-radius: 12px;
+    box-shadow: 0 20px 40px var(--shadow-table);
+    border: 1px solid var(--border-color);
+}
+
+.media-action-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.media-back-btn,
+.admin-edit-toggle {
+    padding: 12px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid var(--border-color);
+    background: var(--table-header-bg);
+    color: var(--primary-text);
+}
+
+.media-back-btn:hover {
+    background: var(--dark-accent-hover);
+    border-color: var(--accent-color);
+}
+
+.admin-edit-toggle.editing {
+    background: var(--color-danger);
+    border-color: var(--color-danger-border);
+}
+
+/* ============================================================
+   Right Pane: Metadata & Info
+   ============================================================ */
+
+.media-info-pane {
+    flex: 1;
+    min-width: 0;
+    /* Important for overflow control */
+}
+
+.media-title-area h1 {
+    font-size: 3rem;
+    color: var(--primary-text);
+    margin: 0;
+    line-height: 1.1;
+    word-wrap: break-word;
+}
+
+.media-badge {
+    display: inline-block;
+    padding: 6px 14px;
+    background: var(--accent-color);
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-top: 15px;
+    color: var(--bg-dark-primary);
+    /* Contrast against blue badge */
+}
+
+.media-details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 30px;
+    margin-top: 40px;
+}
+
+.detail-entry label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--secondary-text);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-bottom: 8px;
+}
+
+.detail-entry p {
+    font-size: 1.2rem;
+    color: var(--primary-text);
+    word-break: break-word;
+}
+
+/* ============================================================
+   Description & Summary Section
+   ============================================================ */
+
+.media-full-description {
+    width: 100%;
+    margin-top: 40px;
+}
+
+.media-full-description h2 {
+    font-size: 1.6rem;
+    color: var(--primary-text);
+    margin-bottom: 10px;
+}
+
+.description-separator {
+    height: 2px;
+    background: linear-gradient(to right, var(--accent-color), transparent);
+    margin-bottom: 25px;
+}
+
+.text-content {
+    line-height: 1.8;
+    color: var(--secondary-text);
+    font-size: 1.1rem;
+    white-space: pre-wrap;
+    max-width: 100%;
+}
+
+/* ============================================================
+   Edit State Styles (Centered & Contained)
+   ============================================================ */
+
+.edit-input-title {
+    background: var(--input-bg);
+    border: 1px dashed var(--accent-color);
+    color: var(--primary-text);
+    font-size: 2.5rem;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px;
+}
+
+.edit-field {
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    color: var(--primary-text);
+    padding: 12px;
+    width: 100%;
+    border-radius: 6px;
+    box-sizing: border-box;
+}
+
+/* 2. Smaller Description Box */
+.edit-area-description {
+    width: 100%;
+    min-height: 150px;
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    color: var(--primary-text);
+    padding: 20px;
+    font-family: inherit;
+    line-height: 1.6;
+    border-radius: 8px;
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+.save-footer {
+    margin-top: 30px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 20px;
+}
+
+/* 3. Revert Changes Button Styling */
+.detail-revert-btn {
+    background: transparent;
+    border: 1px solid var(--update-color);
+    color: var(--update-color);
+    padding: 12px 25px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.detail-revert-btn:hover:not(:disabled) {
+    background: var(--update-btn-hover);
+    color: var(--bg-dark-primary);
+}
+
+.confirm-save-btn {
+    background: var(--success-color);
+    color: var(--primary-text);
+    border: none;
+    padding: 12px 40px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.confirm-save-btn:hover {
+    background: var(--success-hover);
+}
+
+/* ============================================================
+   Responsive Adjustments
+   ============================================================ */
+
+@media (max-width: 1100px) {
+    .media-type {
+        padding: 30px;
+        margin: 20px;
+    }
+
+    .media-split-container {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .media-visual-pane {
+        flex: 0 0 auto;
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .media-title-area h1 {
+        font-size: 2.2rem;
+        text-align: center;
+    }
+
+    .media-info-pane {
+        width: 100%;
+        text-align: center;
+    }
 }

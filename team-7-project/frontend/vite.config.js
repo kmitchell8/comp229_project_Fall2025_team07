@@ -18,6 +18,7 @@ export default defineConfig({
         main: resolve(__dirname, 'index.html'), // Assuming index.html is in frontend/
         login: resolve(__dirname, 'login.html'), // Assuming login.html is in frontend/
         library: resolve(__dirname, 'library.html'),
+        access: resolve(__dirname, 'access.html'),
         contact: resolve(__dirname, 'contact.html'),
         profile: resolve(__dirname, 'profile.html'),
         services: resolve(__dirname, 'services.html'),

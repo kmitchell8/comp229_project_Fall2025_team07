@@ -287,6 +287,95 @@
     transform: none;
     border-radius: 0.5rem;
 }
+
+/* ============================================================
+   RESET PASSWORD COMPONENT STYLES
+   ============================================================ */
+
+.reset-password {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 80px;
+    margin: 80px 170px;
+}
+
+.reset-card {
+    width: 100%;
+    max-width: 24rem;
+    background-color: var(--auth-bg-card);
+    padding: 3rem 2rem;
+    border-radius: 1.5rem;
+    box-shadow: 0 4px 20px var(--auth-shadow);
+    border: 1px solid var(--auth-border-card);
+    text-align: center;
+}
+
+.reset-header {
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: var(--auth-header-text);
+    margin-bottom: 2rem;
+}
+
+.reset-error {
+    background-color: var(--auth-error-bg);
+    color: var(--auth-error-text);
+    border: 1px solid var(--auth-error-border);
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    margin-bottom: 1.5rem;
+    text-align: left;
+    font-size: 0.875rem;
+}
+
+.reset-success {
+    background-color: #f0fdf4; /* Light green success bg */
+    color: #16a34a; /* Success green text */
+    border: 1px solid #bbf7d0;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.reset-submit-btn {
+    width: 100%;
+    padding: 0.75rem;
+    border: none;
+    font-weight: 600;
+    border-radius: 0.5rem;
+    color: white;
+    font-size: 1.125rem;
+    cursor: pointer;
+    background: var(--auth-btn-grad);
+    transition: transform 0.1s, opacity 0.2s;
+    margin-top: 1rem;
+}
+
+.reset-submit-btn:hover:not(:disabled) {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.back-link-btn {
+    background: none;
+    border: none;
+    color: var(--auth-muted-text);
+    font-size: 0.875rem;
+    margin-top: 1.5rem;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.back-link-btn:hover {
+    color: var(--auth-header-text);
+}
+
+
+
 /* ============================================================
    SHARED UTILITY STYLES (Used by all)
    ============================================================ */
@@ -376,4 +465,10 @@
         transform: none;
         margin: 5px 0;
     }
+    /* responsive logic for Reset page */
+@media (max-width: 768px) {
+    .reset-password {
+        margin: 40px 20px;
+    }
+}
 }

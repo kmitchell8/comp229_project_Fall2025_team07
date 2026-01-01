@@ -1,11 +1,174 @@
+:root {
+    /* Color Palette */
+    --bg-input: #222203;
+    --text-primary: #bdbd6e;
+    --text-button: #0c0b0b;
+    --gradient-brand: linear-gradient(110deg, #4c4ce2 15%, #6ce96c 25%, #bdbd6e 60%);
+    --gradient-button: linear-gradient(110deg, #4c4ce2 40%, #bdbd6e 60%);
+    
+    /* Spacing & Transitions */
+    --transition-speed: 0.3s;
+}
 
-
-
-.contact{
+.contact {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 80px;
-    margin: 80px 170px;    
+    margin: 80px 170px;
+}
+
+.contact-title {
+    position: relative;
+}
+
+.contact-title h1 {
+    padding: 0px 30px;
+    font-size: 80px;
+    font-weight: 600;
+}
+
+.contact-title hr {
+    bottom: 0;
+    right: 0;
+    z-index: -1;
+}
+
+.contact-sections {
+    display: flex;
+    gap: 150px;
+}
+
+.contact-left {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.contact-left h1 {
+    font-size: 40px;
+    font-weight: 700;
+    background: var(--gradient-brand);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.contact-left p {
+    max-width: 550px;
+    color: var(--text-primary);
+    font-size: 20px;
+    line-height: 35px;
+}
+
+.contact-details {
+    display: flex;
+    flex-direction: column;
+    gap: 30px; /* Fixed typo from 30x */
+    color: var(--text-primary);
+    font-size: 22px;
+}
+
+.contact-detail {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.contact-right {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    gap: 20px; /* Reduced gap slightly for dense address info */
+}
+
+/* Helper for Address Grid */
+.form-row {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+}
+
+.contact-right .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+.contact-right label {
+    color: var(--text-primary);
+    font-size: 20px;
+    font-weight: 500;
+}
+
+/* Updated Input, Select, and Textarea styles */
+.contact-right input,
+.contact-right select {
+    border: none;
+    width: 100%; /* Changed to 100% to fill container */
+    max-width: 550px;
+    height: 45px; /* Increased height slightly for better tap target */
+    padding-left: 20px;
+    border-radius: 4px;
+    color: var(--text-primary);
+    background-color: var(--bg-input);
+    font-family: inherit;
+}
+
+/* Specific width for single inputs not in a row */
+#name, #email, #phone, #streetAddress, #addressLine2, #city, #postalCode {
+    width: 550px;
+}
+
+.contact-right textarea {
+    width: 550px;
+    border: none;
+    padding: 25px;
+    border-radius: 4px;
+    background-color: var(--bg-input);
+    color: var(--text-primary);
+    font-family: 'Outfit', sans-serif;
+    font-size: 20px;
+}
+
+.form-action-group {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.submit {
+    border: none;
+    color: var(--text-button);
+    border-radius: 25px;
+    background: var(--gradient-button);
+    font-size: 22px;
+    padding: 20px 60px;
+    cursor: pointer;
+    transition: var(--transition-speed);
+}
+
+.reset-btn {
+    background: transparent;
+    border: 1px solid var(--text-primary);
+    color: var(--text-primary);
+    padding: 15px 30px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: var(--transition-speed);
+}
+
+.submit:hover {
+    transform: scale(1.05);
+}
+
+.reset-btn:hover {
+    background-color: rgba(189, 189, 110, 0.1);
+}
+
+/* Validation styling from CreateMedia */
+.input-error {
+    outline: 2px solid #ff4d4d;
 }

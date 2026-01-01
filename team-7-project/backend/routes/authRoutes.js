@@ -15,4 +15,8 @@ router.route('/signin').post(authCtrl.signin);
 router.route('/signout').get(authCtrl.signout);
 router.route('/register').post(authCtrl.register); //Creates User can be accessed from userRoutes
 
+// PASSWORD RESET ROUTES
+router.route('/forgot-password').post(authCtrl.forgotPassword);// Route for user to request a reset token via email
+router.route('/reset-password').post(authCtrl.resetPassword);// Route for user to submit their new password along with the token
+
 module.exports =  router;

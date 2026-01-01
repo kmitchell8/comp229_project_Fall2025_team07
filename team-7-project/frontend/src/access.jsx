@@ -1,15 +1,13 @@
 import React, { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import Register from './Components/Access/Register.jsx'
-import Navbar from './Components/Navbar/Navbar.jsx'
+import { AccessView } from './Components/Views/accessView.jsx'
 import { AuthProvider } from './Components/authState/authProvider.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <AuthProvider>
-      <Navbar />
-      <Register />
+      <AccessView />
     </AuthProvider>
   </StrictMode>,
 )

@@ -1,11 +1,50 @@
+/* Adding Profile-specific overrides to your Media Card CSS */
 
+.profile-avatar-overlay {
+    width: 120px;
+    height: 120px;
+    margin: -60px auto 0 auto; /* Pulls avatar up into the cover image space */
+    position: relative;
+    z-index: 5;
+}
 
+.avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%; /* Circular avatar */
+    border: 4px solid var(--bg-dark-secondary);
+    box-shadow: 0 4px 15px var(--shadow-main);
+    background: var(--bg-dark-primary);
+}
 
-.profile{
-    display: flex;
-    flex-direction: column;
-    align-items: left;
-    justify-content: center;
-    gap: 80px;
-    margin: 80px 170px;    
+.library-stats-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    background: var(--preview-bg);
+    padding: 20px;
+    border-radius: 10px;
+}
+
+/* Prompt styling for missing fields */
+.inline-add {
+    background: transparent;
+    border: 1px dashed var(--accent-color);
+    color: var(--accent-color);
+    padding: 2px 8px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.inline-add:hover {
+    background: var(--hover-overlay-light);
+}
+
+/* Responsive Override for Profile */
+@media (max-width: 1100px) {
+    .profile-avatar-overlay {
+        margin: 20px auto;
+    }
 }

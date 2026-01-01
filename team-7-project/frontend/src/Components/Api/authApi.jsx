@@ -55,7 +55,7 @@ export const signIn = async (email, password) => {
 
 export const signOut = async () => {
     await fetch(`${BASE_URL}/signout`, {
-        mtethod: 'GET'
+        method: 'GET'
     })
 };
 
@@ -101,4 +101,38 @@ let data;
 
 
     return data; 
+};
+
+// Forgot Password API
+export const forgotPassword = async (email) => {
+    const response = await fetch(`${BASE_URL}/forgot-password`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+        throw new Error(data.error || 'Could not process forgot password request.');
+    }
+    return data;
+};
+
+// Reset Password API
+export const resetPassword = async (token, newPassword) => {
+    const response = await fetch(`${BASE_URL}/reset-password`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token, newPassword }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+        throw new Error(data.error || 'Could not reset password.');
+    }
+    return data;
 };

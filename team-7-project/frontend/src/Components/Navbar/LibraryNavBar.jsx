@@ -24,7 +24,7 @@ const LibraryNavBar = ({
                 // data is { "book": [...], "movie": [...] } 
                 const typeKeys = data ? Object.keys(data) : [];
                 setMediaTypes(typeKeys);
-            // eslint-disable-next-line no-unused-vars
+                // eslint-disable-next-line no-unused-vars
             } catch (err) {
                 console.error("Could not load media type definitions.");
             }
@@ -43,7 +43,7 @@ const LibraryNavBar = ({
         if (element) {
             const navHeight = 180;
             const elementPosition = element.getBoundingClientRect().top + window.scrollY;
-            
+
             window.scrollTo({
                 top: elementPosition - navHeight - 10,
                 behavior: 'smooth'
@@ -57,7 +57,7 @@ const LibraryNavBar = ({
         <nav className={`library-nav-container ${isScrolled ? 'scrolled' : ''}`}>
             {/* Main Controls Row */}
             <div className="navbar library-nav">
-                
+
                 {/* Mobile Dropdown Triggers - Only visible on mobile */}
                 <div className="mobile-library-triggers">
                     <select value={viewMode} onChange={(e) => setViewMode(e.target.value)} className="lib-select-trigger">
@@ -95,16 +95,16 @@ const LibraryNavBar = ({
                         </a>
                     </li>
                     <li className="nav-divider">|</li>
-                    
+
                     {/* Media Type Filters - Now Dynamic */}
                     <li className="nav-label-container"><span className="nav-label">Show:</span></li>
                     <li><a onClick={() => setFilterType('all')} className={filterType === 'all' ? 'active-link' : ''}>All</a></li>
-                    
+
                     {/* Mapping through mediaTypes from API to replace hardcoded links */}
                     {mediaTypes.map((type) => (
                         <li key={type}>
-                            <a 
-                                onClick={() => setFilterType(type)} 
+                            <a
+                                onClick={() => setFilterType(type)}
                                 className={filterType === type ? 'active-link' : ''}
                             >
                                 {type.charAt(0).toUpperCase() + type.slice(1)}s
@@ -114,9 +114,16 @@ const LibraryNavBar = ({
 
                     <li className="nav-divider">|</li>
 
-                    <li className="nav-label-container"><span className="nav-label">Sort By:</span></li>
-                    <li><a onClick={() => setSortBy('title')} className={sortBy === 'title' ? 'active-sort' : ''}>Title</a></li>
-                    <li><a onClick={() => setSortBy('author')} className={sortBy === 'author' ? 'active-sort' : ''}>Author</a></li>
+                    <li
+                        className="nav-label-container">
+                        <span className="nav-label">Sort By:</span>
+                    </li>
+                    <li>
+                        <a onClick={() => setSortBy('title')} className={sortBy === 'title' ? 'active-sort' : ''}>Title</a>
+                    </li>
+                    <li>
+                        <a onClick={() => setSortBy('author')} className={sortBy === 'author' ? 'active-sort' : ''}>Author</a>
+                    </li>
                 </ul>
 
                 <div className="search-container">

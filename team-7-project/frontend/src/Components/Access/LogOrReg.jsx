@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react'
 import './Access.css';
 import { signIn, signUp } from '../Api/authApi.jsx';
 import { useAuth } from '../authState/useAuth.jsx';
-import {getPage} from '../Api/getPage.jsx'
+import { getPage, getHash } from '../Api/getPage.jsx'
 
 
 const LogOrReg = () => {
@@ -23,13 +23,18 @@ const LogOrReg = () => {
 
   //getting a usable string from the function
   const getPageString = getPage();
-  //Logic to ensure user does not get to the login/regster pages if logged in
+  const getHashString = getHash();
+  //logic to ensure user does not get to the login/regster pages if logged in
   useEffect(() => {
     if (isAuthenticated && (getPageString === 'login' || getPageString === 'register')) {
       console.log(`User is Logged in. Redirecting from ${getPageString} page to homepage.`);
       window.location.replace('./');
     }
-  }, [isAuthenticated, getPageString]);
+    if (isAuthenticated && (getHashString === 'login' || getHashString === 'register')) {
+      console.log(`User is Logged in. Redirecting from ${getHashString} page to homepage.`);
+      window.location.replace('./');
+    }
+  }, [isAuthenticated, getPageString, getHashString]);
   //If statement to ensure the form does not render if on the 
   // home page and logged in (can be any page)
   //needs to be updated to coincide with the page the component is on
@@ -85,7 +90,7 @@ const LogOrReg = () => {
     // If the user clicks the button that ISN'T active, 
     // we switch the mode and prevent the form from submitting.
     if (mode !== targetMode) {
-      e.preventDefault(); 
+      e.preventDefault();
       setMode(targetMode);
       setError(null); // Clear errors when switching modes for a clean start
     }
@@ -162,7 +167,7 @@ const LogOrReg = () => {
               disabled={loading}
             />
           </div>
-          
+
           <div className='button-container'>
             {/*Login Button*/}
             <button
@@ -177,7 +182,7 @@ const LogOrReg = () => {
             </button>
 
             {/*Signup Button*/}
-            <button 
+            <button
               type="submit"
               className={`register-button split-right ${mode === 'register' ? 'active' : ''}`}
               disabled={loading}
@@ -188,6 +193,12 @@ const LogOrReg = () => {
               {loading && mode === 'register' ? 'Registering...' : 'Sign Up'}
             </button>
           </div>
+          <>
+            <p className="switch-text">
+              Forgot Password? <span>
+                <a href="./access.html#reset">Reset Password</a></span>
+            </p>
+          </>
 
         </form>
       </div>

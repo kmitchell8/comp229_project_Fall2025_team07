@@ -5,8 +5,6 @@ import Profile from '../Profile/Profile.jsx'
 import Admin from './adminView.jsx'
 import Navbar from '../Navbar/Navbar.jsx'
 
-
-
 export const ProfileView = () => {
     const { role: userRole, isAuthenticated, loading } = useAuth(); //use the Auth hook to access role of the user
     //const [isRedirecting, setIsRedirecting] = useState(false);
@@ -19,7 +17,6 @@ export const ProfileView = () => {
             console.log("User not signed in. Redirecting to home page.");
             // Use window.location.replace to prevent users from navigating back to the profile/admin area
             window.location.replace('./');
-            //return null;
         }
         //redirect guard logic
         /* if (!isAuthenticated) {
@@ -32,16 +29,13 @@ export const ProfileView = () => {
              //}, -0.1); // 0.3 seconds
             // return () => clearTimeout(redirectTimer);
          //}
-         //else if (isAuthenticated) {
+         else if (isAuthenticated) {
              // If authenticated, stop redirecting flag
              //setIsRedirecting(false);
              return null;
          }*/
 
     }, [isAuthenticated, loading]);//isAuthenticated/loading dependency
-
-
-
 
     //State stores both the primary view key and the full path segments
 
@@ -50,7 +44,10 @@ export const ProfileView = () => {
         const hash = getHash(); //see getPage.jsx
         const segments = hash.split('/').filter(s => s !== '');
         const primarySegment = segments[0];
-        const adminViews = ['admin', 'createbook', 'updatebook', 'updateuser']
+        const adminViews = ['admin', 'createmedia', 'updamedia', 'updateuser']//Future: add to a config file to allow for dynamic updating
+                                                                                //if spread values changed then they will not be checked 
+                                                                                //to perform their desired function (current function: 
+                                                                                //cases used that render adminView) 
 
         // ensures user is an admin to be able to see admin view
         if (adminViews.includes(primarySegment)) {
@@ -92,8 +89,6 @@ export const ProfileView = () => {
     //takes effect and the useState should match for it to work
     //needs useAuth to fnish checking before calling getInitalview and userRole has been populated
 
-
-
     //const { view: currentView, segments: pathSegments } = viewData;
 
     //Ok to synchronise since authentication is finished
@@ -101,7 +96,8 @@ export const ProfileView = () => {
     useEffect(() => {
         //const handleHashChange = () => {
         const handleRouting = () => {
-            if (!loading) {
+            // Synchronized handleRouting with Auth State
+            if (!loading && isAuthenticated) {
                 // Update state with new view and segments
                 setViewData(getInitialView());
             }
@@ -112,9 +108,11 @@ export const ProfileView = () => {
         return () => {
             window.removeEventListener('hashchange', handleRouting);
         };
-    }, [loading, getInitialView]);
-    //protects viewData from being null
-    if (loading || viewData === null) {
+    }, [loading, isAuthenticated, getInitialView]);
+
+    // Hardened "Render Guard" - protects viewData from being null 
+    // and ensures authentication is confirmed before proceeding
+    if (loading || !isAuthenticated || viewData === null) {
         return null; // Stop rendering and wait for viewData to be set
     }
     const { view: currentView, segments: pathSegments } = viewData;
@@ -122,11 +120,11 @@ export const ProfileView = () => {
     const renderView = () => {
         switch (currentView) {
             case 'admin':
-            case 'createbook': //all nested views default to Admin
-            case 'updatebook':
+            case 'createmedia': //all nested views default to Admin
+            case 'updatemedia':
             case 'updateuser':
                 return <Admin pathSegments={[...pathSegments]} />;//measure against stale prop references.
-                                                                //ecountered during trouble shooting (keep for future reference)
+                                                                 //ecountered during trouble shooting (keep for future reference)
             case 'profile':
             default:
                 return <Profile />;
@@ -142,3 +140,5 @@ export const ProfileView = () => {
         </div>
     );
 };
+
+export default ProfileView;

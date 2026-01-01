@@ -14,6 +14,7 @@ const User = require('../models/users');
 const jwt = require('jsonwebtoken');
 //import jwt from 'jsonwebtoken';
 const { expressjwt } = require('express-jwt');
+const crypto = require('crypto'); // Built-in Node module for secure tokens (best for reset)
 //const { response } = require('express'); //for HTTP cookie
 //const userCtrl = require('./userController');
 //import {expressJwt} from 'express-jwt';
@@ -65,6 +66,10 @@ const signin = async (req, res) => {
             return res.status(401).json({ error: "Email and password don't match." });
         }
 
+        //Sets the last login date and time
+        user.lastLogin = Date.now();
+        await user.save();
+
         const userObject = user.toObject(); //cleaner implimentation
         delete userObject.password; //removes the password from the object
         //Generate the token //isAdmin role will be looked at later
@@ -75,13 +80,13 @@ const signin = async (req, res) => {
             user: userObject
         }
         //Set cookie //removes sensitive user data
-       /* res.cookie('t', token, {//remove for deployment to work //was setting an http cookie reverting to localstorage
-            expire: new Date(Date.now() + 99990000)
-            //httpOnly: true, //recommended for security
-            //secure: process.env.NODE_ENV === 'production',//recommended for production
-            // sameSite: 'None'// Ensures the cookie is sent in cross-site requests
-
-        });*/
+        /* res.cookie('t', token, {//remove for deployment to work //was setting an http cookie reverting to localstorage
+             expire: new Date(Date.now() + 99990000)
+             //httpOnly: true, //recommended for security
+             //secure: process.env.NODE_ENV === 'production',//recommended for production
+             // sameSite: 'None'// Ensures the cookie is sent in cross-site requests
+ 
+         });*/
 
         return res.status(200).json(responseData);//chain the return
         /*res.setHeader('Content-Type', 'application/json');
@@ -94,12 +99,65 @@ const signin = async (req, res) => {
 };
 
 //Clears the authentication cookie to signout user. 
-const signout = (req, res) => {
-   // res.clearCookie("t"); //remove for deployment
+const signout = (_req, res) => {
+    // res.clearCookie("t"); //remove for deployment
     return res.status(200).json({ message: "signed out" });
 };
 
+//PASSWORD RESET LOGIC --
 
+const forgotPassword = async (req, res) => {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: "Email is required" });
+
+    try {
+        const user = await User.findOne({ email });
+        if (!user) return res.status(404).json({ error: "No account with that email exists." });
+
+        // Generate secure random token
+        const token = crypto.randomBytes(20).toString('hex');
+
+        // Set token and expiry (1 hour)
+        user.resetPasswordToken = token;
+        user.resetPasswordExpires = Date.now() + 3600000;
+
+        await user.save();
+
+        // Returning the token for testing; in production, this is emailed.
+        return res.status(200).json({
+            message: "Reset token generated successfully.",
+            token: token
+        });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+};
+
+const resetPassword = async (req, res) => {
+    const { token, newPassword } = req.body;
+
+    try {
+        // Find user with valid token that hasn't expired
+        const user = await User.findOne({
+            resetPasswordToken: token,
+            resetPasswordExpires: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({ error: "Password reset token is invalid or has expired." });
+        }
+
+        // Setting the virtual 'password' triggers the hashing in the pre-save hook
+        user.password = newPassword;
+
+        // Note: The pre-save hook clears the resetPasswordToken and resetPasswordExpires automatically
+        await user.save();
+
+        return res.status(200).json({ message: "Password has been successfully reset." });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+};
 //MIDDLEWARE
 
 //requireSignin
@@ -181,5 +239,14 @@ const hasAuthorization = (req, res, next) => {
     next()
 }
 */
-module.exports = { register, signin, signout, requireSignin, hasAuthorization, isAdmin }
+module.exports = {
+    register,
+    signin,
+    signout,
+    forgotPassword,
+    resetPassword,
+    requireSignin,
+    hasAuthorization,
+    isAdmin
+}
 

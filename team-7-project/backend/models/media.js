@@ -42,7 +42,7 @@ const saveMediaTypesJson = () => {
                     if (instance === 'Number') {
                         uiType = 'number';
                     } else if (instance === 'Array') {
-                        uiType = 'list'; // This triggers your comma-separated logic in React
+                        uiType = 'list'; // This triggers comma-separated logic in React
                     } else if (instance === 'Boolean') {
                         uiType = 'checkbox';
                     }
@@ -78,7 +78,7 @@ const MediaSchema = new mongoose.Schema({
     title: { 
         type: String, 
         required: true,
-        // We keep your sophisticated duplicate title/ISBN check logic here
+        // sophisticated duplicate title/ISBN check logic here
         validate: {
             validator: async function (titleValue) {
                 if (!this.isModified('title') && !this.isNew) return true;
@@ -126,7 +126,7 @@ const MediaSchema = new mongoose.Schema({
     relatedEntries: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Media' }]
 }, baseOptions);
 
-// Keep your existing ISBN indexes (sparse means they only apply if the field exists)
+// existing ISBN indexes (sparse means they only apply if the field exists)
 MediaSchema.index({ ISBN_10: 1 }, { unique: true, sparse: true });//needed for other documents where ISBN does not exist or is optional
 MediaSchema.index({ ISBN_13: 1 }, { unique: true, sparse: true });
 
@@ -148,14 +148,14 @@ const Book = Media.discriminator('book', new mongoose.Schema({
     }
 }));
 
-// Example: Movie Model
+// Movie Model
 const Movie = Media.discriminator('movie', new mongoose.Schema({
     director: { type: String, required: true },
     runtime: Number,
     studio: String
 }));
 
-// Example: Game Model
+// Game Model
 const Game = Media.discriminator('game', new mongoose.Schema({
     developer: String,
     platforms: [String],

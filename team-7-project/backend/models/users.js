@@ -6,19 +6,56 @@
  * Note: code based on slides from week6 "AUTHENTICATION (16) (2) (5).pptx" in comp229(Centennial College)
  */
 
+//See media.js for any code details 
 const mongoose = require('mongoose'); // needed to connect to MongoDB (type: commonjs)
 const bcrypt = require('bcrypt');
+const fs = require('fs');
+const path = require('path');
+const filePath = path.resolve(process.cwd(), 'public', 'documents', 'userRoles.json');
+const roles = JSON.parse(fs.readFileSync(filePath), 'utf8');
 
 // 10 is a good standard default.
 const SALT_ROUNDS = 10;
 
 const UserSchema = new mongoose.Schema({
     name: { type: String, required: true },
+    username: { type: String },
+    profileImage: {
+        type: String,
+        required: true,
+  validate: {
+            // Ensures the string saved to DB always looks like an image path
+            validator: (v) => /\.(jpg|jpeg|png|gif|webp)$/i.test(v),
+            message: "Profile image path must end with a valid image extension."
+        },
+        default: function () {
+            // Accesses the unique MongoDB ID for this specific document
+            const userId = this._id.toString();
+            
+            // set a default path: /users/[userId]/[userId].png
+            // This ensures every user has a unique, predictable folder and filename
+            return `/users/${userId}/${userId}.png`;
+        }
+    },
     email: { type: String, required: true, unique: true },
+    phone: { type: String },
+    altEmail: { type: String, unique: true, sparse: true },
+    address: {
+        street: { type: String },
+        addressLineTwo: { type: String },
+        city: { type: String },
+        Country: { type: String },
+        province: { type: String },
+        postalCode: { type: String }
+    },
     hashed_password: {
         type: String, /*required: true*/ //currently the required validation is firing before the "pre" check
     },
-    role: { type: String, enum: ['user', 'admin'], default: 'user' }
+    //PASSWORD RESET
+    resetPasswordToken: { type: String },
+    resetPasswordExpires: { type: Date },
+    role: { type: String, enum: roles, default: 'user' },
+    lastLogin: { type: Date }//update in authController when user signs in
 }, {
     // Auto inputs the date in the correct format
     timestamps: { createdAt: 'created', updatedAt: 'updated' }
@@ -33,13 +70,13 @@ UserSchema.virtual('password').set(function (password) {//checks given password 
 
 //ASYNCHRONOUS PRE-SAVE HOOK (for secure hashing)
 UserSchema.pre('save', async function (next) {
-    // Only run this function if the password has been modified (or is new)
+    // Only run this function if the password has been modified 
     /*if (!this.isModified('_password')) {
         return next();
 
         
     }*/
-    //runs if password does not exist
+    //runs if password does not exist (or for reset)
     if (!this._password) {
         return next();
     }
@@ -48,6 +85,9 @@ UserSchema.pre('save', async function (next) {
     try {
         const hash = await bcrypt.hash(this._password, SALT_ROUNDS);
         this.hashed_password = hash;
+        // Clear the reset token once the password is successfully changed
+        this.resetPasswordToken = undefined;
+        this.resetPasswordExpires = undefined;
         this._password = undefined;
         next();
     } catch (err) {

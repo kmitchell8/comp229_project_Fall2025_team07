@@ -24,8 +24,8 @@ const Navbar = () => {
         return () => window.removeEventListener('hashchange', handleHashChange);
     }, []);
 
-    const currentPath = window.location.pathname;
-    const isLogOrReg = currentPath.endsWith('/login.html') || currentPath.endsWith('/register.html');
+    const currentPath = getHash();
+    const isLogOrReg = currentPath.includes('login') || currentPath.includes('register');
 
     //capitalising the first letter of the string and creating a value to display the current file path
     const getPageString = getPage().charAt(0).toUpperCase() + getPage().slice(1);
@@ -52,8 +52,8 @@ const Navbar = () => {
                 {/* setView changes the state in AuthProvider, triggering a re-render */}
                 {/*onClick={() => setView('login')}
                 SetView is not necessary for this  Navbar setup*/}
-                <a href="./login.html">Login /</a>
-                <a href="./register.html"> Register</a>
+                <a href="./access.html#login">Login /</a>
+                <a href="./access.html#register"> Register</a>
             </li>
         </>
     );

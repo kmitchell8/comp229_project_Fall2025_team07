@@ -1,35 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../authState/useAuth.jsx';
+import React, { useState, /*useEffect */} from 'react';
+//import { useAuth } from '../authState/useAuth.jsx';
 import { signUp } from '../Api/authApi.jsx';
-import {getPage} from '../Api/getPage.jsx'
+//import { getPage,getHash } from '../Api/getPage.jsx'
 //import './Register.css'
 import './Access.css';
-
-
 
 
 const Register = () => {
   //state to hold form data
   //const { register} = useAuth();
-  const { isAuthenticated } = useAuth();
+  //const { isAuthenticated } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
- 
-  //getting a usable string from the function
-  const getPageString = getPage();
-  //Logic to ensure user does not get to the login/regster pages if logged in
-  useEffect(() => {
-    if (isAuthenticated && (getPageString === 'login' || getPageString === 'register')) {
-      console.log(`User is Logged in. Redirecting from ${getPageString} page to homepage.`);
-      window.location.replace('./');
-    }
-  }, [isAuthenticated, getPageString]);
-   if (getPageString === 'register' && isAuthenticated) {
-    return null;
-  }
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -39,7 +25,7 @@ const Register = () => {
 
     try {
       await signUp(name, email, password);
-      window.location.href = './login.html';
+      window.location.href = './access.html#login';
 
     } catch (err) {
       console.error('Registration error:', err.message);
@@ -115,7 +101,7 @@ const Register = () => {
           {/* switch to login link*/}
           <p className="switch-text">
             Already have an account? <span>
-              <a href="./login.html">Log In</a></span>
+              <a href="./access.html#login">Log In</a></span>
           </p>
 
           {/*Signup Button*/}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import userApi from '../Api/userApi'; // 
-import { useAuth } from '../authState/useAuth'; // Authentication context
+import { useAuth } from '../StateProvider/authState/useAuth'; // Authentication context
 import './Admin.css';
 
 const formatDate = (dateString) => {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { useAuth } from '../authState/useAuth.jsx'
+import { useAuth } from '../StateProvider/authState/useAuth.jsx'
 import { getHash } from '../Api/getPage.jsx'
+import { ROUTES,ADMIN_SUB_VIEWS } from '../Api/routingConfig';
 import Profile from '../Profile/Profile.jsx'
 import Admin from './adminView.jsx'
 import Navbar from '../Navbar/Navbar.jsx'
@@ -44,43 +45,44 @@ export const ProfileView = () => {
         const hash = getHash(); //see getPage.jsx
         const segments = hash.split('/').filter(s => s !== '');
         const primarySegment = segments[0];
-        const adminViews = ['admin', 'createmedia', 'updamedia', 'updateuser']//Future: add to a config file to allow for dynamic updating
+        console.log("Current Role:", userRole, "Requested Segment:", primarySegment);
+       // const adminViews = [ROUTES.ADMIN, ROUTES.CREATE_MEDIA, ROUTES.UPDATE_MEDIA, ROUTES.UPDATE_USER]//Future: add to a config file to allow for dynamic updating
                                                                                 //if spread values changed then they will not be checked 
                                                                                 //to perform their desired function (current function: 
                                                                                 //cases used that render adminView) 
 
         // ensures user is an admin to be able to see admin view
-        if (adminViews.includes(primarySegment)) {
-            if (userRole != 'admin') {
-                window.location.hash = 'profile';
-                //return 'profile';
+        if (ADMIN_SUB_VIEWS.includes(primarySegment)) {
+            if (userRole != ROUTES.ADMIN) {
+                window.location.hash = ROUTES.PROFILE;
+                //return ROUTES.PROFILE;
                 //return { view: primarySegment, segments };
-                return { view: 'profile', segments: ['profile'] };
+                return { view: ROUTES.PROFILE, segments: [ROUTES.PROFILE] };
             }
 
             //return primarySegment;
             return { view: primarySegment, segments };
         }
-        /* if (hash === 'admin' && userRole !== 'admin') {
+        /* if (hash === ROUTES.ADMIN && userRole !== ROUTES.ADMIN) {
              // renders the profile view if not an admin
-             window.location.hash = 'profile';
-             return 'profile';
+             window.location.hash = ROUTES.PROFILE;
+             return ROUTES.PROFILE;
          }*/
 
         // routing for valid users/paths
-        // return hash === 'admin' ? 'admin' : 'profile';
+        // return hash === ROUTES.ADMIN ? ROUTES.ADMIN : ROUTES.PROFILE;
         //non admin view
-        if (!primarySegment || primarySegment === 'profile') {
-            // return 'profile';
+        if (!primarySegment || primarySegment === ROUTES.PROFILE) {
+            // return ROUTES.PROFILE;
             //return { view: primarySegment, segments };
-            return { view: 'profile', segments: ['profile'] };
+            return { view: ROUTES.PROFILE, segments: [ROUTES.PROFILE] };
         }
 
         //default
-        window.location.hash = 'profile';
-        //return 'profile'
+        window.location.hash = ROUTES.PROFILE;
+        //return ROUTES.PROFILE
         // return { view: primarySegment, segments };
-        return { view: 'profile', segments: ['profile'] };
+        return { view: ROUTES.PROFILE, segments: [ROUTES.PROFILE] };
 
     }, [userRole]); // userRole dependency: ensures a re-run if role changes (set dependency for useCallback)
 
@@ -119,13 +121,13 @@ export const ProfileView = () => {
     // conditional rendering
     const renderView = () => {
         switch (currentView) {
-            case 'admin':
-            case 'createmedia': //all nested views default to Admin
-            case 'updatemedia':
-            case 'updateuser':
+            case ROUTES.ADMIN:
+            case ROUTES.CREATE_MEDIA: //all nested views default to Admin
+            case ROUTES.UPDATE_MEDIA:
+            case ROUTES.UPDATE_USER:
                 return <Admin pathSegments={[...pathSegments]} />;//measure against stale prop references.
                                                                  //ecountered during trouble shooting (keep for future reference)
-            case 'profile':
+            case ROUTES.PROFILE:
             default:
                 return <Profile />;
         }

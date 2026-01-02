@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import mediaApi from '../Api/mediaApi';
-import { useAuth } from '../authState/useAuth';
+import { useAuth } from '../StateProvider/authState/useAuth';
 import Media from '../Media/Media';
 import './Admin.css';
 

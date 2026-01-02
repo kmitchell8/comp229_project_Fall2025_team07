@@ -1,6 +1,6 @@
 //import { useForm } from 'react-hook-form';
 import React, { useState, /*useEffect */} from 'react';
-import { useAuth } from '../authState/useAuth.jsx';
+import { useAuth } from '../StateProvider/authState/useAuth.jsx';
 import { signIn } from '../Api/authApi.jsx';
 //import { getPage, getHash } from '../Api/getPage.jsx';
 //import './Login.css';

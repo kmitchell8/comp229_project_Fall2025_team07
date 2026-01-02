@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import mediaApi from '../Api/mediaApi';
-import { useAuth } from '../authState/useAuth';
+import { useAuth } from '../StateProvider/authState/useAuth';
+import {ROUTES, /*LIBRARY_VIEWS*/} from '../Api/routingConfig'
 import './Media.css';
 
 const Media = ({ mediaId, viewContext, onUpdate }) => {
-  const { role, getToken } = useAuth();
+  const { /*role, */getToken, isAdmin } = useAuth();
 
   // State management for raw data and the editable draft
   const [media, setMedia] = useState(null);
@@ -16,9 +17,9 @@ const Media = ({ mediaId, viewContext, onUpdate }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const isAdmin = role === 'admin';
-  const isLibraryView = viewContext === 'library';
-  const isAdminView = viewContext === 'admin';
+  
+  const isLibraryView = viewContext === ROUTES.LIBRARY;
+  const isAdminView = viewContext === ROUTES.ADMIN;
 
   // Core data fetching logic for media details, dynamic config, and genre list
   const fetchFullDetails = useCallback(async () => {
@@ -156,7 +157,7 @@ const Media = ({ mediaId, viewContext, onUpdate }) => {
               )}
 
               {isLibraryView && (
-                <button className="media-back-btn" onClick={() => window.location.hash = 'library'}>
+                <button className="media-back-btn" onClick={() => window.location.hash = ROUTES.LIBRARY}>
                   Back to Library
                 </button>
               )}

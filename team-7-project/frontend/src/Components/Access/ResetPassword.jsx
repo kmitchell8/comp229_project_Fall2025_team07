@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAuth } from '../authState/useAuth.jsx';
+import { useAuth } from '../StateProvider/authState/useAuth.jsx';
 
 const ResetPassword = () => {
     // Reverted: Using your original destructured functions from useAuth

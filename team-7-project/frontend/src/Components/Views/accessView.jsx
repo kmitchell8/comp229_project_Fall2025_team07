@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { useAuth } from '../authState/useAuth.jsx'
+import { useAuth } from '../StateProvider/authState/useAuth.jsx'
 import { getPage, getHash } from '../Api/getPage.jsx'
+import { ROUTES, ACCESS_VIEWS } from '../Api/routingConfig.js'; // Import route-map
 import Register from '../Access/Register.jsx'
 import Login from '../Access/Login.jsx'
 import ResetPassword from '../Access/ResetPassword.jsx'
@@ -21,19 +22,28 @@ export const AccessView = () => {
         const hash = getHash(); //see getPage.jsx
         const segments = hash.split('/').filter(s => s !== '');
         const primarySegment = segments[0];
-        const accessViews = ['register', 'login', 'reset']//Future: add to a config file to allow for dynamic updating
+        // const accessViews = [ROUTES.REGISTER, ROUTES.LOGIN, ROUTES.RESET]//Future: add to a config file to allow for dynamic updating
         //if spread values changed then they will not be checked 
         //to perform their desired function (current function: 
         //cases used that render adminView) 
 
         // ensures user is an admin to be able to see admin view
-        if (accessViews.includes(primarySegment)) {
+        if (ACCESS_VIEWS.includes(primarySegment)) {
             // if user is NOT authenticated, allow login, register, or reset
-            if (!isAuthenticated && (primarySegment !== 'reset' && primarySegment !== 'login' && primarySegment !== 'register')) {
-                window.location.hash = 'login';
-                //return 'login';
+           /* if (!isAuthenticated && (
+                primarySegment !== ROUTES.RESET
+                && primarySegment !== ROUTES.LOGIN
+                && primarySegment !== ROUTES.REGISTER
+            )) {
+                window.location.hash = ROUTES.LOGIN;
+                //return ROUTES.LOGIN;
                 //return { view: primarySegment, segments };
-                return { view: 'login', segments: ['login'] };
+                return { view: ROUTES.LOGIN, segments: [ROUTES.LOGIN] };
+            }*/
+            // Simplified check (using your existing array)
+            if (!isAuthenticated && !ACCESS_VIEWS.includes(primarySegment)) {
+                window.location.hash = ROUTES.LOGIN;
+                return { view: ROUTES.LOGIN, segments: [ROUTES.LOGIN] };
             }
 
             //return primarySegment;
@@ -43,10 +53,10 @@ export const AccessView = () => {
 
 
         //default
-        window.location.hash = 'login';
-        //return 'login'
+        window.location.hash = ROUTES.LOGIN;
+        //return ROUTES.LOGIN
         // return { view: primarySegment, segments };
-        return { view: 'login', segments: ['login'] };
+        return { view: ROUTES.LOGIN, segments: [ROUTES.LOGIN] };
 
     }, [isAuthenticated]); // isAuthenticated dependency: ensures a re-run if role changes (set dependency for useCallback)
 
@@ -74,27 +84,31 @@ export const AccessView = () => {
         };
     }, [loading, getInitialView]);
 
-    
+
     //getting a usable string from the function
     const getPageString = getPage();
     const getHashString = getHash();
     //logic to ensure user does not get to the login/regster pages if logged in
-useEffect(() => {
-    // Only act if we are sure the user is authenticated and loading is finished
-    if (!loading && isAuthenticated) {
-        const isOnAuthPage = 
-            getPageString === 'login' || 
-            getPageString === 'register' || 
-            getHashString === 'login' || 
-            getHashString === 'register';
+    useEffect(() => {
+        // Only act if we are sure the user is authenticated and loading is finished
+        if (!loading && isAuthenticated) {
+            const isOnAuthPage =
+                getPageString === ROUTES.LOGIN
+                || getPageString === ROUTES.REGISTER
+                || getHashString === ROUTES.LOGIN
+                || getHashString === ROUTES.REGISTER;
 
-        if (isOnAuthPage) {
-            console.log("Authenticated user detected on Auth page. Redirecting to home.");
-            window.location.replace('./profile.html');
+            if (isOnAuthPage) {
+                console.log("Authenticated user detected on Auth page. Redirecting to home.");
+                window.location.replace('./profile.html');
+            }
         }
-    }
-}, [isAuthenticated, loading, getPageString, getHashString]);
-    if ((getPageString === 'login' || getHashString === 'login'||getPageString === 'register' || getHashString === 'register') && isAuthenticated) {
+    }, [isAuthenticated, loading, getPageString, getHashString]);
+    if ((getPageString === ROUTES.LOGIN
+        || getHashString === ROUTES.LOGIN
+        || getPageString === ROUTES.REGISTER
+        || getHashString === ROUTES.REGISTER
+    ) && isAuthenticated) {
         return null;
     }
 
@@ -107,19 +121,19 @@ useEffect(() => {
     // conditional rendering
     const renderView = () => {
         switch (currentView) {
-            case 'login':
+            case ROUTES.LOGIN:
                 return <Login />
-            case 'reset':
+            case ROUTES.RESET:
                 return <ResetPassword pathSegments={[...pathSegments]} />;//measure against stale prop references.
             //ecountered during trouble shooting (keep for future reference)
-            case 'register':
+            case ROUTES.REGISTER:
                 return <Register />;
             default:
                 return <Login />;
         }
     };
 
-    
+
 
     return (
         <div className="min-h-screen"> {/*tail-wind css min-h(min-height) and screen(100vh)*/}

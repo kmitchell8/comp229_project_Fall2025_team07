@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { useAuth } from '../authState/useAuth';
+import { useAuth } from '../StateProvider/authState/useAuth';
 //import { getHash } from '../Api/getPage';
+import {ROUTES, ADMIN_SUB_VIEWS} from '../Api/routingConfig'
 import CreateMedia from '../Admin/CreateMedia';
 import UpdateMedia from '../Admin/UpdateMedia';
 import UpdateUser from '../Admin/UpdateUser';
@@ -11,18 +12,18 @@ const AdminView = ({ pathSegments: parentSegments = [] }) => {
   const { role: userRole } = useAuth(); //use the Auth hook to access role of the user
   const internalSegment = parentSegments[1];
 
-  //const adminViews = useMemo(() => ['createmedia', 'updatemedia', 'updateuser'], []);//recommended but not necessary keep for future reference
+  //const adminViews = useMemo(() => [ROUTES.CREATE_MEDIA, ROUTES.UPDATE_MEDIA, ROUTES.UPDATE_USER], []);//recommended but not necessary keep for future reference
 
   // logic to determine the initial view based on the URL hash
   const getInternalView = useCallback(() => {
-    const adminViews = ['createmedia', 'updatemedia', 'updateuser'];
+    //const adminViews = [ROUTES.CREATE_MEDIA, ROUTES.UPDATE_MEDIA, ROUTES.UPDATE_USER];
 
     if (userRole !== 'admin') {//safety check
-      window.location.hash = 'profile';
-      //return { view: 'profile', segments: ['profile'] };
-      return 'profile';
+      window.location.hash = ROUTES.PROFILE;
+      //return { view: ROUTES.PROFILE, segments: [ROUTES.PROFILE] };
+      return ROUTES.PROFILE;
     }
-    if (adminViews.includes(internalSegment)) {
+    if (ADMIN_SUB_VIEWS.includes(internalSegment)) {
       return internalSegment;
     }
     return 'admin';
@@ -41,7 +42,7 @@ const AdminView = ({ pathSegments: parentSegments = [] }) => {
     setCurrentView(getInternalView());
   }, [parentSegments, getInternalView]);
 
-  if (currentView === 'profile') {
+  if (currentView === ROUTES.PROFILE) {
     //forcing a redirect via window.location.hash, 
     //we should stop rendering anything here.
     return null;
@@ -50,8 +51,8 @@ const AdminView = ({ pathSegments: parentSegments = [] }) => {
   const NavigationLinks = ({ currentView }) => { //need to be outside the render or it will continually lose it's state
     return (
       <div className="admin-nav-footer">
-        {currentView !== 'admin' && (
-          <button onClick={() => window.location.hash = 'admin'}
+        {currentView !== ROUTES.ADMIN && (
+          <button onClick={() => window.location.hash = ROUTES.ADMIN}
             className="admin-go-back"
           >
             Go Back
@@ -65,29 +66,31 @@ const AdminView = ({ pathSegments: parentSegments = [] }) => {
   const itemId = parentSegments[2];
   const renderView = () => {
     switch (currentView) {
-      case 'createmedia':
+      case ROUTES.CREATE_MEDIA:
         return <CreateMedia />;
-      case 'updatemedia':
+      case ROUTES.UPDATE_MEDIA:
         return <UpdateMedia pathId={itemId} />;
-      case 'updateuser':
+      case ROUTES.UPDATE_USER:
         return itemId?<Profile managedUserId={itemId} /> : <UpdateUser />;
-      case 'admin':
+        //return <UpdateUser parentSegment={parentSegments} />; //Uncomment once UpdateUser accepts parentSegmentsd internally
+                                                                //and handles <Profile /> subview logic
+      case ROUTES.ADMIN:
       default:
         return (
           <div className='admin-container'>
             <div className='admin-item'>
               <h3>
-                <a href="#/admin/createmedia">create media</a>
+                <a href={`#${ROUTES.ADMIN}/${ROUTES.CREATE_MEDIA}`}>create media</a>
               </h3>
             </div>
             <div className='admin-item'>
               <h3>
-                <a href="#/admin/updatemedia">update media</a>
+                <a href={`#${ROUTES.ADMIN}/${ROUTES.UPDATE_MEDIA}`}>update media</a>
               </h3>
             </div>
             <div className='admin-item'>
               <h3>
-                <a href="#/admin/updateuser">update user</a>
+                <a href={`#${ROUTES.ADMIN}/${ROUTES.UPDATE_USER}`}>update user</a>
               </h3>
             </div>
           </div>

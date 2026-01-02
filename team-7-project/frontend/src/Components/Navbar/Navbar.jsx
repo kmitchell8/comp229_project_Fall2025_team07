@@ -1,8 +1,10 @@
 import { React, useState, useEffect } from 'react'
 import './Navbar.css'
 //import logo from '/images/team_7_logo.png'
-import { useAuth } from '../authState/useAuth.jsx';
+import { useAuth } from '../StateProvider/authState/useAuth';
 import { getPage, getHash } from '../Api/getPage.jsx'
+import {ROUTES/*, ADMIN_SUB_VIEWS*/} from '../Api/routingConfig'
+
 
 
 
@@ -25,7 +27,7 @@ const Navbar = () => {
     }, []);
 
     const currentPath = getHash();
-    const isLogOrReg = currentPath.includes('login') || currentPath.includes('register');
+    const isLogOrReg = currentPath.includes(ROUTES.LOGIN) || currentPath.includes(ROUTES.REGISTER);
 
     //capitalising the first letter of the string and creating a value to display the current file path
     const getPageString = getPage().charAt(0).toUpperCase() + getPage().slice(1);
@@ -50,19 +52,19 @@ const Navbar = () => {
             {/* Show Login link only if not currently on the login view */}
             <li>
                 {/* setView changes the state in AuthProvider, triggering a re-render */}
-                {/*onClick={() => setView('login')}
+                {/*onClick={() => setView(ROUTES.LOGIN)}
                 SetView is not necessary for this  Navbar setup*/}
-                <a href="./access.html#login">Login /</a>
-                <a href="./access.html#register"> Register</a>
+                <a href={`./access.html#${ROUTES.LOGIN}`}>Login /</a>
+                <a href={`./access.html#${ROUTES.REGISTER}`}> Register</a>
             </li>
         </>
     );
 
     //function to render links for authenticated users
     const renderAuthenticatedLinks = () => {
-        const isAdminActive = currentHash === '#admin' || currentHash === 'admin';
+        const isAdminActive = currentHash.includes(ROUTES.ADMIN);
         const currentPage = getPage().toLowerCase();
-        const isProfileActive = (currentPage !== 'profile' || currentPage !== 'profile.html') && !isAdminActive;
+        const isProfileActive = (currentPage!==ROUTES.PROFILE && currentPage !== 'profile.html') && !isAdminActive;
 
         return (
 
@@ -76,8 +78,8 @@ const Navbar = () => {
                 </li>
 
                 {/* Admin-Specific Link */}
-                {/* Check if the user's role is exactly 'admin' (case-sensitive) */}
-                {role === 'admin' && (
+                {/* Check if the user's role is exactly ROUTES.ADMIN (case-sensitive) */}
+                {role === ROUTES.ADMIN && (
                     <li>
                         <a
                             href="./profile.html#admin"

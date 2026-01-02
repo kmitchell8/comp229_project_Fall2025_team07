@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 //import './LogOrReg.css'
 import './Access.css';
 import { signIn, signUp } from '../Api/authApi.jsx';
-import { useAuth } from '../authState/useAuth.jsx';
+import { useAuth } from '../StateProvider/authState/useAuth.jsx';
 import { getPage, getHash } from '../Api/getPage.jsx'
 
 

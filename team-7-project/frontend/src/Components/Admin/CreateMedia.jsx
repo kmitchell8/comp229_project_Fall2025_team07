@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { useAuth } from '../authState/useAuth'; // Assumes useAuth is correctly exported
+import { useAuth } from '../StateProvider/authState/useAuth'; // Assumes useAuth is correctly exported
 import mediaApi from '../Api/mediaApi'; // Assumes path to mediaApi
 import './Admin.css'
 

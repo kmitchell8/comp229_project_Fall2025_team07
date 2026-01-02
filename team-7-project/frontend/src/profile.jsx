@@ -5,7 +5,7 @@ import './index.css'
 //import Profile from './Components/Profile/Profile.jsx'
 //import Admin from './Components/Admin/Admin.jsx'
 //import Navbar from './Components/Navbar/Navbar.jsx'
-import { AuthProvider } from './Components/authState/authProvider.jsx';
+import { AuthProvider } from './Components/StateProvider/authState/authProvider.jsx';
 import { ProfileView } from './Components/Views/profileView.jsx';
 
 

@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 //import { useNavigate } from 'react-router-dom'; // Added for navigation
-import { useAuth } from '../authState/useAuth.jsx';
+import { useAuth } from '../StateProvider/authState/useAuth.jsx';
+import { ROUTES } from '../Api/routingConfig.js';
 import userApi from '../Api/userApi.jsx';
 import './Profile.css';
 
@@ -33,7 +34,7 @@ export const Profile = ({ managedUserId = null }) => {
     const coverInputRef = useRef(null);
 
     // Logic to determine if user is on the admin route (e.g., #admin/user/ID)
-    const isAdminView = window.location.hash.includes('admin');
+    //const isAdminView = window.location.hash.includes(ROUTES.ADMIN);
 
     // State for dynamically loaded country and regional data from API
     const [countryData, setCountryData] = useState({
@@ -283,7 +284,7 @@ export const Profile = ({ managedUserId = null }) => {
 
             // Process Avatar Upload
             if (pendingAvatar) {
-                const { payload, fullName } = prepareUpload(pendingAvatar, 'profile', targetId);
+                const { payload, fullName } = prepareUpload(pendingAvatar, ROUTES.PROFILE, targetId);
                 await userApi.uploadPictures(payload, getToken);
                 finalAvatarFileName = fullName;
             }
@@ -659,7 +660,7 @@ export const Profile = ({ managedUserId = null }) => {
                     <div className="text-content">
                         <p><strong>System Message:</strong> Profile Validation Mode.</p>
                         <p><strong>Role:</strong> {contactData.role || 'N/A'}</p>
-                        <p><strong>Context:</strong> {isAdminView ? 'Admin Route' : 'User Route'}</p>
+                        <p><strong>Context:</strong> {ROUTES.ADMIN ? 'Admin Route' : 'User Route'}</p>
                     </div>
                 </footer>
             </main>

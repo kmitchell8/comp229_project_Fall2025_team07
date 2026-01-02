@@ -1,6 +1,6 @@
 import React, { /*createContext, */useState, useEffect, useCallback } from 'react';
 import { AuthContext } from './authContext';
-import { getUserRoles, signOut, forgotPassword, resetPassword } from '../Api/authApi';
+import { getUserRoles, signOut, forgotPassword, resetPassword } from '../../Api/authApi';
 
 
 // AuthProvider component handles the state and logic,

@@ -4,6 +4,7 @@ import { useAuth } from '../authState/useAuth';
 import CreateMedia from '../Admin/CreateMedia';
 import UpdateMedia from '../Admin/UpdateMedia';
 import UpdateUser from '../Admin/UpdateUser';
+import Profile from '../Profile/Profile';
 //import './Admin.css'
 
 const AdminView = ({ pathSegments: parentSegments = [] }) => {
@@ -69,7 +70,7 @@ const AdminView = ({ pathSegments: parentSegments = [] }) => {
       case 'updatemedia':
         return <UpdateMedia pathId={itemId} />;
       case 'updateuser':
-        return <UpdateUser pathId={itemId} />;
+        return itemId?<Profile managedUserId={itemId} /> : <UpdateUser />;
       case 'admin':
       default:
         return (

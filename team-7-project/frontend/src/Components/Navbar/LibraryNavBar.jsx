@@ -53,6 +53,20 @@ const LibraryNavBar = ({
         }
     };
 
+    // Logic to determine the sort label dynamically
+    const getSortLabel = () => {
+        if (filterType === 'book') return "Author";
+        if (filterType === 'movie') return "Director";
+        if (filterType === 'game') return "Developer";
+        return "Creator"; // Default for 'all' or others
+    };
+
+    // Logic for search placeholder
+    const getSearchPlaceholder = () => {
+        const label = getSortLabel().toLowerCase();
+        return `Search by title or ${label}...`;
+    };
+
     return (
         <nav className={`library-nav-container ${isScrolled ? 'scrolled' : ''}`}>
             {/* Main Controls Row */}
@@ -77,7 +91,7 @@ const LibraryNavBar = ({
 
                     <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="lib-select-trigger">
                         <option value="title">Sort: Title</option>
-                        <option value="author">Sort: Author</option>
+                        <option value="author">Sort: {getSortLabel()}</option>
                     </select>
                 </div>
 
@@ -122,14 +136,17 @@ const LibraryNavBar = ({
                         <a onClick={() => setSortBy('title')} className={sortBy === 'title' ? 'active-sort' : ''}>Title</a>
                     </li>
                     <li>
-                        <a onClick={() => setSortBy('author')} className={sortBy === 'author' ? 'active-sort' : ''}>Author</a>
+                        {/* Dynamic label: Synchronized with current filter */}
+                        <a onClick={() => setSortBy('author')} className={sortBy === 'author' ? 'active-sort' : ''}>
+                            {getSortLabel()}
+                        </a>
                     </li>
                 </ul>
 
                 <div className="search-container">
                     <input
                         type="text"
-                        placeholder="Search by title or author..."
+                        placeholder={getSearchPlaceholder()}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="search-input"

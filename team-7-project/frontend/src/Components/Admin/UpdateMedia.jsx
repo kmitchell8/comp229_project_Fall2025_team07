@@ -4,7 +4,7 @@ import { useAuth } from '../authState/useAuth';
 import Media from '../Media/Media';
 import './Admin.css';
 
-//For full code explanation see UpdateUser.jsx
+// For full code explanation see UpdateUser.jsx
 const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     try {
@@ -15,21 +15,19 @@ const formatDate = (dateString) => {
             hour: '2-digit',
             minute: '2-digit'
         });
-        // eslint-disable-next-line no-unused-vars
+    // eslint-disable-next-line no-unused-vars
     } catch (e) {
         return dateString;
     }
 };
 
-// React.memo ensures this row ONLY re-renders if its specific props change.
-// This prevents the "typing lag" in large tables.
 const MediaRow = React.memo(({
     item,
     columns,
     genres,
     feedback,
     hasChanges,
-    onCellChange, // This is handleCellChange from the parent
+    onCellChange, 
     onView,
     onUpdate,
     onRevert,
@@ -38,24 +36,22 @@ const MediaRow = React.memo(({
     loading
 }) => {
 
-    // Internal helper to handle specific field rendering logic
     const renderTableCell = (item, col) => {
-        const currentValue = item[col.fieldKey];
+        // Use the actual data key for lookups
+        const dataKey = col.fieldKey.includes('.') ? col.fieldKey.split('.')[1] : col.fieldKey;
+        const currentValue = item[dataKey];
 
-        // Handle non-editable fields (Dates and Read-only)
         if (col.fieldKey === 'updated') return formatDate(currentValue);
 
         if (!col.editable || !canUpdateMedia) {
             return (Array.isArray(currentValue) ? currentValue.join(', ') : currentValue) || '—';
         }
 
-        // Handle Dropdown (Select) fields
         if (col.inputType === 'select' && col.fieldKey === 'genre') {
             return (
                 <select
                     className="editable-input"
                     value={currentValue || ''}
-                    // We pass item._id back up so the parent knows WHICH row to update
                     onChange={(e) => onCellChange(item._id, col.fieldKey, e.target.value, 'select')}
                 >
                     {genres.map(g => <option key={g} value={g}>{g}</option>)}
@@ -63,8 +59,7 @@ const MediaRow = React.memo(({
             );
         }
 
-        // Handle Boolean (Checkbox) fields
-        if (col.inputType === 'checkbox') {
+        if (col.inputType === 'checkbox' || col.inputType === 'boolean') {
             return (
                 <input
                     type="checkbox"
@@ -74,8 +69,6 @@ const MediaRow = React.memo(({
             );
         }
 
-        // Default: Handle Text and Array-based fields (Title, Creator, etc.)
-        // Note: ISBNs remain strings here because inputType is 'text'
         const displayValue = Array.isArray(currentValue) ? currentValue.join(', ') : (currentValue || '');
         return (
             <input
@@ -88,19 +81,19 @@ const MediaRow = React.memo(({
     };
 
     return (
-        /* Replaced Fragment with tbody to allow the CSS 'display: block' to center the whole card group on mobile */
         <tbody className="media-row-group">
-            {/* Conditional feedback row - shows success/error messages for this specific item */}
             {feedback && (
                 <tr className={`feedback-base ${feedback.isError ? 'feedback-error' : 'feedback-success'}`}>
                     <td colSpan={columns.length + 1}>{feedback.message}</td>
                 </tr>
             )}
 
-            {/* The actual data row */}
             <tr>
-                {/* Added data-label attribute to provide context in the mobile card view */}
-                {columns.map(col => <td key={col.key} data-label={col.header}>{renderTableCell(item, col)}</td>)}
+                {columns.map(col => (
+                    <td key={col.key} data-label={col.header}>
+                        {renderTableCell(item, col)}
+                    </td>
+                ))}
 
                 <td className="action-button-group-cell">
                     <button
@@ -114,7 +107,7 @@ const MediaRow = React.memo(({
                         disabled={!hasChanges || loading}
                         onClick={() => onUpdate(item._id, item.title)}
                     >Update</button>
-                    {/*Revert Button - Only visible/enabled when there are unsaved changes */}
+                    
                     <button
                         className="button-group revert-button"
                         onClick={() => onRevert(item._id)}
@@ -132,7 +125,7 @@ const MediaRow = React.memo(({
     );
 });
 
-const UpdateMedia = ({ pathId }) => { // Extract pathId passed from AdminView (parentSegments[2])
+const UpdateMedia = ({ pathId }) => { 
 
     const { role: userRole, getToken } = useAuth();
     const canUpdateMedia = userRole === 'admin';
@@ -144,12 +137,10 @@ const UpdateMedia = ({ pathId }) => { // Extract pathId passed from AdminView (p
     const [loading, setLoading] = useState(true);
     const [error, setErr] = useState(null);
 
-    // New State for Filtering
     const [typeFilter, setTypeFilter] = useState('all');
-    const [genres, setGenres] = useState([]); // State to store genres from server
-    const [mediaTypesConfig, setMediaTypesConfig] = useState({}); // DYNAMIC CONFIG
+    const [genres, setGenres] = useState([]); 
+    const [mediaTypesConfig, setMediaTypesConfig] = useState({}); 
 
-    // Load Genres and Dynamic Config on Mount
     useEffect(() => {
         const loadInitialData = async () => {
             try {
@@ -158,10 +149,9 @@ const UpdateMedia = ({ pathId }) => { // Extract pathId passed from AdminView (p
                     mediaApi.getMediaTypes()
                 ]);
 
-                const gList = Array.isArray(genreList) ? genreList : [];
-                setGenres(gList);
+                setGenres(Array.isArray(genreList) ? genreList : []);
                 setMediaTypesConfig(config || {});
-                // eslint-disable-next-line no-unused-vars
+            // eslint-disable-next-line no-unused-vars
             } catch (err) {
                 setErr("Could not load server configuration.");
             }
@@ -169,7 +159,6 @@ const UpdateMedia = ({ pathId }) => { // Extract pathId passed from AdminView (p
         loadInitialData();
     }, []);
 
-    // DYNAMIC COLUMN DEFINITION
     const getColumns = () => {
         const cols = [
             { header: 'Title', key: 'title', fieldKey: 'title', editable: true, inputType: 'text' },
@@ -179,8 +168,10 @@ const UpdateMedia = ({ pathId }) => { // Extract pathId passed from AdminView (p
 
         if (typeFilter !== 'all' && mediaTypesConfig[typeFilter]) {
             mediaTypesConfig[typeFilter].forEach(field => {
+                // Clean up "creator.xxx" for the table header
+                const displayHeader = field.label.includes('.') ? field.label.split('.')[1] : field.label;
                 cols.push({
-                    header: field.label,
+                    header: displayHeader.charAt(0).toUpperCase() + displayHeader.slice(1),
                     key: field.name,
                     fieldKey: field.name,
                     editable: true,
@@ -221,21 +212,20 @@ const UpdateMedia = ({ pathId }) => { // Extract pathId passed from AdminView (p
         loadMedia();
     }, [loadMedia]);
 
-    // Dynamic data handling for Arrays, Numbers, and Strings
-    //accepts both 'list' and 'array' for backend flexibility
     const handleCellChange = useCallback((mediaId, key, value, inputType) => {
+        // Extract property name from "creator.xxx"
+        const dataKey = key.includes('.') ? key.split('.')[1] : key;
+
         setEditedMedia(prevMedia => {
             return prevMedia.map(item => {
                 if (item._id === mediaId) {
                     let finalValue = value;
 
-                    // Handle Arrays: Prevents [""] when clearing input
                     if (inputType === 'list' || inputType === 'array') {
                         finalValue = (typeof value === 'string' && value.trim() === '')
                             ? []
                             : (typeof value === 'string' ? value.split(',').map(v => v.trim()) : value);
                     }
-                    // Handle Numbers: Ensures ISBN strings aren't touched
                     else if (inputType === 'number' || inputType === 'integer') {
                         finalValue = value === '' ? 0 : Number(value);
                     }
@@ -243,7 +233,7 @@ const UpdateMedia = ({ pathId }) => { // Extract pathId passed from AdminView (p
                         finalValue = Boolean(value);
                     }
 
-                    return { ...item, [key]: finalValue };
+                    return { ...item, [dataKey]: finalValue };
                 }
                 return item;
             });
@@ -251,7 +241,6 @@ const UpdateMedia = ({ pathId }) => { // Extract pathId passed from AdminView (p
     }, []);
 
 
-    // finds the original data for a specific ID and resets the edited state for just that row.
     const handleRevertRow = useCallback((mediaId) => {
         const originalItem = media.find(m => m._id === mediaId);
         if (!originalItem) return;
@@ -260,7 +249,6 @@ const UpdateMedia = ({ pathId }) => { // Extract pathId passed from AdminView (p
             prevMedia.map(item => item._id === mediaId ? JSON.parse(JSON.stringify(originalItem)) : item)
         );
 
-        // Clear any feedback messages for this row
         setFeedbackMessage(prev => {
             const newFeedback = { ...prev };
             delete newFeedback[mediaId];
@@ -268,15 +256,14 @@ const UpdateMedia = ({ pathId }) => { // Extract pathId passed from AdminView (p
         });
     }, [media]);
 
-    // Dynamic Change Detection based on config fields
-    // Optimized to handle edge cases where mediaType might be missing
-    //strictly uses the dynamic config to define what counts as a "change"
     const hasChanges = (originalMedia, editedItem) => {
         if (!originalMedia || !editedItem) return false;
 
         const mediaType = editedItem.mediaType || originalMedia.mediaType;
         const baseFields = ['title', 'genre'];
-        const typeFields = mediaTypesConfig[mediaType]?.map(f => f.name) || [];
+        
+        // Flatten the config field names to match state
+        const typeFields = mediaTypesConfig[mediaType]?.map(f => f.name.includes('.') ? f.name.split('.')[1] : f.name) || [];
         const keysToCheck = [...new Set([...baseFields, ...typeFields])];
 
         return keysToCheck.some(key => {
@@ -289,12 +276,11 @@ const UpdateMedia = ({ pathId }) => { // Extract pathId passed from AdminView (p
             return String(orig ?? '') !== String(edit ?? '');
         });
     };
-    // Dynamic Update Payload Construction
+
     const handleUpdate = async (mediaId, mediaTitle) => {
         const originalItem = media.find(m => m._id === mediaId);
         const editedItem = editedMedia.find(m => m._id === mediaId);
 
-        // Detect changes dynamically
         if (!originalItem || !editedItem || !hasChanges(originalItem, editedItem)) {
             setFeedbackMessage(prev => ({ ...prev, [mediaId]: { message: `No changes detected for: ${mediaTitle}.`, isError: false } }));
             return;
@@ -308,8 +294,9 @@ const UpdateMedia = ({ pathId }) => { // Extract pathId passed from AdminView (p
         const isConfirmed = window.confirm(`Are you sure you want to update: ${mediaTitle}?`);
         if (!isConfirmed) return;
 
-        // Build Whitelist: Only send keys defined in the config + base fields
-        const allowedKeys = ['title', 'genre', ...(mediaTypesConfig[editedItem.mediaType]?.map(f => f.name) || [])];
+        // Build Whitelist: Map config names to flat keys
+        const typeFields = mediaTypesConfig[editedItem.mediaType]?.map(f => f.name.includes('.') ? f.name.split('.')[1] : f.name) || [];
+        const allowedKeys = ['title', 'genre', ...typeFields];
 
         const updateData = allowedKeys.reduce((acc, key) => {
             if (editedItem[key] !== undefined) acc[key] = editedItem[key];
@@ -318,7 +305,6 @@ const UpdateMedia = ({ pathId }) => { // Extract pathId passed from AdminView (p
 
         try {
             await mediaApi.update(updateData, mediaId, getToken);
-            // Update original 'media' state to match new saved data
             setMedia(prev => prev.map(m => m._id === mediaId ? { ...editedItem } : m));
             setFeedbackMessage(prev => ({ ...prev, [mediaId]: { message: `Updated successfully!`, isError: false } }));
         } catch (error) {

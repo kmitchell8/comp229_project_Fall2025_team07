@@ -136,3 +136,12 @@ export const resetPassword = async (token, newPassword) => {
     }
     return data;
 };
+
+export const getUserRoles = async () => {
+    const domainName = BASE_URL.replace('/api', '');
+
+    const url = `${domainName}/documents/userRoles.json`;
+const response = await fetch(url); // Adjust path to your backend endpoint
+    if (!response.ok) throw new Error('Failed to fetch roles');
+    return await response.json();
+};

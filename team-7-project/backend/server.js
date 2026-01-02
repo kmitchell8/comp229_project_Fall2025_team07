@@ -57,11 +57,13 @@ app.use(express.json());
 app.use(cookieParser());
 //app.use(bodyParser.json());  //handled by express.json
 //enabling the API routes
-//STATIC
 
+//STATIC
+app.use('/users', express.static(path.join(__dirname, 'public', 'users')));
+app.use('/images/temp', express.static(path.join(__dirname, 'public', 'images', 'temp')));
 app.use('/documents', express.static(path.join(__dirname, 'public', 'documents')));
 //app.use('/documents/description', express.static(path.join(__dirname, 'public', 'documents', 'description')));
-app.use('/images/cover', express.static(path.join(__dirname, 'public', 'images', 'cover')))
+app.use('/images/cover', express.static(path.join(__dirname, 'public', 'images', 'cover')));
 //JSON
 app.use('/api/contacts', contactRoutes);
 app.use('/api/users', userRoutes);

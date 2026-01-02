@@ -1,0 +1,33 @@
+{
+  "countries": [
+    "Canada",
+    "United States",
+    "United Kingdom",
+    "Australia",
+    "Other"
+  ],
+  "regionalOptions": {
+    "United States": [
+      "Alabama",
+      "Alaska",
+      "Arizona",
+      "Arkansas",
+      "California",
+      "Other..."
+    ],
+    "Canada": [
+      "Alberta",
+      "British Columbia",
+      "Manitoba",
+      "Ontario",
+      "Quebec",
+      "Other..."
+    ],
+    "United Kingdom": [
+      "England",
+      "Scotland",
+      "Wales",
+      "Northern Ireland"
+    ]
+  }
+}

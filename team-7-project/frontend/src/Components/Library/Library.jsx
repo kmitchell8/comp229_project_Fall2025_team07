@@ -1,4 +1,3 @@
-// Library.jsx - Improved version
 import React, { useEffect, useState, useMemo } from 'react'
 import './Library.css'
 import mediaApi from '../Api/mediaApi'
@@ -12,7 +11,7 @@ const truncateText = (text, limit) => {
   return text.length > limit ? text.substring(0, limit) + "..." : text;
 };
 
-const Library = ({pathId}) => {
+const Library = ({ pathId }) => {
   //const [mediaShelves, setMediaShelves] = useState({});
   const [media, setMedia] = useState([]);
   const [descriptions, setDescriptions] = useState({}); // { [mediaId]: "Text content..." }
@@ -24,13 +23,11 @@ const Library = ({pathId}) => {
   const [isScrolled, setIsScrolled] = useState(false);//scrolling navbar
   const [searchTerm, setSearchTerm] = useState(""); // search
   const [filterType, setFilterType] = useState('all'); // 'all', 'book', 'movie', 'game'
+  const [mediaTypeConfigs, setMediaTypeConfigs] = useState({}); // Dynamic logic from API
   // const [loading, setLoading] = useState(true)
   //const [error, setError] = useState(null)
   //const { getToken } = useAuth()
   //const navigate = useNavigate();
-
-// If pathId exists (passed from LibraryView via hash parsing), 
-  // render the Media detail component instead of the library grid.
 
   // Merged Scroll Listener for performance
   useEffect(() => {
@@ -42,8 +39,6 @@ const Library = ({pathId}) => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  //SHOW description
 
   // Function for the Modal (Triggered by Cover)
   const handleOpenPreview = async (media) => {
@@ -75,7 +70,7 @@ const Library = ({pathId}) => {
     }
   };
 
-  //KEYBOARD listener
+  // KEYBOARD listener
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
@@ -98,6 +93,10 @@ const Library = ({pathId}) => {
       try {
         const data = await mediaApi.list();
         if (Array.isArray(data)) setMedia(data);
+
+        // Fetch dynamic media types from the API
+        const types = await mediaApi.getMediaTypes();
+        setMediaTypeConfigs(types);
       } catch (error) {
         console.error('Error fetching library:', error);
       }
@@ -106,76 +105,80 @@ const Library = ({pathId}) => {
   }, []);
 
   // Derive grouped and sorted data (The "Shelves")
-  // recalculates only when the 'media' array changes
   const shelfData = useMemo(() => {
     const currentMedia = Array.isArray(media) ? media : [];
 
+    // Helper to find creator key for a specific item
+    const getCreatorKey = (item) => {
+      const config = mediaTypeConfigs[item.mediaType];
+      return config?.find(f => f.name.startsWith('creator'))?.name.split('.')[1];
+    };
+
     // FILTER: Narrow down media based on search
     const filteredMedia = currentMedia.filter(item => {
-      // Check Search Term
       const title = (item.title || "").toLowerCase();
-      const creator = (item.author || item.director || item.developer || "").toLowerCase();
-      const matchesSearch = title.includes(searchTerm.toLowerCase()) || creator.includes(searchTerm.toLowerCase());
-      // Check Media Type
+      
+      // Dynamic Creator Lookup for Search
+      const creatorKey = getCreatorKey(item);
+      const creatorValue = (creatorKey && item[creatorKey] ? item[creatorKey] : "").toLowerCase();
+      
+      const matchesSearch = title.includes(searchTerm.toLowerCase()) || creatorValue.includes(searchTerm.toLowerCase());
       const matchesType = filterType === 'all' || item.mediaType === filterType;
       return matchesSearch && matchesType;
     });
 
-    //HELPER: Handle authors with suffixes (Jr, Sr, III) for last-name sorting
     const suffixes = ['jr', 'jr.', 'sr', 'sr.', 'ii', 'iii', 'iv', 'v', 'esq', 'phd'];
     const getLastName = (fullName) => {
       if (!fullName) return "";
       const parts = fullName.trim().split(/\s+/);
       if (parts.length <= 1) return parts[0].toLowerCase();
-
       let lastIndex = parts.length - 1;
-      // If the last word is a suffix, look at the word before it
       if (suffixes.includes(parts[lastIndex].toLowerCase()) && parts.length > 1) {
         lastIndex--;
       }
       return parts[lastIndex].toLowerCase();
     };
 
-    // Grouping Logic
     const grouped = filteredMedia.reduce((acc, item) => {
       let key;
-
       if (viewMode === 'genre') {
         const rawGenre = item.genre || "Other";
         key = rawGenre.charAt(0).toUpperCase() + rawGenre.slice(1).toLowerCase();
       } else {
-        // If sorting by 'author' but the item is a movie, 
-        // it should use the Title for the shelf key instead of crashing.
         let sortValue = (item[sortBy] || item.title || "#").trim();
-
-        if (sortBy === 'author' && item.author) {
-          sortValue = getLastName(item.author);
+        
+        // Use sortBy as a flag: if it is 'author', we look for the dynamic creator field
+        if (sortBy === 'author') {
+          const creatorKey = getCreatorKey(item);
+          if (creatorKey && item[creatorKey]) {
+            sortValue = getLastName(item[creatorKey]);
+          }
         }
-
+        
         key = sortValue.charAt(0).toUpperCase();
-        // If the first character isn't a letter (like a number or symbol), group under "#"
         if (!/[A-Z]/.test(key)) key = "#";
       }
-
       if (!acc[key]) acc[key] = [];
       acc[key].push({ ...item, id: item._id });
       return acc;
     }, {});
 
-    // sorting inside the shelves
     Object.keys(grouped).forEach(shelf => {
       grouped[shelf].sort((a, b) => {
-        // Check for 'book' discriminator (matching backend)
-        if (sortBy === 'author' && a.author && b.author) {
-          const authorA = getLastName(a.author);
-          const authorB = getLastName(b.author);
-          // If last names are the same, sort by first name (the whole string)
-          if (authorA === authorB) {
-            return (a.author || "").localeCompare(b.author || "");
+        if (sortBy === 'author') {
+          const keyA = getCreatorKey(a);
+          const keyB = getCreatorKey(b);
+          const valA = keyA ? a[keyA] : "";
+          const valB = keyB ? b[keyB] : "";
+          
+          const lastA = getLastName(valA);
+          const lastB = getLastName(valB);
+
+          if (lastA === lastB) {
+            return (valA || "").localeCompare(valB || "");
           }
-          return authorA.localeCompare(authorB);
+          return lastA.localeCompare(lastB);
         } else {
-          // Default to Title sorting for Movies/Games or when sorting by Title
           const valA = (a.title || '').toLowerCase();
           const valB = (b.title || '').toLowerCase();
           return valA.localeCompare(valB);
@@ -190,56 +193,45 @@ const Library = ({pathId}) => {
     });
 
     return { grouped, sortedNames };
-  }, [media, viewMode, sortBy, searchTerm, filterType]);
+  }, [media, viewMode, sortBy, searchTerm, filterType, mediaTypeConfigs]); // Synchronized dependency
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   useEffect(() => {
-    // Check if we have a hash and if media have finally arrived
     const hash = window.location.hash;
     if (hash && shelfData.sortedNames.length > 0) {
-
       const scrollToTarget = () => {
         const targetId = decodeURIComponent(hash.replace('#', ''));
         const element = document.getElementById(targetId);
-
         if (element) {
-          // Use 'auto' instead of 'smooth' for the refresh jump. 
           const navHeight = 180;
           const elementPosition = element.getBoundingClientRect().top + window.scrollY;
-
           window.scrollTo({
-            top: elementPosition - navHeight-10,
+            top: elementPosition - navHeight - 10,
             behavior: 'auto'
           });
-          // URL is clean for the rest of the session.
           window.history.replaceState(null, '', window.location.pathname);
         }
       };
-
       const timer = setTimeout(() => {
         requestAnimationFrame(() => {
           scrollToTarget();
         });
-      }, 500); 
-
+      }, 500);
       return () => clearTimeout(timer);
     }
   }, [media, shelfData.sortedNames]);
 
   const handleViewDetails = (mediaId) => {
-        // Architecture: Directly updating hash to library/[id] 
-        // matches the getPathSegments() logic in LibraryView.jsx
-        window.location.hash = `library/${mediaId}`;
-    };
+    window.location.hash = `library/${mediaId}`;
+  };
 
-  // Final Guard for detail view
   if (pathId) {
     return <Media mediaId={pathId} viewContext="library" />;
   }
-  
+
   return (
     <div className="library">
       <LibraryNavBar
@@ -273,52 +265,57 @@ const Library = ({pathId}) => {
           <div key={shelf} id={`shelf-${shelf.replace(/\s+/g, '-')}`} className='shelf-container'>
             <h1>{shelf}</h1>
             <div className='media-container' >
-              {shelfData.grouped[shelf].map((media) => (
-                <div key={media.id} className='media-formatting'>
-                  <div
-                    className="media-cover-wrapper"
-                    onClick={() => handleOpenPreview(media)}
-                    title="Click to view description">
-                    <img
-                      src={mediaApi.getCoverUrl(media.cover)}
-                      alt={media.title}
-                    />
-                  </div>
-                  <h2>{media.title}</h2>
-                  <h3>
-                    {media.mediaType === 'book' && media.author}
-                    {media.mediaType === 'movie' && `Directed by: ${media.director}`}
-                    {media.mediaType === 'game' && `Developed by: ${media.developer}`}
-                  </h3>
-                  
-                  <button
-                    className="media-readmore"
-                    onClick={() => handleShowDescription(media)}
-                  >
-                    {expandedId === media._id ? 'Close Summary ↑' : 'Quick Summary ↓'}
-                  </button>
+              {shelfData.grouped[shelf].map((media) => {
+                const config = mediaTypeConfigs[media.mediaType];
 
-                  {/* IN-LINE FALLBACK DISPLAY */}
-                  {expandedId === media._id && descriptions[media._id] && (
-                    <p className='media-description'>
-                      {truncateText(descriptions[media._id], 150)}
-                      <br />
-                      <span
-                        className="media-readmore"
-                        onClick={() => handleOpenPreview(media)}
-                      >
-                        Read More
-                      </span>
-                    </p>
-                  )}
-                </div>
-              ))}
+                // Audit Fix: Filter specifically for the field starting with 'creator'
+                const creatorField = config?.find(f => f.name.startsWith('creator'));
+                const creatorKey = creatorField?.name.split('.')[1];
+                const displayLabel = creatorField?.label.split('.')[1] || creatorField?.label;
+
+                return (
+                  <div key={media.id} className='media-formatting'>
+                    <div
+                      className="media-cover-wrapper"
+                      onClick={() => handleOpenPreview(media)}
+                      title="Click to view description">
+                      <img
+                        src={mediaApi.getCoverUrl(media.cover)}
+                        alt={media.title}
+                      />
+                    </div>
+                    <h2>{media.title}</h2>
+                    <h3>
+                      {creatorField && media[creatorKey] ? `${displayLabel}: ${media[creatorKey]}` : ""}
+                    </h3>
+
+                    <button
+                      className="media-readmore"
+                      onClick={() => handleShowDescription(media)}
+                    >
+                      {expandedId === media._id ? 'Close Summary ↑' : 'Quick Summary ↓'}
+                    </button>
+
+                    {expandedId === media._id && descriptions[media._id] && (
+                      <p className='media-description'>
+                        {truncateText(descriptions[media._id], 150)}
+                        <br />
+                        <span
+                          className="media-readmore"
+                          onClick={() => handleOpenPreview(media)}
+                        >
+                          Read More
+                        </span>
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         ))
       )}
 
-      {/* Back to Top Button */}
       {showButton && (
         <button className="back-to-top" onClick={scrollToTop} title="Back to Top">
           ↑
@@ -337,31 +334,40 @@ const Library = ({pathId}) => {
               </div>
 
               <div className="modal-info">
+                {/* Title is rendered directly from the media object */}
                 <h2>{selectedMedia.title}</h2>
+
                 <h3>
-                  {selectedMedia.author || selectedMedia.director || selectedMedia.developer}
+                  {/* Creator is rendered by finding the config field starting with 'creator' */}
+                  {mediaTypeConfigs[selectedMedia.mediaType]
+                    ?.filter(f => f.name.startsWith('creator'))
+                    .map(f => selectedMedia[f.name.split('.')[1]])[0] || ""}
                 </h3>
+
                 <p className="modal-metadata">
-                  {selectedMedia.mediaType === 'book' && (
-                    <>
-                      {selectedMedia.publisher} • {selectedMedia.ISBN_13 || selectedMedia.ISBN_10}
-                    </>
-                  )}
-                  {selectedMedia.mediaType === 'movie' && (
-                    <>
-                      {selectedMedia.studio} • {selectedMedia.runtime} mins
-                    </>
-                  )}
-                  {selectedMedia.mediaType === 'game' && (
-                    <>
-                      {selectedMedia.platform} • {selectedMedia.rating}
-                    </>
-                  )}
+                  {/*filter out 'creator' fields here */}
+                  {mediaTypeConfigs[selectedMedia.mediaType]
+                    ?.filter(field => !field.name.startsWith('creator'))
+                    .map((field, index, filteredArray) => {
+                      const dataKey = field.name.includes('.') ? field.name.split('.')[1] : field.name;
+                      const value = selectedMedia[dataKey];
+
+                      if (!value) return null;
+
+                      return (
+                        <span key={field.name}>
+                          {Array.isArray(value) ? value.join(', ') : value}
+                          {index < filteredArray.length - 1 ? ' • ' : ''}
+                        </span>
+                      );
+                    })}
                 </p>
+
                 <hr />
                 <div className="modal-description">
                   {descriptions[selectedMedia._id] || "Loading description..."}
                 </div>
+
                 <button
                   className="modal-read-more"
                   onClick={() => {

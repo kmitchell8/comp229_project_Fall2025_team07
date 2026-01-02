@@ -56,6 +56,8 @@ const Media = ({ mediaId, viewContext, onUpdate }) => {
   const handleDynamicChange = (key, value, inputType) => {
     setEditData(prev => {
       let finalValue = value;
+      // Audit Fix: Handle "creator.xxx" dot notation while keeping the flat object structure
+      const dataKey = key.includes('.') ? key.split('.')[1] : key;
 
       if (inputType === 'list' || inputType === 'array') {
         finalValue = (typeof value === 'string' && value.trim() === '')
@@ -68,7 +70,7 @@ const Media = ({ mediaId, viewContext, onUpdate }) => {
       else if (inputType === 'checkbox' || inputType === 'boolean') {
         finalValue = Boolean(value);
       }
-      return { ...prev, [key]: finalValue };
+      return { ...prev, [dataKey]: finalValue };
     });
   };
 
@@ -76,11 +78,12 @@ const Media = ({ mediaId, viewContext, onUpdate }) => {
   const hasChanges = () => {
     if (!media || !editData) return false;
     
-    // We check core fields and type-specific fields defined in config
-    const mediaType = media.mediaType;
-    const baseFields = ['title', 'genre'];
-    const typeFields = mediaTypesConfig[mediaType]?.map(f => f.name) || [];
-    const keysToCheck = [...new Set([...baseFields, ...typeFields])];
+    // Audit Fix: Removed baseFields logic. Checking title, genre, and dynamic fields directly.
+    const keysToCheck = [
+        'title', 
+        'genre', 
+        ...(mediaTypesConfig[media.mediaType]?.map(f => f.name.includes('.') ? f.name.split('.')[1] : f.name) || [])
+    ];
 
     return keysToCheck.some(key => {
       const orig = media[key];
@@ -107,7 +110,13 @@ const Media = ({ mediaId, viewContext, onUpdate }) => {
   // Saves updated fields to the database and updates the local "original" state on success
   const handleSave = async () => {
     try {
-      const allowedKeys = ['title', 'genre', ...(mediaTypesConfig[media.mediaType]?.map(f => f.name) || [])];
+      // Audit Fix: Restored your logic of mapping dynamic keys without intermediate baseField variables
+      const allowedKeys = [
+        'title', 
+        'genre', 
+        ...(mediaTypesConfig[media.mediaType]?.map(f => f.name.includes('.') ? f.name.split('.')[1] : f.name) || [])
+      ];
+
       const updatePayload = allowedKeys.reduce((acc, key) => {
         if (editData[key] !== undefined) acc[key] = editData[key];
         return acc;
@@ -169,7 +178,15 @@ const Media = ({ mediaId, viewContext, onUpdate }) => {
                   onChange={(e) => handleDynamicChange('title', e.target.value, 'text')}
                 />
               ) : (
-                <h1>{media.title}</h1>
+                <>
+                  <h1>{media.title}</h1>
+                  {/* Dynamic Creator Sub-heading synchronized with Library logic */}
+                  <h3 className="media-creator-sub">
+                    {mediaTypesConfig[media.mediaType]
+                      ?.filter(f => f.name.startsWith('creator'))
+                      .map(f => media[f.name.split('.')[1]])[0] || ""}
+                  </h3>
+                </>
               )}
               <span className="media-badge">{media.mediaType}</span>
             </header>
@@ -189,21 +206,29 @@ const Media = ({ mediaId, viewContext, onUpdate }) => {
                 ) : <p>{media.genre || 'N/A'}</p>}
               </div>
 
-              {mediaTypesConfig[media.mediaType]?.map(field => (
-                <div key={field.name} className="detail-entry">
-                  <label>{field.label}</label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      className="edit-field"
-                      value={Array.isArray(editData[field.name]) ? editData[field.name].join(', ') : (editData[field.name] || '')}
-                      onChange={(e) => handleDynamicChange(field.name, e.target.value, field.type)}
-                    />
-                  ) : (
-                    <p>{Array.isArray(media[field.name]) ? media[field.name].join(', ') : (media[field.name] || 'N/A')}</p>
-                  )}
-                </div>
-              ))}
+              {/* Filtering logic applied here to prevent duplicate Creator/Title in grid */}
+              {mediaTypesConfig[media.mediaType]
+                ?.filter(field => !field.name.startsWith('creator') && field.name !== 'title')
+                .map(field => {
+                const dataKey = field.name.includes('.') ? field.name.split('.')[1] : field.name;
+                const displayLabel = field.label.includes('.') ? field.label.split('.')[1] : field.label;
+
+                return (
+                  <div key={field.name} className="detail-entry">
+                    <label>{displayLabel}</label>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        className="edit-field"
+                        value={Array.isArray(editData[dataKey]) ? editData[dataKey].join(', ') : (editData[dataKey] || '')}
+                        onChange={(e) => handleDynamicChange(field.name, e.target.value, field.type)}
+                      />
+                    ) : (
+                      <p>{Array.isArray(media[dataKey]) ? media[dataKey].join(', ') : (media[dataKey] || 'N/A')}</p>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           </div>
         </div>

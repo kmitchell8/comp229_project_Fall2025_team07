@@ -1,6 +1,6 @@
 import React, { /*createContext, */useState, useEffect, useCallback } from 'react';
 import { AuthContext } from './authContext';
-import { signOut, forgotPassword, resetPassword } from '../Api/authApi';
+import { getUserRoles, signOut, forgotPassword, resetPassword } from '../Api/authApi';
 
 
 // AuthProvider component handles the state and logic,
@@ -8,12 +8,27 @@ import { signOut, forgotPassword, resetPassword } from '../Api/authApi';
 export const AuthProvider = ({ children }) => {
     const [userInfo, setUserInfo] = useState(null);
     const [view, setView] = useState('login'); // view state for the main app (Navbar)
+    const [availableRoles, setAvailableRoles] = useState([]); // State for your JSON roles
     const [loading, setLoading] = useState(true); // New state for initial loading
 
     // Derived state: the simplified role
-
+// 1. Fetch the roles from the backend on mount
+    useEffect(() => {
+        const fetchRoles = async () => {
+            try {
+                const data = await getUserRoles();
+                // If JSON is { "roles": [...] }, use data.roles. If just [...], use data.
+                setAvailableRoles(data.roles || data);
+            } catch (err) {
+                console.error("Error loading user roles from backend:", err);
+                // Optional: Fallback roles if the file is missing
+                setAvailableRoles(['user', 'moderator', 'admin']);
+            }
+        };
+        fetchRoles();
+    }, []);
     const role = userInfo ? (userInfo.role || 'user') : 'signedOut';//state based on user role
-
+ 
     //Authentication Logic 
 
     // Reads token/user from localStorage on app load
@@ -82,6 +97,8 @@ export const AuthProvider = ({ children }) => {
     // Context Value
 
     const value = {
+        availableRoles,
+        isAdmin: userInfo?.role === 'admin',
         userInfo,
         role, // Universal role state
         view, // Universal view state

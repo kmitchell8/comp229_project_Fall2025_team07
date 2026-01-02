@@ -23,7 +23,7 @@ const UserSchema = new mongoose.Schema({
     profileImage: {
         type: String,
         required: true,
-  validate: {
+        validate: {
             // Ensures the string saved to DB always looks like an image path
             validator: (v) => /\.(jpg|jpeg|png|gif|webp)$/i.test(v),
             message: "Profile image path must end with a valid image extension."
@@ -31,10 +31,27 @@ const UserSchema = new mongoose.Schema({
         default: function () {
             // Accesses the unique MongoDB ID for this specific document
             const userId = this._id.toString();
-            
+
             // set a default path: /users/[userId]/[userId].png
             // This ensures every user has a unique, predictable folder and filename
-            return `/users/${userId}/${userId}.png`;
+            return `/users/${userId}/profileimage.png`;
+        }
+    },
+    coverImage: {
+        type: String,
+        required: true,
+        validate: {
+            // Ensures the string saved to DB always looks like an image path
+            validator: (v) => /\.(jpg|jpeg|png|gif|webp)$/i.test(v),
+            message: "Profile image path must end with a valid image extension."
+        },
+        default: function () {
+            // Accesses the unique MongoDB ID for this specific document
+            const userId = this._id.toString();
+
+            // set a default path: /users/[userId]/[userId].png
+            // This ensures every user has a unique, predictable folder and filename
+            return `/users/${userId}/coverimage.png`;
         }
     },
     email: { type: String, required: true, unique: true },
@@ -55,6 +72,7 @@ const UserSchema = new mongoose.Schema({
     resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date },
     role: { type: String, enum: roles, default: 'user' },
+    dateOfBirth: { type: Date },
     lastLogin: { type: Date }//update in authController when user signs in
 }, {
     // Auto inputs the date in the correct format

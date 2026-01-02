@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import userApi from '../Api/userApi'; // Your provided API module
+import userApi from '../Api/userApi'; // 
 import { useAuth } from '../authState/useAuth'; // Authentication context
 import './Admin.css';
 
-const ROLES = ['user', 'admin'];
 const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     try {
@@ -20,33 +19,132 @@ const formatDate = (dateString) => {
     }
 };
 
+// Memoized Row Component aligned with MediaRow style
+const UserRow = React.memo(({
+    user,
+    columns,
+    feedback,
+    hasChanges,
+    onCellChange,
+    onView,
+    onUpdate,
+    onRevert,
+    canChangeRole,
+    currentUserId,
+    loading,
+    availableRoles // Passed down from main component
+}) => {
+    return (
+        <tbody className="user-row-group">
+            {/* Feedback Row */}
+            {feedback && (
+                <tr className={`feedback-base ${feedback.isError ? 'feedback-error' : 'feedback-success'}`}>
+                    <td colSpan={columns.length + 1}>
+                        <div role="alert">
+                            {feedback.message}
+                        </div>
+                    </td>
+                </tr>
+            )}
 
-const UpdateUser = (/*{pathId}/*{parentSegment}*/) => {//pass the _id path to be able to create an Id subview
+            <tr>
+                {columns.map((col) => {
+                    const currentValue = user[col.fieldKey] || '';
+                    const isEditable = col.editable;
 
-    // const userId = pathId; // Extracts _Id to create a _Id subview (pathId can  also be parentSegment[2])
+                    return (
+                        <td key={col.key}>
+                            {isEditable ? (
+                                //Radio buttons for Role
+                                col.inputType === 'radio' && col.fieldKey === 'role' ? (
+                                    <div className="role-radio-group-table">
+                                        {availableRoles.map(roleOption => (
+                                            <label key={roleOption} className="role-radio-label-table">
+                                                <input
+                                                    type="radio"
+                                                    name={`role-${user._id}`}
+                                                    value={roleOption}
+                                                    checked={currentValue === roleOption}
+                                                    onChange={(e) => onCellChange(user._id, col.fieldKey, e.target.value)}
+                                                    // Logic: Admins can't change their own role to prevent lockout
+                                                    disabled={loading || !canChangeRole || user._id === currentUserId}
+                                                />
+                                                <span className="radio-custom-indicator-table"></span>
+                                                <span className="radio-text">{roleOption}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    // Editable text inputs for Name/Email
+                                    <input
+                                        type={col.inputType || 'text'}
+                                        value={currentValue}
+                                        onChange={(e) => onCellChange(user._id, col.fieldKey, e.target.value)}
+                                        className="editable-input"
+                                        disabled={loading}
+                                    />
+                                )
+                            ) : (
+                                //Read-Only fields (like Date)
+                                col.format ? col.format(currentValue) : currentValue
+                            )}
+                        </td>
+                    );
+                })}
+                <td className="action-button-group-cell">
+                    <button
+                        className="button-group view-button"
+                        onClick={() => onView(user._id)}
+                        disabled={loading}
+                    >
+                        View
+                    </button>
+                    <button
+                        className={`button-group update-button ${hasChanges ? 'has-changes' : ''}`}
+                        onClick={() => onUpdate(user._id, user.name)}
+                        disabled={loading || !hasChanges}
+                    >
+                        Update
+                    </button>
+                    <button
+                        className="button-group revert-button"
+                        onClick={() => onRevert(user._id)}
+                        disabled={!hasChanges || loading}
+                        title="Discard unsaved changes"
+                    >
+                        ↺
+                    </button>
+                </td>
+            </tr>
+        </tbody>
+    );
+});
+
+const UpdateUser = ({ pathId }/*{parentSegment}*/) => { //pass the _id path to be able to create an Id subview
+
+    // const userId = pathId; // Extracts _Id to create a _Id subview (pathId can also be parentSegment[2])
     //This information is passed down from the profileView segment anytime 
     //anything in the profile.html# path is invoked at any point in the routing   
     //see profileView and Adminview to understand the routing
 
-    const { role: userRole, getToken, userInfo } = useAuth();
+    const { role: userRole, getToken, userInfo, availableRoles} = useAuth(); // Destructured ROLES from useAuth
     const [feedbackMessage, setFeedbackMessage] = useState({});
-    const [users, setUsers] = useState([]); // Original Source of Truth (oiringal data used for reference)
+    const [users, setUsers] = useState([]); // Original Source of Truth
     const [editedUsers, setEditedUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setErr] = useState(null);
+
+    // Default to common roles if useAuth doesn't provide them yet, but uses hook data as source
+    
     const currentUserId = userInfo ? userInfo._id : null;
     const canChangeRole = userRole === 'admin';
 
-    // Role uses radio buttons.
     const columns = [
-        //{ header: 'ID', key: '_id', fieldKey: '_id', editable: false }, 
-        { header: 'Name', key: 'name', fieldKey: 'name', editable: false, inputType: 'text' },
-        { header: 'Email', key: 'email', fieldKey: 'email', editable: false, inputType: 'email' },
-        { header: 'Role', key: 'role', fieldKey: 'role', editable: true, inputType: 'radio' }, // Set inputType to 'radio' for specific rendering
+        { header: 'Name', key: 'name', fieldKey: 'name', editable: true, inputType: 'text' },
+        { header: 'Email', key: 'email', fieldKey: 'email', editable: true, inputType: 'email' },
+        { header: 'Role', key: 'role', fieldKey: 'role', editable: true, inputType: 'radio' },
         { header: 'Created On', key: 'created', fieldKey: 'created', editable: false, format: formatDate },
     ];
-
-    // Function to load user data from the API
 
     const loadUsers = useCallback(async () => {
         setLoading(true);
@@ -69,16 +167,29 @@ const UpdateUser = (/*{pathId}/*{parentSegment}*/) => {//pass the _id path to be
     }, [loadUsers]);
 
     const handleCellChange = useCallback((userId, key, value) => {
-        setEditedUsers(prevUsers => {
-            return prevUsers.map(user => {
-                if (user._id === userId) {
-                    return { ...user, [key]: value };
-                }
-                return user;
-            });
-        });
+        setEditedUsers(prevUsers => prevUsers.map(user => {
+            if (user._id === userId) {
+                return { ...user, [key]: value };
+            }
+            return user;
+        }));
         setErr(null);
     }, []);
+
+    const handleRevertRow = useCallback((userId) => {
+        const originalUser = users.find(u => u._id === userId);
+        if (!originalUser) return;
+
+        setEditedUsers(prevUsers =>
+            prevUsers.map(u => u._id === userId ? JSON.parse(JSON.stringify(originalUser)) : u)
+        );
+
+        setFeedbackMessage(prev => {
+            const newFeedback = { ...prev };
+            delete newFeedback[userId];
+            return newFeedback;
+        });
+    }, [users]);
 
     const hasChanges = (originalUser, editedUser) => {
         const updatableKeys = ['name', 'email', 'role'];
@@ -101,63 +212,38 @@ const UpdateUser = (/*{pathId}/*{parentSegment}*/) => {//pass the _id path to be
         );
 
         if (!isConfirmed) {
-            //clicked 'Cancel' on the confirmation dialog
             setFeedbackMessage(prev => ({
                 ...prev,
                 [userId]: { message: `Update for ${userName} cancelled by admin.`, isError: false }
             }));
             return;
         }
+
         const updateData = {
             name: editedUser.name,
             email: editedUser.email,
             role: editedUser.role,
         };
 
-        setFeedbackMessage(prev => {
-            const newState = { ...prev };
-            delete newState[userId];
-            return newState;
-        });
-
         try {
             await userApi.update(updateData, userId, getToken);
-
-            setUsers(prevUsers => prevUsers.map(u => u._id === userId ? editedUser : u));
-
+            setUsers(prevUsers => prevUsers.map(u => u._id === userId ? { ...editedUser } : u));
             setFeedbackMessage(prev => ({
                 ...prev,
                 [userId]: { message: `User ${userName} updated successfully!`, isError: false }
             }));
-
         } catch (error) {
             console.error("Update failed", error);
-            const detailedMessage = `Update Failed: ${error.message || 'Unknown Error'}`;
-
             setFeedbackMessage(prev => ({
                 ...prev,
-                [userId]: { message: detailedMessage, isError: true }
+                [userId]: { message: `Update Failed: ${error.message || 'Unknown Error'}`, isError: true }
             }));
         }
     };
 
-    //Placeholder handler for View action (will be replaced with navigation)
-    const handleViewUser = (userId, userName) => {
-        console.log(`[NAVIGATION PLACEHOLDER] Navigating to detail page for User ID: ${userId} (${userName})`);
-        // use React Router here:
-        // navigate(`admin/updateuser/${userId}`);
-    };
-
-    const ReloadListButton = () => {
-        return (
-            <button
-                onClick={loadUsers}
-                className="button-group reload-button"
-                disabled={loading}
-            >
-                {loading ? 'Loading...' : 'Reload List'}
-            </button>
-        );
+    const handleViewUser = (userId) => {
+        // Activated similarly to updateMedia using hash-based navigation
+        window.location.hash = `admin/updateuser/${userId}`;
     };
 
     // RENDER STATES 
@@ -179,20 +265,37 @@ const UpdateUser = (/*{pathId}/*{parentSegment}*/) => {//pass the _id path to be
         );
     }
 
-    if (users.length === 0) {
+if (pathId) {
         return (
-            <div className="info-box empty-box">
-                <p>No users found in the directory.</p>
-                <ReloadListButton />
+            <div className="admin-subview-container">
+                <div className="admin-subview-header">
+                    <button 
+                        onClick={() => window.location.hash = 'admin/updateuser'} 
+                        className="media-back-btn"
+                    >
+                        ← Back to User Directory
+                    </button>
+                </div>
+                {/* Pass the pathId to Profile. 
+                    update Profile.jsx to look for this prop 
+                */}
+                <Profile managedUserId={pathId} />
             </div>
         );
     }
-    // MAIN TABLE RENDER
     return (
+
+
         <div className="user-table-container">
             <div className="table-header-controls">
                 <h1>User Directory</h1>
-                <ReloadListButton />
+                <button
+                    onClick={loadUsers}
+                    className="button-group reload-button"
+                    disabled={loading}
+                >
+                    {loading ? 'Loading...' : 'Reload List'}
+                </button>
             </div>
 
             <table className="user-table">
@@ -206,92 +309,29 @@ const UpdateUser = (/*{pathId}/*{parentSegment}*/) => {//pass the _id path to be
                         <th className="action-col">Actions</th>
                     </tr>
                 </thead>
-                <tbody>
-                    {editedUsers.map((user, index) => {
-                        const feedback = feedbackMessage[user._id];
-                        const originalUser = users.find(u => u._id === user._id) || {};
-                        const userHasChanges = hasChanges(originalUser, user);
-
-                        return (
-                            <React.Fragment key={`user-${user._id || index}`}>
-                                {/* Feedback Row */}
-                                {feedback && (
-                                    <tr className={`feedback-base ${feedback.isError ? 'feedback-error' : 'feedback-success'}`}>
-                                        <td colSpan={columns.length + 1}>
-                                            <div role="alert">
-                                                {feedback.message}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                )}
-
-                                <tr>
-                                    {columns.map((col) => {
-                                        const currentValue = user[col.fieldKey] || '';
-                                        const isEditable = col.editable;
-
-                                        return (
-                                            <td key={col.key}>
-                                                {isEditable ? (
-                                                    //Radio buttons
-                                                    col.inputType === 'radio' && col.fieldKey === 'role' ? (
-                                                        <div className="role-radio-group-table">
-                                                            {ROLES.map(roleOption => (
-                                                                <label key={roleOption} className="role-radio-label-table">
-                                                                    <input
-                                                                        type="radio"
-                                                                        name={`role-${user._id}`}
-                                                                        value={roleOption}
-                                                                        checked={currentValue === roleOption}
-                                                                        onChange={(e) => handleCellChange(user._id, col.fieldKey, e.target.value)}
-                                                                        disabled={loading || !canChangeRole || user._id === currentUserId}
-                                                                    />
-                                                                    <span className="radio-custom-indicator-table"></span>
-                                                                    <span className="radio-text">{roleOption}</span>
-                                                                </label>
-                                                            ))}
-                                                        </div>
-                                                    ) : (
-                                                        //editable inputs
-                                                        <input
-                                                            type={col.inputType || 'text'}
-                                                            value={currentValue}
-                                                            onChange={(e) => handleCellChange(user._id, col.fieldKey, e.target.value)}
-                                                            className="editable-input"
-                                                            disabled={loading}
-                                                        />
-                                                    )
-                                                ) : (
-                                                    //Read-Only field
-                                                    col.format ? col.format(currentValue) : currentValue
-                                                )}
-                                            </td>
-                                        );
-                                    })}
-                                    <td className="action-button-group-cell">
-                                        <button
-                                            className="button-group view-button"
-                                            onClick={() => handleViewUser(user._id, user.name)}
-                                            disabled={loading}
-                                        >
-                                            View
-                                        </button>
-                                        <button
-                                            className={`button-group update-button ${userHasChanges ? 'has-changes' : ''}`}
-                                            onClick={() => handleUpdate(user._id, user.name)}
-                                            disabled={loading || !userHasChanges}
-                                        >
-                                            Update
-                                        </button>
-                                    </td>
-                                </tr>
-                            </React.Fragment>
-                        );
-                    })}
-                </tbody>
+                {editedUsers.map((user, index) => {
+                    const originalUser = users.find(u => u._id === user._id) || {};
+                    return (
+                        <UserRow
+                            key={user._id || index}
+                            user={user}
+                            columns={columns}
+                            feedback={feedbackMessage[user._id]}
+                            hasChanges={hasChanges(originalUser, user)}
+                            onCellChange={handleCellChange}
+                            onView={handleViewUser}
+                            onUpdate={handleUpdate}
+                            onRevert={handleRevertRow}
+                            canChangeRole={canChangeRole}
+                            currentUserId={currentUserId}
+                            loading={loading}
+                            availableRoles={availableRoles}
+                        />
+                    );
+                })}
             </table>
         </div>
     );
 };
 
-export default UpdateUser
+export default UpdateUser;

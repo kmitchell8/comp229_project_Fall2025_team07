@@ -1,3 +1,21 @@
+:root {
+    /* Existing variables */
+    --bg-dark-primary: #1a1a1a;
+    --bg-dark-secondary: #2d2d2d;
+    --shadow-main: rgba(0, 0, 0, 0.5);
+    --accent-color: #3498db;
+    --hover-overlay-light: rgba(255, 255, 255, 0.1);
+    --preview-bg: #252525;
+    
+    /* NEW: Extracted from JSX */
+    --success-green: #2ecc71;
+    --error-red: #e74c3c;
+    --debug-opacity: 0.6;
+    
+    /* Overlay colors for editing */
+    --edit-overlay: rgba(0, 0, 0, 0.6);
+}
+
 /* Adding Profile-specific overrides to your Media Card CSS */
 
 .profile-avatar-overlay {
@@ -6,6 +24,13 @@
     margin: -60px auto 0 auto; /* Pulls avatar up into the cover image space */
     position: relative;
     z-index: 5;
+    border-radius: 50%;
+    overflow: hidden; /* Ensures the hover hint stays within the circle */
+}
+
+/* State-based cursor change */
+.profile-avatar-overlay.clickable-edit {
+    cursor: pointer;
 }
 
 .avatar-img {
@@ -16,6 +41,40 @@
     border: 4px solid var(--bg-dark-secondary);
     box-shadow: 0 4px 15px var(--shadow-main);
     background: var(--bg-dark-primary);
+    transition: transform 0.3s ease;
+}
+
+/* Hover effect for the avatar when editing */
+.clickable-edit:hover .avatar-img {
+    transform: scale(1.05);
+    filter: brightness(70%);
+}
+
+/* NEW: Hint overlay that appears on the avatar during edit mode */
+.edit-hint-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: var(--edit-overlay);
+    color: #ffffff;
+    font-size: 0.75rem;
+    padding: 8px 0;
+    text-align: center;
+    pointer-events: none; /* Allows clicks to pass through to the container */
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.media-cover-frame {
+    /* Base frame remains standard, but we allow cursor feedback if needed */
+    overflow: hidden;
+}
+
+.media-cover-frame img {
+    width: 100%;
+    height: auto;
+    display: block;
 }
 
 .library-stats-container {
@@ -40,6 +99,48 @@
 
 .inline-add:hover {
     background: var(--hover-overlay-light);
+}
+
+/* Layout & Action Classes moved from JSX */
+.edit-actions-group {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+}
+
+.edit-actions-group .media-back-btn,
+.edit-actions-group .admin-edit-toggle {
+    flex: 1;
+}
+
+/* Contextual button overrides */
+.cancel-btn {
+    background: var(--bg-dark-secondary);
+    border-color: #444;
+}
+
+.save-btn {
+    background: var(--success-green);
+    color: white;
+}
+
+.save-btn:disabled {
+    background: #27ae60;
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.security-reset-btn {
+    padding: 5px 10px;
+}
+
+.library-open-btn {
+    margin-top: 20px;
+}
+
+.debug-footer {
+    margin-top: 80px;
+    opacity: var(--debug-opacity);
 }
 
 /* Responsive Override for Profile */

@@ -13,16 +13,6 @@ const CreateMedia = (/*{parentSegment}*/) => {
         genre: '',
         cover: ''
         // managed dynamically via mediaTypesConfig
-        /*author: '',
-        publisher: '',
-        ISBN_10: '',
-        ISBN_13: '',
-        director: '',
-        studio: '',
-        runtime: '',
-        developer: '',
-        platform: '',
-        rating: ''*/
     });
 
     const [descriptionText, setDescriptionText] = useState('');
@@ -47,7 +37,7 @@ const CreateMedia = (/*{parentSegment}*/) => {
                     }
                     return prev;
                 });
-                // eslint-disable-next-line no-unused-vars
+            // eslint-disable-next-line no-unused-vars
             } catch (err) {
                 setErr("Could not load genre categories.");
             }
@@ -56,7 +46,6 @@ const CreateMedia = (/*{parentSegment}*/) => {
         const loadMediaTypes = async () => {
             try {
                 const data = await mediaApi.getMediaTypes();
-                // data is now { "book": [...], "movie": [...] } per updated backend logic
                 setMediaTypesConfig(data || {});
 
                 const typeKeys = data ? Object.keys(data) : [];
@@ -65,7 +54,7 @@ const CreateMedia = (/*{parentSegment}*/) => {
                 if (typeKeys.length > 0) {
                     setMediaType(typeKeys[0]);
                 }
-                // eslint-disable-next-line no-unused-vars
+            // eslint-disable-next-line no-unused-vars
             } catch (err) {
                 setErr("Could not load media type definitions.");
             }
@@ -79,13 +68,22 @@ const CreateMedia = (/*{parentSegment}*/) => {
     useEffect(() => {
         setFeedbackMessage({});
         setErr('');
+        
+        // Clear dynamic fields when switching types to ensure clean state
+        setMediaData(prev => ({
+            title: prev.title,
+            genre: prev.genre,
+            cover: prev.cover
+        }));
     }, [mediaType]);
 
     const handleChange = name => event => {
         if (name === 'description') {
             setDescriptionText(event.target.value);
         } else {
-            setMediaData({ ...mediaData, [name]: event.target.value });
+            // Handle "creator.xxx" dot notation while keeping the flat object structure
+            const dataKey = name.includes('.') ? name.split('.')[1] : name;
+            setMediaData({ ...mediaData, [dataKey]: event.target.value });
         }
         setFeedbackMessage(prev => ({ ...prev, [name]: undefined }));
         setErr('');
@@ -119,7 +117,7 @@ const CreateMedia = (/*{parentSegment}*/) => {
             // UPLOAD COVER FILE
             if (!coverFile) {
                 setFeedbackMessage(prev => ({ ...prev, coverFile: 'Cover image is required.' }));
-                setLoading(false); // Ensure loading stops if file is missing
+                setLoading(false); 
                 return;
             }
             const uploadResult = await mediaApi.uploadCover(coverFile, getToken);
@@ -144,8 +142,7 @@ const CreateMedia = (/*{parentSegment}*/) => {
                 throw new Error("Description file creation failed.");
             }
 
-            // PREPARE DATA DYNAMICALLY (Replaces hardcoded book/movie logic)
-            // This ensures any new discriminators added to the backend work automatically
+            // PREPARE DATA DYNAMICALLY
             const finalMediaData = {
                 mediaType,
                 title: mediaData.title,
@@ -156,9 +153,10 @@ const CreateMedia = (/*{parentSegment}*/) => {
             // Inject only fields defined in the config for this specific type
             if (mediaTypesConfig[mediaType]) {
                 mediaTypesConfig[mediaType].forEach(field => {
-                    const value = mediaData[field.name];
+                    const dataKey = field.name.includes('.') ? field.name.split('.')[1] : field.name;
+                    const value = mediaData[dataKey];
                     if (value !== undefined && value !== '') {
-                        finalMediaData[field.name] = value;
+                        finalMediaData[dataKey] = value;
                     }
                 });
             }
@@ -167,7 +165,6 @@ const CreateMedia = (/*{parentSegment}*/) => {
             setSuccessMessage(`${mediaType.toUpperCase()} "${result.title}" created successfully!`);
 
             // Clear form state and inputs
-            //setMediaData({ title: '', genre: genres[0] || '', author: '', publisher: '', director: '', studio: '', developer: '', platform: '' });
             setMediaData({
                 title: '',
                 genre: genres[0] || '',
@@ -180,10 +177,8 @@ const CreateMedia = (/*{parentSegment}*/) => {
         } catch (submitError) {
             let message = submitError.message || 'Media creation failed.';
 
-            // Refined error messaging for validation
             if (message.includes('validation failed') || message.includes('required')) {
                 setErr("Validation failed. Please check the highlighted fields.");
-                // Note: Feedback messages are usually mapped here based on server response keys
             } else {
                 setErr(message);
             }
@@ -192,7 +187,7 @@ const CreateMedia = (/*{parentSegment}*/) => {
             if (descriptionFileName) {
                 try {
                     await mediaApi.removeCover(descriptionFileName, getToken);
-                    successfulCleanUp += `Description file (${descriptionFileName.substring(0, 8)}...) removed. `;
+                    successfulCleanUp += `Description file removed. `;
                 } catch (cleanupError) {
                     console.error('Description delete failed:', cleanupError);
                 }
@@ -200,7 +195,7 @@ const CreateMedia = (/*{parentSegment}*/) => {
             if (coverFileName) {
                 try {
                     await mediaApi.removeCover(coverFileName, getToken);
-                    successfulCleanUp += `Cover file (${coverFileName.substring(0, 8)}...) removed. `;
+                    successfulCleanUp += `Cover file removed. `;
                 } catch (cleanupError) {
                     console.error('Cover delete failed:', cleanupError);
                 }
@@ -216,13 +211,17 @@ const CreateMedia = (/*{parentSegment}*/) => {
     }, [mediaData, coverFile, descriptionText, mediaType, getToken, genres, mediaTypesConfig]);
 
     const renderInput = (name, label, type = 'text', required = false) => {
+        // Clean up "creator.xxx" labels for display
+        const displayLabel = label.includes('.') ? label.split('.')[1] : label;
+        const dataKey = name.includes('.') ? name.split('.')[1] : name;
+        
         const isError = feedbackMessage[name];
-        const value = mediaData[name];
+        const value = mediaData[dataKey];
 
         return (
             <div className="form-group" key={name}>
                 <label htmlFor={name} className="form-label">
-                    {label} {required && <span className="required">*</span>}
+                    {displayLabel} {required && <span className="required">*</span>}
                 </label>
                 <input
                     type={type}
@@ -292,18 +291,20 @@ const CreateMedia = (/*{parentSegment}*/) => {
 
                     {/* DYNAMIC FIELD RENDERING ENGINE */}
                     {mediaType && mediaTypesConfig[mediaType]?.map(field => {
+                        const dataKey = field.name.includes('.') ? field.name.split('.')[1] : field.name;
+                        
                         // Handle Array/List types (e.g., platforms)
-                        if (field.type === 'list') {
+                        if (field.type === 'list' || field.type === 'array') {
                             return (
                                 <div className="form-group" key={field.name}>
-                                    <label className="form-label">{field.label}</label>
+                                    <label className="form-label">{field.label.includes('.') ? field.label.split('.')[1] : field.label}</label>
                                     <input
                                         type="text"
                                         placeholder="Separate with commas"
-                                        value={Array.isArray(mediaData[field.name]) ? mediaData[field.name].join(', ') : ''}
+                                        value={Array.isArray(mediaData[dataKey]) ? mediaData[dataKey].join(', ') : ''}
                                         onChange={(e) => {
                                             const values = e.target.value.split(',').map(v => v.trim());
-                                            setMediaData({ ...mediaData, [field.name]: values });
+                                            setMediaData({ ...mediaData, [dataKey]: values });
                                         }}
                                         className="form-input"
                                         disabled={loading}
@@ -312,29 +313,28 @@ const CreateMedia = (/*{parentSegment}*/) => {
                             );
                         }
 
-                        // Handle Boolean/Checkbox types (e.g., multiplayer)
-                        if (field.type === 'checkbox') {
+                        // Handle Boolean/Checkbox types
+                        if (field.type === 'checkbox' || field.type === 'boolean') {
                             return (
                                 <div className="form-group checkbox-inline-group" key={field.name}>
                                     <div className="checkbox-wrapper">
                                         <input
                                             type="checkbox"
                                             id={field.name}
-                                            checked={!!mediaData[field.name]}
+                                            checked={!!mediaData[dataKey]}
                                             onChange={(e) => {
-                                                setMediaData({ ...mediaData, [field.name]: e.target.checked });
+                                                setMediaData({ ...mediaData, [dataKey]: e.target.checked });
                                             }}
                                             disabled={loading}
                                             className="form-checkbox"
                                         />
                                         <label htmlFor={field.name} className="checkbox-label-text">
-                                            {field.label}
+                                            {field.label.includes('.') ? field.label.split('.')[1] : field.label}
                                         </label>
                                     </div>
                                 </div>
                             );
                         }
-                        // Default to standard renderInput for text/number
                         return renderInput(field.name, field.label, field.type || 'text', field.required);
                     })}
                 </div>

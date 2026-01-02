@@ -1,8 +1,8 @@
 {
   "book": [
     {
-      "name": "author",
-      "label": "Author",
+      "name": "creator.author",
+      "label": "Creator.author",
       "type": "text",
       "required": true
     },
@@ -27,8 +27,8 @@
   ],
   "movie": [
     {
-      "name": "director",
-      "label": "Director",
+      "name": "creator.director",
+      "label": "Creator.director",
       "type": "text",
       "required": true
     },
@@ -47,8 +47,8 @@
   ],
   "game": [
     {
-      "name": "developer",
-      "label": "Developer",
+      "name": "creator.developer",
+      "label": "Creator.developer",
       "type": "text",
       "required": false
     },

@@ -66,7 +66,7 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 40px;
+    gap: 50px;
     background: var(--bg-dark-secondary);
     padding: 40px;
     border-radius: 12px;
@@ -130,8 +130,9 @@
     flex-direction: column;
     gap: 15px;
    flex: 1.2 1 300px;
-    min-width: 300px;
-    max-width: 420px; /* Kept compact requested */
+    min-width: 280px;
+    max-width: 100%;
+   /* max-width: 420px; */
 }
 
 .form-group {
@@ -264,18 +265,26 @@
     align-self: center;
     margin-top: 20px;
 }
-/*  Responsive Adjustments  */
+/* Responsive Adjustments  */
 @media (max-width: 768px) {
+    .contact {
+        padding: 0 15px;
+    }
+
     .contact-sections {
-        padding: 25px;
+        padding: 20px; 
         max-width: 100%;
     }
     
     .contact-right {
-        max-width: 100%;
+        min-width: 100%;
     }
 
     .form-row {
         flex-direction: column;
+    }
+
+    .contact-left {
+        min-width: 100%;
     }
 }

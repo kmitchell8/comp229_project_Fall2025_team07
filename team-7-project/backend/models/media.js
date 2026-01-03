@@ -1,9 +1,11 @@
 /*
  * File Name: books.js
- * Author(s): Adrian Myers, Kevon Mitchell
+ * Author(s): Kevon Mitchell
  * Student ID (s): , 301508202
  * Date: November 10, 2025
  */
+
+//FRONTED: Profile.jsx, userProvider.jsx, Contact.jsx
 
 const mongoose = require('mongoose'); // needed to connect to MongoDB (type: commonjs)
 //import mongoose from 'mongoose';

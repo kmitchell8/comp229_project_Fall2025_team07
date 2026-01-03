@@ -5,6 +5,18 @@ import { ROUTES } from '../Api/routingConfig.js';
 import userApi from '../Api/userApi.jsx';
 import './Profile.css';
 
+/**
+ * CONFIGURATION: Single Source of Truth for Address Fields
+ * To handle schema changes, simply update the 'id' to match your Mongoose model.
+ */
+const ADDRESS_FIELD_CONFIG = [
+    { id: 'street', label: 'Street Address', fullWidth: true },
+    { id: 'addressLineTwo', label: 'Address Line 2', fullWidth: false },
+    { id: 'city', label: 'City', fullWidth: false },
+    // Country and Province are handled separately due to their <select> logic
+    { id: 'postalCode', label: 'Postal / Zip Code', fullWidth: false },
+];
+
 export const Profile = ({ managedUserId = null }) => {
     // Consume the context provided by UserProvider
     const {
@@ -100,8 +112,6 @@ export const Profile = ({ managedUserId = null }) => {
         resetLocalStates();
     };
 
-
-
     return (
         <div className={`media ${isSaving ? 'processing-blur' : ''}`}>
             {/* Hidden Inputs for Picture Uploading */}
@@ -169,7 +179,6 @@ export const Profile = ({ managedUserId = null }) => {
                         <div className="detail-entry">
                             <label>Security</label>
                             <button
-                                //type="button"
                                 className="media-back-btn security-reset-btn"
                                 onClick={handlePasswordResetRequest}
                             >Reset Password</button>
@@ -196,20 +205,6 @@ export const Profile = ({ managedUserId = null }) => {
                                     />
                                 </div>
                             )}
-                            {/* User Name - Only editable if viewing OWN profile */}
-                            {/* <div className="detail-entry">
-                                <label>User Name</label>
-                                {isEditing && isOwnProfile ? (
-                                    <input
-                                        type="text"
-                                        value={contactData.username}
-                                        onChange={(e) => handleInputChange(e, 'username')}
-                                        className="editable-input"
-                                    />
-                                ) : (
-                                    <p>{contactData.username}</p>
-                                )}
-                            </div>*/}
 
                             {/* Full Name - Only editable if viewing OWN profile */}
                             <div className="detail-entry">
@@ -295,38 +290,25 @@ export const Profile = ({ managedUserId = null }) => {
                                     {/* FULL ADDRESS SECTION - Only for Owner */}
                                     {isEditing && (
                                         <>
-                                            <div className="detail-entry full-width">
-                                                <label>Street Address</label>
-                                                <input
-                                                    type="text"
-                                                    value={contactData.address.streetAddress}
-                                                    onChange={(e) => handleInputChange(e, 'streetAddress', true)}
-                                                    className="editable-input"
-                                                />
-                                            </div>
-                                            <div className="detail-entry">
-                                                <label>Address Line 2</label>
-                                                <input
-                                                    type="text"
-                                                    value={contactData.address.addressLine2}
-                                                    onChange={(e) => handleInputChange(e, 'addressLine2', true)}
-                                                    className="editable-input"
-                                                />
-                                            </div>
-                                            <div className="detail-entry">
-                                                <label>City</label>
-                                                <input
-                                                    type="text"
-                                                    value={contactData.address.city}
-                                                    onChange={(e) => handleInputChange(e, 'city', true)}
-                                                    className="editable-input"
-                                                />
-                                            </div>
+                                            {/* Dynamically generated address fields for schema-agnostic maintenance */}
+                                            {ADDRESS_FIELD_CONFIG.map((field) => (
+                                                <div key={field.id} className={`detail-entry ${field.fullWidth ? 'full-width' : ''}`}>
+                                                    <label>{field.label}</label>
+                                                    <input
+                                                        type="text"
+                                                        value={contactData.address[field.id] || ''}
+                                                        onChange={(e) => handleInputChange(e, field.id, true)}
+                                                        className="editable-input"
+                                                    />
+                                                </div>
+                                            ))}
+
+                                            {/* Logic-based Address fields (Selects) */}
                                             <div className="detail-entry">
                                                 <label>Country</label>
                                                 <select
-                                                    value={contactData.address.country}
-                                                    onChange={(e) => handleInputChange(e, 'country', true)}
+                                                    value={contactData.address.Country}
+                                                    onChange={(e) => handleInputChange(e, 'Country', true)}
                                                     className="editable-input"
                                                 >
                                                     {countryData.countries.map(c => <option key={c} value={c}>{c}</option>)}
@@ -334,34 +316,24 @@ export const Profile = ({ managedUserId = null }) => {
                                             </div>
                                             <div className="detail-entry">
                                                 <label>State / Province</label>
-                                                {countryData.regionalOptions[contactData.address.country] ? (
+                                                {countryData.regionalOptions[contactData.address.Country] ? (
                                                     <select
-                                                        value={contactData.address.stateProvince}
-                                                        onChange={(e) => handleInputChange(e, 'stateProvince', true)}
+                                                        value={contactData.address.province}
+                                                        onChange={(e) => handleInputChange(e, 'province', true)}
                                                         className="editable-input"
                                                     >
                                                         <option value="">Select...</option>
-                                                        {countryData.regionalOptions[contactData.address.country].map(s => <option key={s} value={s}>{s}</option>)}
+                                                        {countryData.regionalOptions[contactData.address.Country].map(s => <option key={s} value={s}>{s}</option>)}
                                                     </select>
                                                 ) : (
                                                     <input
                                                         type="text"
-                                                        value={contactData.address.stateProvince}
-                                                        onChange={(e) => handleInputChange(e, 'stateProvince', true)}
+                                                        value={contactData.address.province}
+                                                        onChange={(e) => handleInputChange(e, 'province', true)}
                                                         className="editable-input"
                                                     />
                                                 )}
                                             </div>
-                                            <div className="detail-entry">
-                                                <label>Postal / Zip Code</label>
-                                                <input
-                                                    type="text"
-                                                    value={contactData.address.postalCode}
-                                                    onChange={(e) => handleInputChange(e, 'postalCode', true)}
-                                                    className="editable-input"
-                                                />
-                                            </div>
-
                                         </>
                                     )}
                                 </>

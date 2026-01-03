@@ -18,12 +18,12 @@ export const UserProvider = ({ children }) => {
         phone: '',
         dob: '',
         address: {
-            streetAddress: '',
-            addressLine2: '',
+            street: '',          // Updated to schema name
+            addressLineTwo: '',   // Updated to schema name
             city: '',
-            stateProvince: '',
+            province: '',        // Updated to schema name
             postalCode: '',
-            country: 'Canada'
+            Country: 'Canada'    // Updated to schema name (Capital C)
         },
         preferredContact: 'email',
         role: 'user'
@@ -81,12 +81,12 @@ export const UserProvider = ({ children }) => {
                                 ? data.dob.split('T')[0]
                                 : '',
                             address: {
-                                streetAddress: data.address?.streetAddress || '',
-                                addressLine2: data.address?.addressLine2 || '',
+                                street: data.address?.street || '',
+                                addressLineTwo: data.address?.addressLineTwo || '',
                                 city: data.address?.city || '',
-                                stateProvince: data.address?.stateProvince || '',
+                                province: data.address?.province || '',
                                 postalCode: data.address?.postalCode || '',
-                                country: data.address?.country || 'Canada',
+                                Country: data.address?.Country || 'Canada',
                             },
                             preferredContact: data.preferredContact || 'email',
                             role: data.role || 'user',
@@ -161,7 +161,7 @@ export const UserProvider = ({ children }) => {
             if (isAddress) {
                 const updatedAddress = { ...prev.address, [field]: value };
                 // If the country changes, clear the state/province to avoid mismatched data
-                if (field === 'country') updatedAddress.stateProvince = '';
+                if (field === 'Country') updatedAddress.province = '';
                 return { ...prev, address: updatedAddress };
             }
             return { ...prev, [field]: value };
@@ -290,7 +290,7 @@ export const UserProvider = ({ children }) => {
         //setIsEditing(false);
         //!hasChanges;
         // Then navigate using the hash AccessView expects
-       // setTimeout(() => {
+        // setTimeout(() => {
             window.location.href = `./access.html#${ROUTES.RESET}`;
         //}, 10);
     };

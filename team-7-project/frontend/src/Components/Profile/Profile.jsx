@@ -176,7 +176,7 @@ export const Profile = ({ managedUserId = null }) => {
                             )}
                         </div>
                         {/*Password Reset*/}
-                       {isOwnProfile & (<div className="detail-entry">
+                        {isOwnProfile & (<div className="detail-entry">
                             <label>Security</label>
                             <button
                                 className="media-back-btn security-reset-btn"

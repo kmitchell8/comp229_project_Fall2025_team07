@@ -52,7 +52,9 @@ const AdminView = ({ pathSegments: parentSegments = [] }) => {
     return (
       <div className="admin-nav-footer">
         {currentView !== ROUTES.ADMIN && (
-          <button onClick={() => window.location.hash = ROUTES.ADMIN}
+          
+          <button 
+          onClick={() => (window.location.hash = ROUTES.ADMIN)}
             className="admin-go-back"
           >
             Go Back

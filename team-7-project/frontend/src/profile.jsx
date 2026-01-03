@@ -6,6 +6,8 @@ import './index.css'
 //import Admin from './Components/Admin/Admin.jsx'
 //import Navbar from './Components/Navbar/Navbar.jsx'
 import { AuthProvider } from './Components/StateProvider/authState/authProvider.jsx';
+import { MediaProvider } from './Components/StateProvider/mediaState/mediaProvider.jsx';
+import { UserProvider } from './Components/StateProvider/userState/userProvider.jsx';
 import { ProfileView } from './Components/Views/profileView.jsx';
 
 
@@ -14,7 +16,11 @@ import { ProfileView } from './Components/Views/profileView.jsx';
 createRoot(document.getElementById('root')).render(
     <StrictMode>
         <AuthProvider>
-            <ProfileView/>
+            <UserProvider>
+                <MediaProvider>
+                    <ProfileView />
+                </MediaProvider>
+            </UserProvider>
         </AuthProvider>
     </StrictMode>,
 

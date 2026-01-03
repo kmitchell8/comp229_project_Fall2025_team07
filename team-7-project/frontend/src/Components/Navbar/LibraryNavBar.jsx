@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import './Navbar.css';
-import mediaApi from '../Api/mediaApi'; // Following your original import pattern
+import mediaApi from '../Api/mediaApi';
+import { useMedia } from '../StateProvider/mediaState/useMedia'; // Consume the context hook
 
-const LibraryNavBar = ({
-    isScrolled,
-    viewMode,
-    setViewMode,
-    sortBy,
-    setSortBy,
-    searchTerm,
-    setSearchTerm,
-    filterType,
-    setFilterType,
-    shelfNames }) => {
+const LibraryNavBar = ({ isScrolled, shelfNames }) => {
+    // 1. Pull logic/state directly from Context instead of props
+    const {
+        viewMode, setViewMode,
+        sortBy, setSortBy,
+        searchTerm, setSearchTerm,
+        filterType, setFilterType,
+        getSortLabel
+    } = useMedia();
 
     const [mediaTypes, setMediaTypes] = useState([]);
 
@@ -54,13 +53,13 @@ const LibraryNavBar = ({
     };
 
     // Logic to determine the sort label dynamically
-    const getSortLabel = () => {
+   /* const getSortLabel = () => {
         if (filterType === 'book') return "Author";
         if (filterType === 'movie') return "Director";
         if (filterType === 'game') return "Developer";
         return "Creator"; // Default for 'all' or others
     };
-
+*/
     // Logic for search placeholder
     const getSearchPlaceholder = () => {
         const label = getSortLabel().toLowerCase();
@@ -128,8 +127,7 @@ const LibraryNavBar = ({
 
                     <li className="nav-divider">|</li>
 
-                    <li
-                        className="nav-label-container">
+                    <li className="nav-label-container">
                         <span className="nav-label">Sort By:</span>
                     </li>
                     <li>
@@ -154,7 +152,7 @@ const LibraryNavBar = ({
                 </div>
             </div>
 
-            {/* Secondary Navigation Row ( */}
+            {/* Secondary Navigation Row */}
             <div className="secondary-nav">
                 <span className="jump-label">Jump to:</span>
                 <div className="jump-links">

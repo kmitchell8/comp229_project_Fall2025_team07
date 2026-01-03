@@ -1,13 +1,22 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '../StateProvider/authState/useAuth'; // Assumes useAuth is correctly exported
+import { useMedia } from '../StateProvider/mediaState/useMedia'; // Context integration
 import mediaApi from '../Api/mediaApi'; // Assumes path to mediaApi
 import './Admin.css'
 
 const CreateMedia = (/*{parentSegment}*/) => {
 
     const { getToken } = useAuth();
+    // Consuming Media Context
+    const { 
+        mediaTypeConfigs, 
+        refreshMedia, 
+        genres: contextGenres = [], 
+        loading: contextLoading 
+    } = useMedia();
+
     const [mediaType, setMediaType] = useState('');
-    const [mediaTypesConfig, setMediaTypesConfig] = useState({});
+    // mediaTypesConfig state removed as it is now provided by Context
     const [mediaData, setMediaData] = useState({ //can be reused in the UpdateMedia component
         title: '',
         genre: '',
@@ -21,48 +30,20 @@ const CreateMedia = (/*{parentSegment}*/) => {
     const [loading, setLoading] = useState(false);
     const [error, setErr] = useState(null);
     const [successMessage, setSuccessMessage] = useState(null);
-    const [genres, setGenres] = useState([]); // To store the list from the server
-    const [availableMediaTypes, setAvailableMediaTypes] = useState([]);
+    // local genres and availableMediaTypes states removed to use Context values
 
+    // availableMediaTypes derived directly from context keys
+    const availableMediaTypes = Object.keys(mediaTypeConfigs || {});
+
+    // Effect to handle initial selection once context data arrives
     useEffect(() => {
-        const loadGenres = async () => {
-            try {
-                const list = await mediaApi.getGenres();
-                const genreList = Array.isArray(list) ? list : [];
-                setGenres(genreList);
-
-                setMediaData(prev => {
-                    if (!prev.genre && genreList.length > 0) {
-                        return { ...prev, genre: genreList[0] };
-                    }
-                    return prev;
-                });
-            // eslint-disable-next-line no-unused-vars
-            } catch (err) {
-                setErr("Could not load genre categories.");
-            }
-        };
-
-        const loadMediaTypes = async () => {
-            try {
-                const data = await mediaApi.getMediaTypes();
-                setMediaTypesConfig(data || {});
-
-                const typeKeys = data ? Object.keys(data) : [];
-                setAvailableMediaTypes(typeKeys);
-
-                if (typeKeys.length > 0) {
-                    setMediaType(typeKeys[0]);
-                }
-            // eslint-disable-next-line no-unused-vars
-            } catch (err) {
-                setErr("Could not load media type definitions.");
-            }
-        };
-
-        loadGenres();
-        loadMediaTypes();
-    }, []);
+        if (availableMediaTypes.length > 0 && !mediaType) {
+            setMediaType(availableMediaTypes[0]);
+        }
+        if (contextGenres.length > 0 && !mediaData.genre) {
+            setMediaData(prev => ({ ...prev, genre: contextGenres[0] }));
+        }
+    }, [mediaTypeConfigs, contextGenres, availableMediaTypes, mediaType, mediaData.genre]);
 
     // Reset feedback and specific metadata when switching types to prevent "state pollution"
     useEffect(() => {
@@ -151,8 +132,8 @@ const CreateMedia = (/*{parentSegment}*/) => {
             };
 
             // Inject only fields defined in the config for this specific type
-            if (mediaTypesConfig[mediaType]) {
-                mediaTypesConfig[mediaType].forEach(field => {
+            if (mediaTypeConfigs[mediaType]) {
+                mediaTypeConfigs[mediaType].forEach(field => {
                     const dataKey = field.name.includes('.') ? field.name.split('.')[1] : field.name;
                     const value = mediaData[dataKey];
                     if (value !== undefined && value !== '') {
@@ -164,10 +145,13 @@ const CreateMedia = (/*{parentSegment}*/) => {
             const result = await mediaApi.create(finalMediaData, getToken);
             setSuccessMessage(`${mediaType.toUpperCase()} "${result.title}" created successfully!`);
 
+            // Refresh Library context to include new item
+            refreshMedia();
+
             // Clear form state and inputs
             setMediaData({
                 title: '',
-                genre: genres[0] || '',
+                genre: contextGenres[0] || '',
                 cover: ''
             });
             setDescriptionText('');
@@ -208,7 +192,7 @@ const CreateMedia = (/*{parentSegment}*/) => {
         } finally {
             setLoading(false);
         }
-    }, [mediaData, coverFile, descriptionText, mediaType, getToken, genres, mediaTypesConfig]);
+    }, [mediaData, coverFile, descriptionText, mediaType, getToken, contextGenres, mediaTypeConfigs, refreshMedia]);
 
     const renderInput = (name, label, type = 'text', required = false) => {
         // Clean up "creator.xxx" labels for display
@@ -238,7 +222,7 @@ const CreateMedia = (/*{parentSegment}*/) => {
         );
     };
 
-    const renderSelect = (name, label, options, required = false) => {
+    const renderSelect = (name, label, options = [], required = false) => {
         const isError = feedbackMessage[name];
         const value = mediaData[name];
 
@@ -255,7 +239,8 @@ const CreateMedia = (/*{parentSegment}*/) => {
                     disabled={loading}
                     className={`form-input ${isError ? 'input-error' : ''}`}
                 >
-                    {options.map(g => (
+                    {/* Guard for options.map to prevent crash on undefined */}
+                    {Array.isArray(options) && options.map(g => (
                         <option key={g} value={g}>{g}</option>
                     ))}
                 </select>
@@ -263,6 +248,11 @@ const CreateMedia = (/*{parentSegment}*/) => {
             </div>
         );
     };
+
+    // Prevent rendering until critical config is loaded
+    if (contextLoading && availableMediaTypes.length === 0) {
+        return <div className="create-media-container"><h2>Loading form configuration...</h2></div>;
+    }
 
     return (
         <div className="create-media-container">
@@ -286,11 +276,11 @@ const CreateMedia = (/*{parentSegment}*/) => {
 
             <form onSubmit={handleSubmit} className="media-form">
                 <div className="form-section-group">
-                    {renderSelect('genre', 'Genre', genres, true)}
+                    {renderSelect('genre', 'Genre', contextGenres, true)}
                     {renderInput('title', 'Title', 'text', true)}
 
                     {/* DYNAMIC FIELD RENDERING ENGINE */}
-                    {mediaType && mediaTypesConfig[mediaType]?.map(field => {
+                    {mediaType && mediaTypeConfigs[mediaType]?.map(field => {
                         const dataKey = field.name.includes('.') ? field.name.split('.')[1] : field.name;
                         
                         // Handle Array/List types (e.g., platforms)

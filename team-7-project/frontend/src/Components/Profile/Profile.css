@@ -1,3 +1,5 @@
+/* Profile.css*/
+
 :root {
     /* Existing variables */
     --bg-dark-primary: #1a1a1a;
@@ -7,7 +9,7 @@
     --hover-overlay-light: rgba(255, 255, 255, 0.1);
     --preview-bg: #252525;
     
-    /* NEW: Extracted from JSX */
+    /* Extracted from JSX */
     --success-green: #2ecc71;
     --error-red: #e74c3c;
     --debug-opacity: 0.6;
@@ -16,7 +18,7 @@
     --edit-overlay: rgba(0, 0, 0, 0.6);
 }
 
-/* Adding Profile-specific overrides to your Media Card CSS */
+/* Profile-specific overrides to Media Card CSS */
 
 .profile-avatar-overlay {
     width: 120px;
@@ -41,16 +43,26 @@
     border: 4px solid var(--bg-dark-secondary);
     box-shadow: 0 4px 15px var(--shadow-main);
     background: var(--bg-dark-primary);
-    transition: transform 0.3s ease;
+    /*transition: transform 0.3s ease;*/
+    /* ADDED: Smooth transition for multiple properties */
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), filter 0.3s ease;
+    
+    /* ADDED: Set the anchor point to the center-bottom */
+    /* This keeps the bottom of the circle "locked" while it grows upwards and outwards */
+    transform-origin: bottom center;
 }
 
 /* Hover effect for the avatar when editing */
-.clickable-edit:hover .avatar-img {
-    transform: scale(1.05);
-    filter: brightness(70%);
+ .avatar-img:hover {
+   /* transform: scale(1.05);
+    filter: brightness(70%); */
+
+    transform: scale(1.1) translateY(-2px);
+    filter: brightness(85%);
+    border-color: var(--accent-color);
 }
 
-/* NEW: Hint overlay that appears on the avatar during edit mode */
+/* Hint overlay that appears on the avatar during edit mode */
 .edit-hint-overlay {
     position: absolute;
     bottom: 0;
@@ -67,8 +79,9 @@
 }
 
 .media-cover-frame {
-    /* Base frame remains standard, but we allow cursor feedback if needed */
+    /* Base frame remains standard, but allows cursor feedback if needed */
     overflow: hidden;
+    position: relative; /* Ensure the frame acts as a stable base for the overlap */
 }
 
 .media-cover-frame img {
@@ -146,6 +159,13 @@
 /* Responsive Override for Profile */
 @media (max-width: 1100px) {
     .profile-avatar-overlay {
-        margin: 20px auto;
+        /* Maintain the negative margin even in portrait/small screens */
+        /* If the overlap feels too deep on small screens,  adjust -60px to -40px */
+        margin: -60px auto 0 auto; 
+    }
+    
+    /* Ensure the container below doesn't hide the overlapped avatar */
+    .media-visual-pane {
+        padding-top: 20px; 
     }
 }

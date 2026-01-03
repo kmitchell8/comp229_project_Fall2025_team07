@@ -1,174 +1,273 @@
 :root {
-    /* Color Palette */
-    --bg-input: #222203;
-    --text-primary: #bdbd6e;
-    --text-button: #0c0b0b;
-    --gradient-brand: linear-gradient(110deg, #4c4ce2 15%, #6ce96c 25%, #bdbd6e 60%);
-    --gradient-button: linear-gradient(110deg, #4c4ce2 40%, #bdbd6e 60%);
+    /* --- Aligned with Library.css Primary Palette --- */
+    --primary-text: #ffffff;
+    --secondary-text: #bdbdff;
+    --bg-dark-primary: #0d0249;
+    --bg-dark-secondary: #240c83;
+    --accent-color: #79a6ff;
+    --border-color: #3812b1;
+    --input-bg: #1a0867;
     
-    /* Spacing & Transitions */
-    --transition-speed: 0.3s;
+    /* --- System & Validation --- */
+    --success-color: #4CAF50;
+    --error-color: #F44336;
+    --shadow-heavy: #000000cc;
+    --glow-accent-soft: #79a6ff66;
+    --hover-overlay: rgba(255, 255, 255, 0.05);
+
+    /* --- Library Title Gradient Match --- */
+    --title-gradient-mid: #4facfe;
+    --title-gradient-end: #00f2fe;
+    --contact-brand-gradient: linear-gradient(110deg, var(--accent-color) 15%, var(--title-gradient-mid) 25%, var(--title-gradient-end) 60%);
+    
+    /* --- Animation --- */
+    --transition-standard: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .contact {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 80px;
-    margin: 80px 170px;
+    gap: 40px;
+    margin: 40px auto;
+    padding: 0 20px;
+    background-color: var(--bg-dark-primary);
+    width: 100%;
+    min-height: 80vh;
 }
 
+/* --- Title Section --- */
 .contact-title {
-    position: relative;
+    text-align: center;
 }
 
 .contact-title h1 {
-    padding: 0px 30px;
-    font-size: 80px;
-    font-weight: 600;
+    font-size: clamp(36px, 8vw, 56px);
+    font-weight: 700;
+    color: var(--primary-text);
+    text-transform: uppercase;
+    letter-spacing: 2px;
 }
 
 .contact-title hr {
-    bottom: 0;
-    right: 0;
-    z-index: -1;
+    height: 4px;
+    border: none;
+    background: var(--contact-brand-gradient);
+    width: 100px;
+    margin: 10px auto;
+    border-radius: 2px;
 }
 
+/* --- Main Layout Frame --- */
 .contact-sections {
     display: flex;
-    gap: 150px;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 50px;
+    background: var(--bg-dark-secondary);
+    padding: 40px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 15px 30px var(--shadow-heavy);
+    width: 100%;
+    max-width: 950px;
 }
 
+/* --- Left Column: Branding --- */
 .contact-left {
     display: flex;
     flex-direction: column;
-    gap: 30px;
+    gap: 20px;
+    flex: 1;
+    min-width: 280px;
 }
 
 .contact-left h1 {
-    font-size: 40px;
+    font-size: 28px;
     font-weight: 700;
-    background: var(--gradient-brand);
+    background: var(--contact-brand-gradient);
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
 .contact-left p {
-    max-width: 550px;
-    color: var(--text-primary);
-    font-size: 20px;
-    line-height: 35px;
+    color: var(--secondary-text);
+    font-size: 15px;
+    line-height: 1.6;
+    opacity: 0.9;
 }
 
 .contact-details {
     display: flex;
     flex-direction: column;
-    gap: 30px; /* Fixed typo from 30x */
-    color: var(--text-primary);
-    font-size: 22px;
+    gap: 20px;
 }
 
 .contact-detail {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 12px;
+    font-size: 16px;
+    color: var(--secondary-text);
+    transition: var(--transition-standard);
 }
 
+.contact-detail:hover {
+    color: var(--primary-text);
+    transform: translateX(8px);
+}
+
+/* --- Right Column: Form --- */
 .contact-right {
     display: flex;
     flex-direction: column;
-    align-items: start;
-    gap: 20px; /* Reduced gap slightly for dense address info */
+    gap: 15px;
+    flex: 1.2;
+    min-width: 300px;
+    max-width: 420px; /* Kept compact as requested */
 }
 
-/* Helper for Address Grid */
-.form-row {
+.form-group {
     display: flex;
-    gap: 20px;
+    flex-direction: column;
+    gap: 6px;
     width: 100%;
 }
 
-.contact-right .form-group {
+.form-row {
     display: flex;
-    flex-direction: column;
-    gap: 10px;
+    gap: 12px;
     width: 100%;
 }
 
 .contact-right label {
-    color: var(--text-primary);
-    font-size: 20px;
-    font-weight: 500;
+    color: var(--accent-color);
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
-/* Updated Input, Select, and Textarea styles */
+/* --- Input Styling (Small & Deep Blue) --- */
 .contact-right input,
-.contact-right select {
-    border: none;
-    width: 100%; /* Changed to 100% to fill container */
-    max-width: 550px;
-    height: 45px; /* Increased height slightly for better tap target */
-    padding-left: 20px;
+.contact-right select,
+.contact-right textarea {
+    background-color: var(--input-bg);
+    border: 1px solid var(--border-color);
+    color: var(--primary-text);
+    padding: 8px 12px;
+    font-size: 14px;
     border-radius: 4px;
-    color: var(--text-primary);
-    background-color: var(--bg-input);
     font-family: inherit;
+    transition: var(--transition-standard);
 }
 
-/* Specific width for single inputs not in a row */
-#name, #email, #phone, #streetAddress, #addressLine2, #city, #postalCode {
-    width: 550px;
+.contact-right input:focus,
+.contact-right select:focus,
+.contact-right textarea:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 10px var(--glow-accent-soft);
 }
 
 .contact-right textarea {
-    width: 550px;
-    border: none;
-    padding: 25px;
-    border-radius: 4px;
-    background-color: var(--bg-input);
-    color: var(--text-primary);
-    font-family: 'Outfit', sans-serif;
-    font-size: 20px;
+    min-height: 80px;
+    resize: vertical;
 }
 
+/* --- Buttons --- */
 .form-action-group {
     display: flex;
-    gap: 20px;
-    align-items: center;
+    gap: 12px;
+    margin-top: 10px;
 }
 
 .submit {
+    flex: 2;
+    background: var(--contact-brand-gradient);
+    color: var(--bg-dark-primary); /* Dark text on bright gradient for legibility */
     border: none;
-    color: var(--text-button);
+    padding: 10px 25px;
+    font-size: 15px;
+    font-weight: 700;
     border-radius: 25px;
-    background: var(--gradient-button);
-    font-size: 22px;
-    padding: 20px 60px;
     cursor: pointer;
-    transition: var(--transition-speed);
+    transition: var(--transition-standard);
+}
+
+.submit:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 0 15px var(--accent-color);
+    filter: brightness(1.1);
 }
 
 .reset-btn {
+    flex: 1;
     background: transparent;
-    border: 1px solid var(--text-primary);
-    color: var(--text-primary);
-    padding: 15px 30px;
+    border: 1px solid var(--border-color);
+    color: var(--secondary-text);
+    padding: 10px 15px;
+    font-size: 13px;
     border-radius: 25px;
     cursor: pointer;
-    transition: var(--transition-speed);
-}
-
-.submit:hover {
-    transform: scale(1.05);
+    transition: var(--transition-standard);
 }
 
 .reset-btn:hover {
-    background-color: rgba(189, 189, 110, 0.1);
+    background: var(--hover-overlay);
+    border-color: var(--accent-color);
+    color: var(--primary-text);
 }
 
-/* Validation styling from CreateMedia */
+/* --- Error State --- */
 .input-error {
-    outline: 2px solid #ff4d4d;
+    border-color: var(--error-color) !important;
+}
+
+/* --- Success Modal Specifics --- */
+.success-modal {
+    max-width: 500px; /* Smaller than the media preview modal */
+    text-align: center;
+    border: 2px solid var(--accent-color);
+    box-shadow: 0 0 30px var(--glow-accent-soft);
+}
+
+.success-title {
+    background: var(--contact-brand-gradient);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+.success-modal .modal-info {
+    align-items: center;
+}
+
+.success-modal .modal-description {
+    text-align: center;
+    font-size: 1.1rem;
+    color: var(--secondary-text);
+}
+
+.success-modal .modal-read-more {
+    align-self: center;
+    margin-top: 20px;
+}
+/* --- Responsive Adjustments --- */
+@media (max-width: 768px) {
+    .contact-sections {
+        padding: 25px;
+        max-width: 100%;
+    }
+    
+    .contact-right {
+        max-width: 100%;
+    }
+
+    .form-row {
+        flex-direction: column;
+    }
 }

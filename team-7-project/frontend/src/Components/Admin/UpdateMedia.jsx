@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import mediaApi from '../Api/mediaApi';
 import { useAuth } from '../StateProvider/authState/useAuth';
+import { useMedia } from '../StateProvider/mediaState/useMedia'; // Provider Integration
 import Media from '../Media/Media';
 import './Admin.css';
 
@@ -131,6 +132,15 @@ const UpdateMedia = ({ pathId }) => {
     const canUpdateMedia = userRole === 'admin';
     const canDeleteMedia = userRole === 'admin';
 
+    // Deliberately using contextLoading to ensure data synchronization.
+    // We alias mediaTypeConfigs to your original variable name and provide empty fallbacks.
+    const { 
+        genres = [], 
+        mediaTypeConfigs: mediaTypesConfig = {}, 
+        loading: contextLoading,
+        refreshMedia 
+    } = useMedia();
+
     const [feedbackMessage, setFeedbackMessage] = useState({});
     const [media, setMedia] = useState([]);
     const [editedMedia, setEditedMedia] = useState([]);
@@ -138,27 +148,8 @@ const UpdateMedia = ({ pathId }) => {
     const [error, setErr] = useState(null);
 
     const [typeFilter, setTypeFilter] = useState('all');
-    const [genres, setGenres] = useState([]); 
-    const [mediaTypesConfig, setMediaTypesConfig] = useState({}); 
 
-    useEffect(() => {
-        const loadInitialData = async () => {
-            try {
-                const [genreList, config] = await Promise.all([
-                    mediaApi.getGenres(),
-                    mediaApi.getMediaTypes()
-                ]);
-
-                setGenres(Array.isArray(genreList) ? genreList : []);
-                setMediaTypesConfig(config || {});
-            // eslint-disable-next-line no-unused-vars
-            } catch (err) {
-                setErr("Could not load server configuration.");
-            }
-        };
-        loadInitialData();
-    }, []);
-
+    // ORIGINAL LOGIC: getColumns now relies on the Provider's mediaTypesConfig
     const getColumns = () => {
         const cols = [
             { header: 'Title', key: 'title', fieldKey: 'title', editable: true, inputType: 'text' },
@@ -187,6 +178,9 @@ const UpdateMedia = ({ pathId }) => {
     const columns = getColumns();
 
     const loadMedia = useCallback(async () => {
+        // Guard: Prevent API calls until the configuration context is ready
+        if (contextLoading) return;
+
         setLoading(true);
         setErr(null);
         setFeedbackMessage({});
@@ -206,7 +200,7 @@ const UpdateMedia = ({ pathId }) => {
         } finally {
             setLoading(false);
         }
-    }, [getToken, canUpdateMedia, typeFilter]);
+    }, [getToken, canUpdateMedia, typeFilter, contextLoading]);
 
     useEffect(() => {
         loadMedia();
@@ -307,6 +301,9 @@ const UpdateMedia = ({ pathId }) => {
             await mediaApi.update(updateData, mediaId, getToken);
             setMedia(prev => prev.map(m => m._id === mediaId ? { ...editedItem } : m));
             setFeedbackMessage(prev => ({ ...prev, [mediaId]: { message: `Updated successfully!`, isError: false } }));
+            
+            // Sync global context if necessary
+            refreshMedia();
         } catch (error) {
             setFeedbackMessage(prev => ({ ...prev, [mediaId]: { message: `Update Failed: ${error.message}`, isError: true } }));
         }
@@ -329,6 +326,9 @@ const UpdateMedia = ({ pathId }) => {
             setMedia(prev => prev.filter(m => m._id !== mediaId));
             setEditedMedia(prev => prev.filter(m => m._id !== mediaId));
             setFeedbackMessage(prev => ({ ...prev, [mediaId]: { message: `Deleted.`, isError: false } }));
+            
+            // Sync global context
+            refreshMedia();
         } catch (error) {
             setFeedbackMessage(prev => ({ ...prev, [mediaId]: { message: `Deletion Failed: ${error.message}`, isError: true } }));
         }
@@ -338,6 +338,10 @@ const UpdateMedia = ({ pathId }) => {
         window.location.hash = `admin/updatemedia/${mediaId}`;
     };
 
+    // Deliberate use of contextLoading: Ensures we don't render a broken UI if config is missing.
+    if (contextLoading) {
+        return <div className="info-box"><h2>Loading Configuration...</h2></div>;
+    }
 
     if (!canUpdateMedia) {
         return <div className="info-box error-box"><h2>Unauthorized Access</h2><p>Admin login required.</p></div>;

@@ -27,6 +27,11 @@ export const AccessView = () => {
         //to perform their desired function (current function: 
         //cases used that render adminView) 
 
+        // FIX: If there is NO hash, don't force a redirect immediately.
+    // This prevents the loop when another page (like profile.html) loads AccessView via the Navbar.
+    if (!primarySegment) {
+        return { view: ROUTES.LOGIN, segments: [ROUTES.LOGIN] };
+    }
         // ensures user is an admin to be able to see admin view
         if (ACCESS_VIEWS.includes(primarySegment)) {
             // if user is NOT authenticated, allow login, register, or reset

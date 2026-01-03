@@ -1,353 +1,106 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
-//import { useNavigate } from 'react-router-dom'; // Added for navigation
-import { useAuth } from '../StateProvider/authState/useAuth.jsx';
+import React, { useRef, useEffect, useMemo } from 'react';
+import { useUser } from '../StateProvider/userState/useUser.jsx';
+import { useMedia } from '../StateProvider/mediaState/useMedia.jsx';
 import { ROUTES } from '../Api/routingConfig.js';
 import userApi from '../Api/userApi.jsx';
 import './Profile.css';
 
 export const Profile = ({ managedUserId = null }) => {
+    // Consume the context provided by UserProvider
+    const {
+        contactData,
+        isEditing,
+        setIsEditing,
+        isSaving,
+        loading,
+        avatarPreview,
+        coverPreview,
+        countryData,
+        isOwnProfile,
+        hasChanges,
+        handleInputChange,
+        submitUpdates,
+        resetLocalStates,
+        onAvatarSelected,
+        onCoverSelected,
+        handleImgError,
+        userActivity,
+        availableRoles,
+        isAdmin,
+        setSelectedUserId,
+        handlePasswordResetRequest
+    } = useUser();
 
-    // Standard React Router hook for navigation
-    //const navigate = useNavigate();
-    // Accessing core identity and account status
-    // getToken and isAdmin are essential for the API and conditional UI logic
-    const { userInfo, loading, availableRoles, isAdmin, getToken, updateUserInfo } = useAuth();
-    //Reference state to hold original data for reversion logic
-    const [originalData, setOriginalData] = useState(null);
+    // Consume MediaContext
+    const {
+        media,
+        shelfData,
+        loading: mediaLoading
+    } = useMedia();
 
-    // Local state to toggle between "Display" and "Edit" modes
-    const [isEditing, setIsEditing] = useState(false);
+    // Filter global media to only what this user owns
+    const userOwnedItems = useMemo(() => {
+        if (!userActivity?.mediaInventory || !media) return [];
+        // Assuming mediaInventory is an array of IDs
+        return media.filter(item => userActivity.mediaInventory.includes(item._id));
+    }, [media, userActivity.mediaInventory]);
 
-    // Track saving state to prevent double-submissions during API calls
-    const [isSaving, setIsSaving] = useState(false);
+    // Get top genres for this specific user //this logic is necessary later for algorithmic based rendering
+    const topGenres = useMemo(() => {
+        const counts = userOwnedItems.reduce((acc, item) => {
+            const g = item.genre || "Other";
+            acc[g] = (acc[g] || 0) + 1;
+            return acc;
+        }, {});
+        return Object.entries(counts)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 2); // Get top 2 genres
+    }, [userOwnedItems]);
 
-    // Image Upload States - Mirroring CreateMedia logic for binary handling
-    const [pendingAvatar, setPendingAvatar] = useState(null); // Holds the actual File object
-    const [avatarPreview, setAvatarPreview] = useState(null); // Holds local blob URL for instant UI feedback
+    //  Use effect to tell the Context which ID to load. 
+    // This is the specific logic switch needed to stop it from defaulting to the Admin's own profile.
+    useEffect(() => {
+        if (setSelectedUserId) {
+            setSelectedUserId(managedUserId);
+        }
+        return () => {
+            if (setSelectedUserId) setSelectedUserId(null);
+        };
+    }, [managedUserId, setSelectedUserId]);
 
-    // Cover Image Upload States
-    const [pendingCover, setPendingCover] = useState(null);
-    const [coverPreview, setCoverPreview] = useState(null);
-
-    // References to trigger hidden file inputs via the image clicks
+    // Refs for hidden file inputs
     const avatarInputRef = useRef(null);
     const coverInputRef = useRef(null);
 
-    // Logic to determine if user is on the admin route (e.g., #admin/user/ID)
-    //const isAdminView = window.location.hash.includes(ROUTES.ADMIN);
+    // Guard: Show loading state if data is still being fetched
+    if (loading) {
+        return <div className="loading-container">Loading Profile...</div>;
+    }
 
-    // State for dynamically loaded country and regional data from API
-    const [countryData, setCountryData] = useState({
-        countries: [],
-        regionalOptions: {}
-    });
+    // Logic for image paths: Priority is Preview (Blob) > Database Image > Default Placeholder
+    const profilePath = avatarPreview || userApi.getImages(contactData.profileImage || 'profileimage');
+    const coverPath = coverPreview || userApi.getImages(contactData.coverImage || 'coverimage');
 
-    // Local state for the "Activity" data - placeholder for library stats
-    const [userActivity] = useState({
-        mediaInventory: [],
-        ratings: [],
-        libraryCard: 'Standard'
-    });
-
-    // Form state - Initialized with empty defaults to avoid 'undefined' errors during first render
-    const [contactData, setContactData] = useState({
-        name: '',
-        username: 'N/A',
-        email: '',
-        altEmail: '',
-        phone: '',
-        dob: '',
-        address: {
-            streetAddress: '',
-            addressLine2: '',
-            city: '',
-            stateProvince: '',
-            postalCode: '',
-            country: 'Canada',
-        },
-        preferredContact: 'email',
-        role: 'user'
-    });
-
-    // Load User
-    //Form state synchronisation
-    // Load User - Consolidated to handle both Fetching and Snapshotting
-    useEffect(() => {
-        const loadUserData = async () => {
-            try {
-                // Determine if we are an Admin looking at someone else or a user looking at ourselves
-                const targetId = managedUserId || userInfo?._id;
-
-                if (targetId) {
-                    // Use .read to match your userApi.jsx
-                    const data = await userApi.read(targetId, getToken);
-
-                    if (data) {
-                        // Normalize the data immediately for the form inputs
-                        const normalizedData = {
-                            name: data.name || '',
-                            username: data.username || 'N/A',
-                            email: data.email || '',
-                            altEmail: data.altEmail || '',
-                            phone: data.phone || '',
-                            // Ensure date is formatted for <input type="date">
-                            dob: data.dob && typeof data.dob === 'string'
-                                ? data.dob.split('T')[0]
-                                : '',
-                            address: {
-                                streetAddress: data.address?.streetAddress || '',
-                                addressLine2: data.address?.addressLine2 || '',
-                                city: data.address?.city || '',
-                                stateProvince: data.address?.stateProvince || '',
-                                postalCode: data.address?.postalCode || '',
-                                country: data.address?.country || 'Canada',
-                            },
-                            preferredContact: data.preferredContact || 'email',
-                            role: data.role || 'user',
-                            _id: data._id
-                        };
-
-                        // Update both states at once to keep them in sync
-                        setContactData(normalizedData);
-                        setOriginalData(JSON.parse(JSON.stringify(normalizedData)));
-                    }
-                }
-            } catch (err) {
-                console.error("Error loading profile:", err);
-            }
-        };
-
-        // Only load if Auth has finished or if we have an explicit managedUserId
-        if (!loading || managedUserId) {
-            loadUserData();
-        }
-        // We only depend on the IDs and the Token, NOT the state we are setting
-    }, [managedUserId, userInfo?._id, getToken, loading]);
-
-
-    // Determine if the person logged in is looking at their own profile
-    const isOwnProfile = useMemo(() => {
-        const targetId = managedUserId || userInfo?._id;
-        return targetId === userInfo?._id;
-    }, [managedUserId, userInfo?._id]);
-    // Logic for Profile Image
-    // Logic for Profile Image
-    const profilePath = useMemo(() => {
-        if (avatarPreview) return avatarPreview;
-
-        // Use contactData (the loaded user) instead of userInfo (the admin)
-        const imageIdentifier = contactData?.profileImage || 'profileimage';
-
-        // Use contactData._id for the path construction
-        return userApi.getImages(imageIdentifier, contactData?._id);
-    }, [contactData, avatarPreview]); // Update dependency to contactData
-
-    // Logic for Cover Image
-    const coverPath = useMemo(() => {
-        if (coverPreview) return coverPreview;
-
-        // Use contactData (the loaded user)
-        const imageIdentifier = contactData?.coverImage || 'coverimage';
-
-        return userApi.getImages(imageIdentifier, contactData?._id);
-    }, [contactData, coverPreview]); // Update dependency to contactData
-
-
-    const handleImgError = (e, fallbackType) => {
-        // Determine which placeholder to ask the API for
-        const placeholder = fallbackType === 'cover' ? 'coverimage' : 'profileimage';
-
-        // Get the temporary image URL from your API logic
-        const fallbackUrl = userApi.getImages(placeholder);
-
-        if (e.target.src !== fallbackUrl) {
-            e.target.onerror = null; // Prevents infinite loop if placeholder is also missing
-            e.target.src = fallbackUrl;
-        }
+    // Click handlers for the frames
+    const handleAvatarClick = () => {
+        if (isEditing) avatarInputRef.current.click();
     };
 
-    // Fetch country and regional data from API on component mount
-    useEffect(() => {
-        const fetchLocationData = async () => {
-            try {
-                const data = await userApi.getCountries();
-                setCountryData(data);
-            } catch (error) {
-                console.error("Failed to load country data:", error);
-            }
-        };
-        fetchLocationData();
-    }, []);
-
-
-
-    useEffect(() => {
-        // Cleanup function to revoke the data URLs
-        return () => {
-            if (avatarPreview) URL.revokeObjectURL(avatarPreview);
-            if (coverPreview) URL.revokeObjectURL(coverPreview);
-        };
-    }, [avatarPreview, coverPreview]);
-
-    // Check for actual changes to enable/style the save button
-    const hasChanges = useMemo(() => {
-        if (!originalData) return false;
-        const textChanged = JSON.stringify(contactData) !== JSON.stringify(originalData);
-        const imagesChanged = !!pendingAvatar || !!pendingCover;
-        return textChanged || imagesChanged;
-    }, [contactData, originalData, pendingAvatar, pendingCover]);
-
-    // Reusable reset logic to return form to original Auth state
-    const resetForm = () => {
-        setIsEditing(false);
-        if (avatarPreview) URL.revokeObjectURL(avatarPreview);
-        if (coverPreview) URL.revokeObjectURL(coverPreview);
-        setPendingAvatar(null);
-        setAvatarPreview(null);
-        setPendingCover(null);
-        setCoverPreview(null);
-        if (originalData) {
-            setContactData(JSON.parse(JSON.stringify(originalData)));
-        }
+    const handleCoverClick = () => {
+        if (isEditing) coverInputRef.current.click();
     };
 
-    // Triggered when clicking on the avatar or cover while in Edit mode
-    const handleAvatarClick = (e) => {
-        if (isEditing) {
-            e.preventDefault();
-            e.stopPropagation();
-            if (avatarInputRef.current) avatarInputRef.current.click();
-        }
-    };
-
-    const handleCoverClick = (e) => {
-        if (isEditing) {
-            e.preventDefault();
-            e.stopPropagation();
-            if (coverInputRef.current) coverInputRef.current.click();
-        }
-    };
-
-    // Handles the file selection from the hidden inputs
-    const onAvatarSelected = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            if (avatarPreview) URL.revokeObjectURL(avatarPreview);
-            setPendingAvatar(file);
-            setAvatarPreview(URL.createObjectURL(file));
-            e.target.value = ''; // Reset input to allow re-selection of same file
-        }
-    };
-
-    const onCoverSelected = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            if (coverPreview) URL.revokeObjectURL(coverPreview);
-            setPendingCover(file);
-            setCoverPreview(URL.createObjectURL(file));
-            e.target.value = ''; // Reset input to allow re-selection of same file
-        }
-    };
-
-    // Logic to handle the API update when 'Submit Changes' is clicked
-    const prepareUpload = (file, prefix, targetId) => {
-        const lastDot = file.name.lastIndexOf('.');
-        const extension = file.name.substring(lastDot);
-        const fileName = `${prefix}_${Date.now()}`;
-
-        return {
-            payload: {
-                _id: targetId,
-                file: file,
-                fileName: fileName,
-                extension: extension
-            },
-            fullName: `${fileName}${extension}`
-        };
-    };
+    // Form submission wrapper
     const handleUpdateSubmit = async () => {
-        if (!hasChanges) {
-            setIsEditing(false);
-            return;
-        }
-
-        const isConfirmed = window.confirm("Are you sure you want to update this profile?");
-        if (!isConfirmed) return;
-
-        setIsSaving(true);
-        try {
-            // Always use the ID from contactData to ensure we edit the correct person
-            const targetId = contactData._id;
-
-            let finalAvatarFileName = contactData.profileImage;
-            let finalCoverFileName = contactData.coverImage;
-
-            // Process Avatar Upload
-            if (pendingAvatar) {
-                const { payload, fullName } = prepareUpload(pendingAvatar, ROUTES.PROFILE, targetId);
-                await userApi.uploadPictures(payload, getToken);
-                finalAvatarFileName = fullName;
-            }
-
-            // Process Cover Upload
-            if (pendingCover) {
-                const { payload, fullName } = prepareUpload(pendingCover, 'cover', targetId);
-                await userApi.uploadPictures(payload, getToken);
-                finalCoverFileName = fullName;
-            }
-
-            const finalProfileData = {
-                ...contactData,
-                profileImage: finalAvatarFileName,
-                coverImage: finalCoverFileName
-            };
-
-            // Call the update method
-            const updatedUser = await userApi.update(finalProfileData, targetId, getToken);
-
-            // Only update the Top-Right Admin Header if the Admin edited THEMSELVES
-            if (targetId === userInfo?._id && updateUserInfo) {
-                updateUserInfo(updatedUser);
-            }
-
-            // Update local snapshot so the "Save" button disables after success
-            setOriginalData(JSON.parse(JSON.stringify(finalProfileData)));
-            setContactData(finalProfileData);
-
-            setIsEditing(false);
-            setPendingAvatar(null);
-            setAvatarPreview(null);
-            setPendingCover(null);
-            setCoverPreview(null);
-        } catch (error) {
-            console.error("Failed to update profile:", error);
-            alert("Update failed. Please try again.");
-        } finally {
-            setIsSaving(false);
-        }
+        await submitUpdates();
     };
 
-    // handler to support the flatter structure used in the Contact form
-    // supports nested 'address' updates and business logic for regional clearing
-    const handleInputChange = (e, field, isAddress = false) => {
-        const { value } = e.target;
-
-        setContactData(prev => {
-            if (isAddress) {
-                const updatedAddress = { ...prev.address, [field]: value };
-
-                // If the country changes, clear the state/province to avoid mismatched data
-                if (field === 'country') {
-                    updatedAddress.stateProvince = '';
-                }
-
-                return { ...prev, address: updatedAddress };
-            }
-            return { ...prev, [field]: value };
-        });
+    // Reset wrapper
+    const resetForm = () => {
+        resetLocalStates();
     };
 
-    if (loading) return null;
+
 
     return (
         <div className={`media ${isSaving ? 'processing-blur' : ''}`}>
@@ -387,6 +140,7 @@ export const Profile = ({ managedUserId = null }) => {
                         </div>
 
                         {/* Grouped Action Bar for UX consistency */}
+
                         <div className="media-action-bar">
                             {!isEditing ? (
                                 <button className="media-back-btn" onClick={() => setIsEditing(true)}>
@@ -411,7 +165,17 @@ export const Profile = ({ managedUserId = null }) => {
                                 </div>
                             )}
                         </div>
+                        {/*Password Reset*/}
+                        <div className="detail-entry">
+                            <label>Security</label>
+                            <button
+                                //type="button"
+                                className="media-back-btn security-reset-btn"
+                                onClick={handlePasswordResetRequest}
+                            >Reset Password</button>
+                        </div>
                     </aside>
+
                     {/* RIGHT PANE: Identity & Metadata */}
                     <section className="media-info-pane">
                         <div className="media-title-area">
@@ -420,9 +184,20 @@ export const Profile = ({ managedUserId = null }) => {
                         </div>
 
                         <div className="media-details-grid">
-
+                            {/* USERNAME: Only visible when editing to reduce redundancy */}
+                            {isEditing && isOwnProfile && (
+                                <div className="detail-entry">
+                                    <label>Username</label>
+                                    <input
+                                        type="text"
+                                        value={contactData.username}
+                                        onChange={(e) => handleInputChange(e, 'username')}
+                                        className="editable-input"
+                                    />
+                                </div>
+                            )}
                             {/* User Name - Only editable if viewing OWN profile */}
-                            <div className="detail-entry">
+                            {/* <div className="detail-entry">
                                 <label>User Name</label>
                                 {isEditing && isOwnProfile ? (
                                     <input
@@ -434,7 +209,7 @@ export const Profile = ({ managedUserId = null }) => {
                                 ) : (
                                     <p>{contactData.username}</p>
                                 )}
-                            </div>
+                            </div>*/}
 
                             {/* Full Name - Only editable if viewing OWN profile */}
                             <div className="detail-entry">
@@ -586,10 +361,7 @@ export const Profile = ({ managedUserId = null }) => {
                                                     className="editable-input"
                                                 />
                                             </div>
-                                            <div className="detail-entry">
-                                                <label>Security</label>
-                                                <button className="media-back-btn security-reset-btn">Request Password Reset</button>
-                                            </div>
+
                                         </>
                                     )}
                                 </>
@@ -627,16 +399,37 @@ export const Profile = ({ managedUserId = null }) => {
                         <div className="media-full-description">
                             <h2>Personal Library Summary</h2>
                             <div className="description-separator"></div>
-                            <div className="library-stats-container">
-                                <div className="detail-entry">
-                                    <label>Inventory Size</label>
-                                    <p>{userActivity.mediaInventory.length} Items</p>
+
+                            {mediaLoading ? (
+                                <p className="loading-text">Analyzing library data...</p>
+                            ) : (
+                                <div className="library-stats-container">
+                                    <div className="detail-entry">
+                                        <label>Inventory Size</label>
+                                        <p><strong>{userOwnedItems.length}</strong> Items Total</p>
+                                    </div>
+
+                                    <div className="detail-entry">
+                                        <label>Primary Interests</label>
+                                        <p>
+                                            {topGenres.length > 0
+                                                ? topGenres.map(([name]) => name).join(' & ')
+                                                : "No Data Yet"}
+                                        </p>
+                                    </div>
+
+                                    <div className="detail-entry">
+                                        <label>Active Rentals</label>
+                                        <p>0 Items</p>
+                                    </div>
+
+                                    {/* Optional: Show a small "Diversity" stat based on shelf names */}
+                                    <div className="detail-entry">
+                                        <label>Collection Span</label>
+                                        <p>{shelfData.sortedNames.length} Categories</p>
+                                    </div>
                                 </div>
-                                <div className="detail-entry">
-                                    <label>Active Rentals</label>
-                                    <p>0 Items</p>
-                                </div>
-                            </div>
+                            )}
 
                             {!isEditing && (
                                 <button

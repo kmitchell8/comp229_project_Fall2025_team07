@@ -1,11 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import mediaApi from '../Api/mediaApi';
 import { useAuth } from '../StateProvider/authState/useAuth';
-import {ROUTES, /*LIBRARY_VIEWS*/} from '../Api/routingConfig'
+import { useMedia } from '../StateProvider/mediaState/useMedia'; // Import the context hook
+import { ROUTES } from '../Api/routingConfig';
 import './Media.css';
 
 const Media = ({ mediaId, viewContext, onUpdate }) => {
-  const { /*role, */getToken, isAdmin } = useAuth();
+  const { getToken, isAdmin } = useAuth();
+  
+  // Consuming the Media Context
+  // We pull mediaTypeConfigs and refreshMedia from the Provider
+  const { mediaTypeConfigs, refreshMedia } = useMedia();
 
   // State management for raw data and the editable draft
   const [media, setMedia] = useState(null);
@@ -13,28 +18,26 @@ const Media = ({ mediaId, viewContext, onUpdate }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [description, setDescription] = useState("");
   const [genres, setGenres] = useState([]); 
-  const [mediaTypesConfig, setMediaTypesConfig] = useState({});
+  // mediaTypesConfig state removed as it is now provided by Context
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  
   const isLibraryView = viewContext === ROUTES.LIBRARY;
   const isAdminView = viewContext === ROUTES.ADMIN;
 
-  // Core data fetching logic for media details, dynamic config, and genre list
+  // Core data fetching logic for media details, and genre list
+  // mediaApi.getMediaTypes() removed from here to rely on Provider's data
   const fetchFullDetails = useCallback(async () => {
     if (!mediaId) return;
     try {
       setLoading(true);
-      const [data, config, genreList] = await Promise.all([
+      const [data, genreList] = await Promise.all([
         mediaApi.read(mediaId),
-        mediaApi.getMediaTypes(),
         mediaApi.getGenres()
       ]);
 
       setMedia(data);
       setEditData(JSON.parse(JSON.stringify(data))); 
-      setMediaTypesConfig(config);
       setGenres(Array.isArray(genreList) ? genreList : []);
 
       if (data.description) {
@@ -80,10 +83,11 @@ const Media = ({ mediaId, viewContext, onUpdate }) => {
     if (!media || !editData) return false;
     
     // Audit Fix: Removed baseFields logic. Checking title, genre, and dynamic fields directly.
+    // Updated to use mediaTypeConfigs from Context
     const keysToCheck = [
         'title', 
         'genre', 
-        ...(mediaTypesConfig[media.mediaType]?.map(f => f.name.includes('.') ? f.name.split('.')[1] : f.name) || [])
+        ...(mediaTypeConfigs[media.mediaType]?.map(f => f.name.includes('.') ? f.name.split('.')[1] : f.name) || [])
     ];
 
     return keysToCheck.some(key => {
@@ -112,10 +116,11 @@ const Media = ({ mediaId, viewContext, onUpdate }) => {
   const handleSave = async () => {
     try {
       // Audit Fix: Restored your logic of mapping dynamic keys without intermediate baseField variables
+      // Updated to use mediaTypeConfigs from Context
       const allowedKeys = [
         'title', 
         'genre', 
-        ...(mediaTypesConfig[media.mediaType]?.map(f => f.name.includes('.') ? f.name.split('.')[1] : f.name) || [])
+        ...(mediaTypeConfigs[media.mediaType]?.map(f => f.name.includes('.') ? f.name.split('.')[1] : f.name) || [])
       ];
 
       const updatePayload = allowedKeys.reduce((acc, key) => {
@@ -127,6 +132,9 @@ const Media = ({ mediaId, viewContext, onUpdate }) => {
       
       setMedia(JSON.parse(JSON.stringify(editData)));
       setIsEditing(false);
+      
+      // Trigger context refresh to update Library shelves immediately
+      refreshMedia(); 
       onUpdate?.(); 
     } catch (err) {
       alert("Update failed: " + err.message);
@@ -181,9 +189,9 @@ const Media = ({ mediaId, viewContext, onUpdate }) => {
               ) : (
                 <>
                   <h1>{media.title}</h1>
-                  {/* Dynamic Creator Sub-heading synchronized with Library logic */}
+                  {/* Dynamic Creator Sub-heading synchronized with Library logic via Context */}
                   <h3 className="media-creator-sub">
-                    {mediaTypesConfig[media.mediaType]
+                    {mediaTypeConfigs[media.mediaType]
                       ?.filter(f => f.name.startsWith('creator'))
                       .map(f => media[f.name.split('.')[1]])[0] || ""}
                   </h3>
@@ -207,12 +215,16 @@ const Media = ({ mediaId, viewContext, onUpdate }) => {
                 ) : <p>{media.genre || 'N/A'}</p>}
               </div>
 
-              {/* Filtering logic applied here to prevent duplicate Creator/Title in grid */}
-              {mediaTypesConfig[media.mediaType]
+              {/* Filtering logic using Context config to prevent duplicate Creator/Title in grid */}
+              {mediaTypeConfigs[media.mediaType]
                 ?.filter(field => !field.name.startsWith('creator') && field.name !== 'title')
                 .map(field => {
                 const dataKey = field.name.includes('.') ? field.name.split('.')[1] : field.name;
-                const displayLabel = field.label.includes('.') ? field.label.split('.')[1] : field.label;
+                
+                // Handling the "Creator.xxx" label logic consistent with Provider
+                const displayLabel = field.label.includes('.') ? 
+                    (field.label.split('.')[1].charAt(0).toUpperCase() + field.label.split('.')[1].slice(1)) : 
+                    field.label;
 
                 return (
                   <div key={field.name} className="detail-entry">

@@ -92,7 +92,18 @@ const Media = ({ mediaId, viewContext, onUpdate }) => {
     });
   };
 
-  const handleRevert = () => setEditData(JSON.parse(JSON.stringify(media)));
+ const handleRevert = async () => {
+    setEditData(JSON.parse(JSON.stringify(media)));
+    
+    // Re-fetch or re-set the description text if it was changed
+    if (media.description) {
+        const text = await mediaApi.getDescriptionText(media.description);
+        setDescription(text);
+    } else {
+        setDescription("");
+    }
+  };
+  
   const handleCancel = () => { handleRevert(); setIsEditing(false); };
 
   const handleSave = async () => {

@@ -191,7 +191,7 @@
     flex: 0 0 44px;
     height: 44px;
     width: 44px;
-    background: transparent;
+    /*background: transparent;*/
     border: 1px solid var(--update-color);
     color: var(--update-color);
     border-radius: 6px;

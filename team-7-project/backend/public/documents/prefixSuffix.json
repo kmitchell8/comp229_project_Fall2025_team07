@@ -1,0 +1,29 @@
+{
+    "ignoredSuffixes": [
+        "Jr",
+        "Jr.",
+        "jr", 
+        "jr.",
+        "Sr",
+        "Sr.",
+        "sr", 
+        "sr.",
+        "II",
+        "III",
+        "IV",
+        "V",
+        "Ph.D",
+        "Esq.",  
+        "ii", 
+        "iii", 
+        "iv", 
+        "v", 
+        "esq", 
+        "phd"
+    ],
+    "ignoredPrefixes": [
+        "The",
+        "A",
+        "An"
+    ]
+}

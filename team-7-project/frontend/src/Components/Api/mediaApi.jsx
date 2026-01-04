@@ -1,6 +1,7 @@
 //import React from 'react';
 import { API_URL } from "../../../config";
 const BASE_URL = `${API_URL}/medias`;
+const DOMAIN_URL = BASE_URL.replace('/api/medias', '');
 
 
 //getting the header and making it global for all modules
@@ -158,7 +159,7 @@ const getDescriptionText = async (descriptionPath) => {
 
 
 }
-//List all medias
+//List all media
 const list = async (type = null, getToken=null) => {
     // Handle 'all' or null to return the base URL
     const isFiltered = type && type !== 'all';
@@ -170,7 +171,7 @@ const list = async (type = null, getToken=null) => {
     });
 };
 
-//Delete all medias
+//Delete all media
 const deleteAll = async (getToken) => {
     const headers = await getAuthHeaders(getToken);
 
@@ -211,23 +212,14 @@ const remove = async (mediaId, getToken) => {
     });
 };
 
-const getGenres = async () => {
-    const domainName = BASE_URL.replace('/api/medias', '');
-    const url = `${domainName}/documents/genres.json`;
-
+const getConfigDoc = async (docName) => {
+        // Dynamically point to any JSON file in the documents folder
+    const url = `${DOMAIN_URL}/documents/${docName}.json`;
     return fetchHelper(url, {
         method: 'GET'
     });
 };
 
-const getMediaTypes = async () => {
-    const domainName = BASE_URL.replace('/api/medias', '');
-    const url = `${domainName}/documents/mediaTypes.json`;
-
-    return fetchHelper(url, {
-        method: 'GET'
-    });
-};
 export default {
     create,
     uploadCover,
@@ -241,6 +233,5 @@ export default {
     read,
     update,
     remove,
-    getGenres,
-    getMediaTypes
+    getConfigDoc
 };

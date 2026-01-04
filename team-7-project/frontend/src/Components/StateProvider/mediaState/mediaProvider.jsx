@@ -13,21 +13,24 @@ export const MediaProvider = ({ children }) => {
     const [sortBy, setSortBy] = useState('title');
     const [searchTerm, setSearchTerm] = useState("");
     const [filterType, setFilterType] = useState('all');
+    const [configStrings, setConfigStrings] = useState({ ignoredSuffixes: [], ignoredPrefixes: [] });
 
     const loadData = useCallback(async () => {
         setLoading(true);
         try {
             // Fetching all three critical configuration pieces in parallel
-            const [mediaData, typeConfigs, genreList] = await Promise.all([
+            const [mediaData, typeConfigs, genreList, prefixSuffixData] = await Promise.all([
                 mediaApi.list(),
-                mediaApi.getMediaTypes(),
-                mediaApi.getGenres()
+                mediaApi.getConfigDoc('mediaTypes'),  // Replaces getMediaTypes
+                mediaApi.getConfigDoc('genres'),      // Replaces getGenres
+                mediaApi.getConfigDoc('prefixSuffix')
             ]);
-            
+
             if (Array.isArray(mediaData)) setMedia(mediaData);
             setMediaTypeConfigs(typeConfigs || {});
             setGenres(Array.isArray(genreList) ? genreList : []);
-            
+            if (prefixSuffixData) setConfigStrings(prefixSuffixData);
+
         } catch (error) {
             console.error('Error fetching media context:', error);
         } finally {
@@ -67,11 +70,14 @@ export const MediaProvider = ({ children }) => {
 
         const getLastName = (fullName) => {
             if (!fullName) return "";
-            const suffixes = ['jr', 'jr.', 'sr', 'sr.', 'ii', 'iii', 'iv', 'v', 'esq', 'phd'];
+            //const suffixes = ['jr', 'jr.', 'sr', 'sr.', 'ii', 'iii', 'iv', 'v', 'esq', 'phd'];
+            const suffixes = (configStrings.ignoredSuffixes || []).map(s => s.toLowerCase());
             const parts = fullName.trim().split(/\s+/);
             if (parts.length <= 1) return parts[0].toLowerCase();
             let lastIndex = parts.length - 1;
-            if (suffixes.includes(parts[lastIndex].toLowerCase()) && parts.length > 1) lastIndex--;
+            if (suffixes.includes(parts[lastIndex].toLowerCase()) && parts.length > 1) {
+                lastIndex--;
+            }
             return parts[lastIndex].toLowerCase();
         };
 
@@ -104,6 +110,18 @@ export const MediaProvider = ({ children }) => {
             acc[key].push({ ...item, id: item._id });
             return acc;
         }, {});
+        // Prepare the prefix list once (not every time the sort runs)
+        const ignorePrefixes = (configStrings.ignoredPrefixes || []).map(p => p.toLowerCase());
+
+        // Define the helper once
+        const stripPrefix = (str) => {
+            if (!str) return "";
+            const parts = str.trim().split(/\s+/);
+            if (parts.length > 1 && ignorePrefixes.includes(parts[0].toLowerCase())) {
+                return parts.slice(1).join(' ');
+            }
+            return str;
+        };
 
         Object.keys(grouped).forEach(shelf => {
             grouped[shelf].sort((a, b) => {
@@ -119,7 +137,12 @@ export const MediaProvider = ({ children }) => {
                     }
                     return lastA.localeCompare(lastB);
                 }
-                return (a.title || '').toLowerCase().localeCompare((b.title || '').toLowerCase());
+                //return (a.title || '').toLowerCase().localeCompare((b.title || '').toLowerCase());
+
+                const titleA = stripPrefix(a.title || '').toLowerCase();
+                const titleB = stripPrefix(b.title || '').toLowerCase();
+
+                return titleA.localeCompare(titleB);
             });
         });
 
@@ -130,12 +153,12 @@ export const MediaProvider = ({ children }) => {
         });
 
         return { grouped, sortedNames };
-    }, [media, viewMode, sortBy, searchTerm, filterType, mediaTypeConfigs]);
+    }, [media, viewMode, sortBy, searchTerm, filterType, mediaTypeConfigs, configStrings]);
 
     const value = {
-        media, 
-        loading, 
-        shelfData, 
+        media,
+        loading,
+        shelfData,
         mediaTypeConfigs,
         genres, // Now strictly managed from the Master List
         viewMode, setViewMode,
@@ -147,7 +170,7 @@ export const MediaProvider = ({ children }) => {
     };
 
     return (
-    <MediaContext.Provider value={value}>
-        {children}
-    </MediaContext.Provider>);
+        <MediaContext.Provider value={value}>
+            {children}
+        </MediaContext.Provider>);
 };

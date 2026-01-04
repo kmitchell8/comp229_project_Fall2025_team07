@@ -35,6 +35,25 @@ const CreateMedia = (/*{parentSegment}*/) => {
     // availableMediaTypes derived directly from context keys
     const availableMediaTypes = Object.keys(mediaTypeConfigs || {});
 
+    // FIX 2: Universal State Comparison Logic
+    // This allows the button to enable/disable based on any field in the dynamic config
+    const hasChanges = useCallback(() => {
+        if (mediaData.title.trim() !== '') return true;
+        if (descriptionText.trim() !== '') return true;
+        if (coverFile !== null) return true;
+        
+        // Check if genre is different from the default first genre
+        if (mediaData.genre !== (contextGenres[0] || '')) return true;
+
+        // Check dynamic fields (anything that isn't title, genre, or cover)
+        const dynamicKeys = Object.keys(mediaData).filter(k => !['title', 'genre', 'cover'].includes(k));
+        return dynamicKeys.some(key => {
+            const val = mediaData[key];
+            // If it's a string, check if not empty. If it's boolean, check if true.
+            return typeof val === 'string' ? val.trim() !== '' : !!val;
+        });
+    }, [mediaData, descriptionText, coverFile, contextGenres]);
+
     // Effect to handle initial selection once context data arrives
     useEffect(() => {
         if (availableMediaTypes.length > 0 && !mediaType) {
@@ -64,6 +83,9 @@ const CreateMedia = (/*{parentSegment}*/) => {
         } else {
             // Handle "creator.xxx" dot notation while keeping the flat object structure
             const dataKey = name.includes('.') ? name.split('.')[1] : name;
+            
+            // FIX 1: Keep value as raw string during typing. 
+            // This prevents the cursor jumping/trimming issues when typing lists with commas.
             setMediaData({ ...mediaData, [dataKey]: event.target.value });
         }
         setFeedbackMessage(prev => ({ ...prev, [name]: undefined }));
@@ -126,7 +148,7 @@ const CreateMedia = (/*{parentSegment}*/) => {
             // PREPARE DATA DYNAMICALLY
             const finalMediaData = {
                 mediaType,
-                title: mediaData.title,
+                title: mediaData.title.trim(),
                 genre: mediaData.genre,
                 cover: coverFileName,
             };
@@ -135,7 +157,15 @@ const CreateMedia = (/*{parentSegment}*/) => {
             if (mediaTypeConfigs[mediaType]) {
                 mediaTypeConfigs[mediaType].forEach(field => {
                     const dataKey = field.name.includes('.') ? field.name.split('.')[1] : field.name;
-                    const value = mediaData[dataKey];
+                    let value = mediaData[dataKey];
+
+                    // FIX 1 (Part B): Transform string into array ONLY at submission time
+                    if ((field.type === 'list' || field.type === 'array') && typeof value === 'string') {
+                        value = value.split(',').map(v => v.trim()).filter(v => v !== '');
+                    }
+                    // Handle numbers/booleans if needed for the engine
+                    if (field.type === 'number' || field.type === 'integer') value = Number(value);
+
                     if (value !== undefined && value !== '') {
                         finalMediaData[dataKey] = value;
                     }
@@ -291,11 +321,9 @@ const CreateMedia = (/*{parentSegment}*/) => {
                                     <input
                                         type="text"
                                         placeholder="Separate with commas"
-                                        value={Array.isArray(mediaData[dataKey]) ? mediaData[dataKey].join(', ') : ''}
-                                        onChange={(e) => {
-                                            const values = e.target.value.split(',').map(v => v.trim());
-                                            setMediaData({ ...mediaData, [dataKey]: values });
-                                        }}
+                                        // Note: Keeping it as a string from mediaData for smooth typing
+                                        value={mediaData[dataKey] || ''}
+                                        onChange={handleChange(field.name)}
                                         className="form-input"
                                         disabled={loading}
                                     />
@@ -352,7 +380,13 @@ const CreateMedia = (/*{parentSegment}*/) => {
                 </div>
 
                 <div className="form-action-group">
-                    <button type="submit" disabled={loading} className="button-primary">{loading ? 'Creating...' : 'Create Media'}</button>
+                    <button 
+                        type="submit" 
+                        disabled={loading || !hasChanges()} 
+                        className={`button-primary ${!hasChanges() ? 'disabled' : ''}`}
+                    >
+                        {loading ? 'Creating...' : 'Create Media'}
+                    </button>
                 </div>
             </form>
         </div>

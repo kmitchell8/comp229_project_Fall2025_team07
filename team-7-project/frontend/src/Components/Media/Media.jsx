@@ -31,6 +31,16 @@ const Media = ({ mediaId, viewContext, onUpdate }) => {
         mediaApi.getConfigDoc('genres')
       ]);*/
 
+      // Get the description text
+    let text = "";
+    if (data.description) {
+      text = await mediaApi.getDescriptionText(data.description);
+    }
+
+    // 2Attach the raw text to the data object before setting state
+    // This allows hasChanges() to compare the live textarea vs this original value
+    data._originalDescriptionText = text;
+
       setMedia(data);
       setEditData(JSON.parse(JSON.stringify(data))); 
       setGenres(masterGenres);
@@ -72,9 +82,19 @@ const Media = ({ mediaId, viewContext, onUpdate }) => {
     });
   };
 
-  // State Comparison Logic (Preserved)
-  const hasChanges = () => {
+  // State Comparison Logic 
+const hasChanges = () => {
     if (!media || !editData) return false;
+
+    // Check if the description text has changed
+    // compare current 'description' state vs what we initially loaded
+    // Note: 'media.description' is just the filename, so check against the 
+    // text stored during fetchFullDetails (might want a 'originalDescription' state for 100% accuracy)
+    // For now, compare against the text content.
+   const descChanged = description !== (media._originalDescriptionText || "");
+    if (descChanged) return true;
+
+    // Check dynamic fields
     const currentConfig = mediaTypeConfigs[media.mediaType] || [];
     const keysToCheck = [
         'title', 
@@ -83,14 +103,14 @@ const Media = ({ mediaId, viewContext, onUpdate }) => {
     ];
 
     return keysToCheck.some(key => {
-      const orig = media[key];
-      const edit = editData[key];
-      if (Array.isArray(orig) || Array.isArray(edit)) {
-        return JSON.stringify(orig || []) !== JSON.stringify(edit || []);
-      }
-      return String(orig ?? '') !== String(edit ?? '');
+        const orig = media[key];
+        const edit = editData[key];
+        if (Array.isArray(orig) || Array.isArray(edit)) {
+            return JSON.stringify(orig || []) !== JSON.stringify(edit || []);
+        }
+        return String(orig ?? '') !== String(edit ?? '');
     });
-  };
+};
 
  const handleRevert = async () => {
     setEditData(JSON.parse(JSON.stringify(media)));
@@ -118,9 +138,13 @@ const Media = ({ mediaId, viewContext, onUpdate }) => {
         if (editData[key] !== undefined) acc[key] = editData[key];
         return acc;
       }, {});
+      //send updated text
+      updatePayload.descriptionText = description;
 
       await mediaApi.update(updatePayload, mediaId, getToken);
-      setMedia(JSON.parse(JSON.stringify(editData)));
+      const savedData = JSON.parse(JSON.stringify(editData));
+      savedData._originalDescriptionText = description;
+      setMedia(savedData);
       setIsEditing(false);
       refreshMedia(); 
       onUpdate?.(); 

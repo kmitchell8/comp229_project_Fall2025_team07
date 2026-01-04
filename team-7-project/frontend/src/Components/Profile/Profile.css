@@ -12,6 +12,7 @@
 
     /* Brand & Accents */
     --accent-color: #3498db;
+    /*--update-color: #00f2ff;  High-contrast Cyan for deep blue backgrounds */
     --update-color: #f39c12; /* Assigned for Revert logic */
     --success-green: #2ecc71;
     --success-green-disabled: #27ae60;
@@ -201,6 +202,7 @@
     justify-content: center;
     cursor: pointer;
     transition: all 0.2s ease;
+    box-shadow: 0 4px 10px var(--update-color);
 }
 
 .revert-btn:hover:not(:disabled) {
@@ -304,7 +306,8 @@
     /* Stack all buttons vertically on mobile */
     .edit-actions-group {
         flex-direction: column;
-        gap: 12px;
+        align-items: center; /* Prevents buttons from growing to 100% width */
+        gap: 20px;
     }
 
     .media-back-btn, 

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import './Navbar.css';
-import mediaApi from '../Api/mediaApi';
+//import mediaApi from '../Api/mediaApi';
 import { useMedia } from '../StateProvider/mediaState/useMedia'; // Consume the context hook
 
 const LibraryNavBar = ({ isScrolled, shelfNames }) => {
@@ -10,27 +10,11 @@ const LibraryNavBar = ({ isScrolled, shelfNames }) => {
         sortBy, setSortBy,
         searchTerm, setSearchTerm,
         filterType, setFilterType,
-        getSortLabel
+        getSortLabel,
+        mediaTypes
     } = useMedia();
 
-    const [mediaTypes, setMediaTypes] = useState([]);
-
-    // following the loadMediaTypes pattern from CreateMedia.jsx
-    useEffect(() => {
-        const loadMediaTypes = async () => {
-            try {
-                const data = await mediaApi.getMediaTypes();
-                // data is { "book": [...], "movie": [...] } 
-                const typeKeys = data ? Object.keys(data) : [];
-                setMediaTypes(typeKeys);
-                // eslint-disable-next-line no-unused-vars
-            } catch (err) {
-                console.error("Could not load media type definitions.");
-            }
-        };
-
-        loadMediaTypes();
-    }, []);
+   
 
     const handleJump = (e, name) => {
         e.preventDefault(); //  stops the state reset

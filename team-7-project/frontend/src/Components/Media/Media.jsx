@@ -7,7 +7,7 @@ import './Media.css';
 
 const Media = ({ mediaId, viewContext, onUpdate }) => {
   const { getToken, isAdmin } = useAuth();
-  const { mediaTypeConfigs, refreshMedia } = useMedia();
+  const { mediaTypeConfigs, refreshMedia, genres:masterGenres} = useMedia();
 
   const [media, setMedia] = useState(null);
   const [editData, setEditData] = useState(null); 
@@ -25,14 +25,15 @@ const Media = ({ mediaId, viewContext, onUpdate }) => {
     if (!mediaId) return;
     try {
       setLoading(true);
-      const [data, genreList] = await Promise.all([
+      const data = await mediaApi.read(mediaId);
+      /*const [data, genreList] = await Promise.all([
         mediaApi.read(mediaId),
-        mediaApi.getGenres()
-      ]);
+        mediaApi.getConfigDoc('genres')
+      ]);*/
 
       setMedia(data);
       setEditData(JSON.parse(JSON.stringify(data))); 
-      setGenres(Array.isArray(genreList) ? genreList : []);
+      setGenres(masterGenres);
 
       if (data.description) {
         const text = await mediaApi.getDescriptionText(data.description);
@@ -44,7 +45,7 @@ const Media = ({ mediaId, viewContext, onUpdate }) => {
     } finally {
       setLoading(false);
     }
-  }, [mediaId]);
+  }, [mediaId, masterGenres]);
 
   useEffect(() => {
     fetchFullDetails();
@@ -74,10 +75,11 @@ const Media = ({ mediaId, viewContext, onUpdate }) => {
   // State Comparison Logic (Preserved)
   const hasChanges = () => {
     if (!media || !editData) return false;
+    const currentConfig = mediaTypeConfigs[media.mediaType] || [];
     const keysToCheck = [
         'title', 
         'genre', 
-        ...(mediaTypeConfigs[media.mediaType]?.map(f => f.name.includes('.') ? f.name.split('.')[1] : f.name) || [])
+        ...currentConfig.map(f => f.name.includes('.') ? f.name.split('.')[1] : f.name)
     ];
 
     return keysToCheck.some(key => {

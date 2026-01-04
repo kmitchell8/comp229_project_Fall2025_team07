@@ -81,7 +81,136 @@
     color: var(--secondary-text);
 }
 
+.shelf-container {
+    /* ensures the header doesn't touch the very top of the browser */
+    /*scroll-margin-top: 50px; */
+    scroll-margin-top: 180px;
+    width: 100%;
+    /* Reduced space between shelves */
+    margin-bottom: 40px;
+    position: relative;
+    padding-bottom: 10px;
+    content-visibility: auto;
+}
 
+/* Genre Headings */
+.shelf-container h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--secondary-text);
+    margin-bottom: 20px;
+    border-left: 4px solid var(--accent-color);
+    padding-left: 15px;
+    /* leaves space for the navbar or general padding */
+    scroll-margin-top: 40px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+/* The Shelf Grid */
+.media-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 30px;
+    width: 100%;
+    margin-bottom: 20px;
+    padding-bottom: 100px;
+    border-bottom: 2px solid var(--border-color);
+    /* Shelf line using your border color */
+    /* This creates the 'floor' of the shelf */
+    border-bottom: 8px solid var(--shelf-floor-color);
+    background: var(--shelf-bg-tint);
+    border-radius: 4px;
+    position: relative;
+}
+
+/* Individual Media Card */
+.media-formatting {
+    display: flex;
+    flex-direction: column;
+    /* align-items: flex-start;*/
+    text-align: center;
+    gap: 8px;
+    padding: 10px;
+    /*background-color: var(--bg-dark-secondary); */
+    /* Darker contrast for cards */
+    background: none;
+    /* border-radius: 12px;*/
+    border: none;
+    /*1px solid var(--border-color);*/
+    transition: transform 0.3s
+        /*all 0.4s*/
+        ease;
+}
+
+/* image container */
+.media-cover-wrapper {
+    width: 100%;
+    max-width: 150px;
+    aspect-ratio: 2 / 3;
+    /* Forces consistent media shape */
+    background-color: var(--bg-dark-secondary);
+    /* Uses your palette */
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 15px var(--shadow-light);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+/* Media Cover - THE FOCAL POINT */
+.media-formatting img {
+    width: 100%;
+    height: 100%;
+    /* Fill the grid column width */
+    /*max-width: 150px;*/
+    /* Keep them from getting too huge */
+    /*aspect-ratio: 2 / 3;*/
+    /*object-fit: cover;*/
+    object-fit: contain;
+    /*border-radius: 4px;
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.5);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    height: 150px;*/
+
+}
+
+/* Hover Effect: Just the cover (cover wrapper)*/
+.media-formatting:hover .media-cover-wrapper {
+    transform: translateY(-8px) scale(1.05);
+    /*box-shadow: 0 12px 25px rgba(0, 0, 0, 0.7);*/
+
+    /* Layered Box Shadow for the 'Glow' effect */
+    /* The standard shadow for depth */
+    /* A sharp glow near the edge */
+    /* A soft, wide bloom of light */
+    box-shadow:
+        0 15px 30px var(--shadow-heavy),
+        0 0 10px var(--accent-color),
+        0 0 20px var(--glow-accent-soft);
+    /* Makes the cover colors slightly more vibrant on hover */
+    filter: brightness(1.1) contrast(1.1);
+    /* Ensures the border glows */
+    border-color: var(--accent-color);
+}
+
+/* Media Titles (keeping your unique gradient) */
+.media-formatting h2 {
+    font-size: 1rem;
+    font-weight: 700;
+    text-align: center;
+    margin: 8px 0 2px;
+    line-height: 1.2;
+    background: linear-gradient(110deg, var(--accent-color) 15%, var(--title-gradient-mid) 25%, var(--title-gradient-end) 60%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    transition: filter 0.3s ease;
+}
 
 /* Authors */
 .media-formatting h3 {

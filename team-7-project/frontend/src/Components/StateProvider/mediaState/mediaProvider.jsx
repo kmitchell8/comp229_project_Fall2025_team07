@@ -15,20 +15,47 @@ export const MediaProvider = ({ children }) => {
     const [filterType, setFilterType] = useState('all');
     const [configStrings, setConfigStrings] = useState({ ignoredSuffixes: [], ignoredPrefixes: [] });
 
+        const [mediaTypes, setMediaTypes] = useState([]);
+    
+        // following the loadMediaTypes pattern from CreateMedia.jsx //REmoved from LibraryNavBar.jsx
+       /* useEffect(() => {
+            const loadMediaTypes = async () => {
+                try {
+                    const data = await mediaApi.getConfigDoc('mediaTypes');
+                    // data is { "book": [...], "movie": [...] } 
+                    const typeKeys = data ? Object.keys(data) : [];
+                    setMediaTypes(typeKeys);
+                    // eslint-disable-next-line no-unused-vars
+                } catch (err) {
+                    console.error("Could not load media type definitions.");
+                }
+            };
+    
+            loadMediaTypes();
+        }, []);
+*/
     const loadData = useCallback(async () => {
         setLoading(true);
         try {
-            // Fetching all three critical configuration pieces in parallel
+            // Logic: Fetch all configuration pieces in parallel
             const [mediaData, typeConfigs, genreList, prefixSuffixData] = await Promise.all([
                 mediaApi.list(),
-                mediaApi.getConfigDoc('mediaTypes'),  // Replaces getMediaTypes
-                mediaApi.getConfigDoc('genres'),      // Replaces getGenres
+                mediaApi.getConfigDoc('mediaTypes'),
+                mediaApi.getConfigDoc('genres'),
                 mediaApi.getConfigDoc('prefixSuffix')
             ]);
 
+            //Process Media List
             if (Array.isArray(mediaData)) setMedia(mediaData);
-            setMediaTypeConfigs(typeConfigs || {});
+            // Process Media Type Configurations
+            const configs = typeConfigs || {};
+            setMediaTypeConfigs(configs);            
+            // Extract the keys (e.g., "book", "movie") for components that need a simple list
+            setMediaTypes(Object.keys(configs));
+
             setGenres(Array.isArray(genreList) ? genreList : []);
+
+            // 4. Process Strings
             if (prefixSuffixData) setConfigStrings(prefixSuffixData);
 
         } catch (error) {
@@ -38,15 +65,20 @@ export const MediaProvider = ({ children }) => {
         }
     }, []);
 
+    // Initial Load
+    useEffect(() => { 
+        loadData(); 
+    }, [loadData]);
+
+    // Sorting Helper for Labels
     const getSortLabel = useCallback(() => {
         if (filterType === 'all' || !mediaTypeConfigs[filterType]) {
             return "Creator";
         }
-
         const config = mediaTypeConfigs[filterType];
         const creatorField = config.find(f => f.name.startsWith('creator'));
 
-        if (creatorField && creatorField.label) {
+        if (creatorField?.label) {
             const labelParts = creatorField.label.split('.');
             const cleanLabel = labelParts.length > 1 ? labelParts[1] : labelParts[0];
             return cleanLabel.charAt(0).toUpperCase() + cleanLabel.slice(1);
@@ -54,9 +86,7 @@ export const MediaProvider = ({ children }) => {
         return "Creator";
     }, [filterType, mediaTypeConfigs]);
 
-    useEffect(() => { loadData(); }, [loadData]);
-
-    // heavy-lifting "Shelf Engine" (Logic remains exactly as original)
+    // Main Shelf Engine (Internal logic preserved)
     const shelfData = useMemo(() => {
         const currentMedia = Array.isArray(media) ? media : [];
 
@@ -70,7 +100,6 @@ export const MediaProvider = ({ children }) => {
 
         const getLastName = (fullName) => {
             if (!fullName) return "";
-            //const suffixes = ['jr', 'jr.', 'sr', 'sr.', 'ii', 'iii', 'iv', 'v', 'esq', 'phd'];
             const suffixes = (configStrings.ignoredSuffixes || []).map(s => s.toLowerCase());
             const parts = fullName.trim().split(/\s+/);
             if (parts.length <= 1) return parts[0].toLowerCase();
@@ -110,10 +139,9 @@ export const MediaProvider = ({ children }) => {
             acc[key].push({ ...item, id: item._id });
             return acc;
         }, {});
-        // Prepare the prefix list once (not every time the sort runs)
+
         const ignorePrefixes = (configStrings.ignoredPrefixes || []).map(p => p.toLowerCase());
 
-        // Define the helper once
         const stripPrefix = (str) => {
             if (!str) return "";
             const parts = str.trim().split(/\s+/);
@@ -137,11 +165,8 @@ export const MediaProvider = ({ children }) => {
                     }
                     return lastA.localeCompare(lastB);
                 }
-                //return (a.title || '').toLowerCase().localeCompare((b.title || '').toLowerCase());
-
                 const titleA = stripPrefix(a.title || '').toLowerCase();
                 const titleB = stripPrefix(b.title || '').toLowerCase();
-
                 return titleA.localeCompare(titleB);
             });
         });
@@ -160,7 +185,9 @@ export const MediaProvider = ({ children }) => {
         loading,
         shelfData,
         mediaTypeConfigs,
+        configStrings,
         genres, // Now strictly managed from the Master List
+        mediaTypes,
         viewMode, setViewMode,
         sortBy, setSortBy,
         searchTerm, setSearchTerm,

@@ -1,32 +1,26 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import mediaApi from '../Api/mediaApi';
 import { useAuth } from '../StateProvider/authState/useAuth';
-import { useMedia } from '../StateProvider/mediaState/useMedia'; // Import the context hook
+import { useMedia } from '../StateProvider/mediaState/useMedia'; 
 import { ROUTES } from '../Api/routingConfig';
 import './Media.css';
 
 const Media = ({ mediaId, viewContext, onUpdate }) => {
   const { getToken, isAdmin } = useAuth();
-  
-  // Consuming the Media Context
-  // We pull mediaTypeConfigs and refreshMedia from the Provider
   const { mediaTypeConfigs, refreshMedia } = useMedia();
 
-  // State management for raw data and the editable draft
   const [media, setMedia] = useState(null);
   const [editData, setEditData] = useState(null); 
   const [isEditing, setIsEditing] = useState(false);
   const [description, setDescription] = useState("");
   const [genres, setGenres] = useState([]); 
-  // mediaTypesConfig state removed as it is now provided by Context
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const isLibraryView = viewContext === ROUTES.LIBRARY;
   const isAdminView = viewContext === ROUTES.ADMIN;
 
-  // Core data fetching logic for media details, and genre list
-  // mediaApi.getMediaTypes() removed from here to rely on Provider's data
+  // Optimized Fetcher
   const fetchFullDetails = useCallback(async () => {
     if (!mediaId) return;
     try {
@@ -56,11 +50,10 @@ const Media = ({ mediaId, viewContext, onUpdate }) => {
     fetchFullDetails();
   }, [fetchFullDetails]);
 
-  // Handles complex data types to ensure arrays and numbers are stored correctly in state
+  // Handle complex data types (Preserved logic)
   const handleDynamicChange = (key, value, inputType) => {
     setEditData(prev => {
       let finalValue = value;
-      // Audit Fix: Handle "creator.xxx" dot notation while keeping the flat object structure
       const dataKey = key.includes('.') ? key.split('.')[1] : key;
 
       if (inputType === 'list' || inputType === 'array') {
@@ -78,12 +71,9 @@ const Media = ({ mediaId, viewContext, onUpdate }) => {
     });
   };
 
-  // Compares original state with draft state to determine if UI should show "unsaved" status
+  // State Comparison Logic (Preserved)
   const hasChanges = () => {
     if (!media || !editData) return false;
-    
-    // Audit Fix: Removed baseFields logic. Checking title, genre, and dynamic fields directly.
-    // Updated to use mediaTypeConfigs from Context
     const keysToCheck = [
         'title', 
         'genre', 
@@ -93,7 +83,6 @@ const Media = ({ mediaId, viewContext, onUpdate }) => {
     return keysToCheck.some(key => {
       const orig = media[key];
       const edit = editData[key];
-
       if (Array.isArray(orig) || Array.isArray(edit)) {
         return JSON.stringify(orig || []) !== JSON.stringify(edit || []);
       }
@@ -101,22 +90,11 @@ const Media = ({ mediaId, viewContext, onUpdate }) => {
     });
   };
 
-  // Resets the draft data to match the original database record
-  const handleRevert = () => {
-    setEditData(JSON.parse(JSON.stringify(media)));
-  };
+  const handleRevert = () => setEditData(JSON.parse(JSON.stringify(media)));
+  const handleCancel = () => { handleRevert(); setIsEditing(false); };
 
-  // Exits edit mode and clears any unsaved changes in the draft
-  const handleCancel = () => {
-    handleRevert();
-    setIsEditing(false);
-  };
-
-  // Saves updated fields to the database and updates the local "original" state on success
   const handleSave = async () => {
     try {
-      // Audit Fix: Restored your logic of mapping dynamic keys without intermediate baseField variables
-      // Updated to use mediaTypeConfigs from Context
       const allowedKeys = [
         'title', 
         'genre', 
@@ -129,16 +107,23 @@ const Media = ({ mediaId, viewContext, onUpdate }) => {
       }, {});
 
       await mediaApi.update(updatePayload, mediaId, getToken);
-      
       setMedia(JSON.parse(JSON.stringify(editData)));
       setIsEditing(false);
-      
-      // Trigger context refresh to update Library shelves immediately
       refreshMedia(); 
       onUpdate?.(); 
     } catch (err) {
       alert("Update failed: " + err.message);
     }
+  };
+
+  // Helper for Creator Info (Correction Implemented)
+  const getCreatorInfo = (item) => {
+    const config = mediaTypeConfigs[item.mediaType];
+    const field = config?.find(f => f.name.startsWith('creator'));
+    if (!field) return { label: "", value: "" };
+    const key = field.name.split('.')[1] || field.name;
+    const label = field.label.split('.')[1] || field.label;
+    return { label: label.charAt(0).toUpperCase() + label.slice(1), value: item[key] || "" };
   };
 
   if (loading) return <div className="media-status">Loading entry...</div>;
@@ -163,16 +148,9 @@ const Media = ({ mediaId, viewContext, onUpdate }) => {
                   {isEditing ? "Cancel" : "Edit Media"}
                 </button>
               )}
-
               {isLibraryView && (
                 <button className="media-back-btn" onClick={() => window.location.hash = ROUTES.LIBRARY}>
                   Back to Library
-                </button>
-              )}
-
-              {isAdminView && !isEditing && (
-                <button className="media-back-btn" onClick={() => window.location.hash = 'admin/updatemedia'}>
-                  Back to Admin List
                 </button>
               )}
             </div>
@@ -189,11 +167,8 @@ const Media = ({ mediaId, viewContext, onUpdate }) => {
               ) : (
                 <>
                   <h1>{media.title}</h1>
-                  {/* Dynamic Creator Sub-heading synchronized with Library logic via Context */}
                   <h3 className="media-creator-sub">
-                    {mediaTypeConfigs[media.mediaType]
-                      ?.filter(f => f.name.startsWith('creator'))
-                      .map(f => media[f.name.split('.')[1]])[0] || ""}
+                    {getCreatorInfo(media).value}
                   </h3>
                 </>
               )}
@@ -209,39 +184,31 @@ const Media = ({ mediaId, viewContext, onUpdate }) => {
                         value={editData.genre || ''} 
                         onChange={(e) => handleDynamicChange('genre', e.target.value, 'select')}
                     >
-                        <option value="" disabled>Select Genre</option>
                         {genres.map(g => <option key={g} value={g}>{g}</option>)}
                     </select>
                 ) : <p>{media.genre || 'N/A'}</p>}
               </div>
 
-              {/* Filtering logic using Context config to prevent duplicate Creator/Title in grid */}
               {mediaTypeConfigs[media.mediaType]
                 ?.filter(field => !field.name.startsWith('creator') && field.name !== 'title')
                 .map(field => {
-                const dataKey = field.name.includes('.') ? field.name.split('.')[1] : field.name;
-                
-                // Handling the "Creator.xxx" label logic consistent with Provider
-                const displayLabel = field.label.includes('.') ? 
-                    (field.label.split('.')[1].charAt(0).toUpperCase() + field.label.split('.')[1].slice(1)) : 
-                    field.label;
-
-                return (
-                  <div key={field.name} className="detail-entry">
-                    <label>{displayLabel}</label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        className="edit-field"
-                        value={Array.isArray(editData[dataKey]) ? editData[dataKey].join(', ') : (editData[dataKey] || '')}
-                        onChange={(e) => handleDynamicChange(field.name, e.target.value, field.type)}
-                      />
-                    ) : (
-                      <p>{Array.isArray(media[dataKey]) ? media[dataKey].join(', ') : (media[dataKey] || 'N/A')}</p>
-                    )}
-                  </div>
-                )
-              })}
+                  const dataKey = field.name.includes('.') ? field.name.split('.')[1] : field.name;
+                  return (
+                    <div key={field.name} className="detail-entry">
+                      <label>{field.label.includes('.') ? field.label.split('.')[1].toUpperCase() : field.label}</label>
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          className="edit-field"
+                          value={Array.isArray(editData[dataKey]) ? editData[dataKey].join(', ') : (editData[dataKey] || '')}
+                          onChange={(e) => handleDynamicChange(field.name, e.target.value, field.type)}
+                        />
+                      ) : (
+                        <p>{Array.isArray(media[dataKey]) ? media[dataKey].join(', ') : (media[dataKey] || 'N/A')}</p>
+                      )}
+                    </div>
+                  );
+                })}
             </div>
           </div>
         </div>
@@ -258,22 +225,12 @@ const Media = ({ mediaId, viewContext, onUpdate }) => {
           ) : (
             <div className="text-content">{description || "No description provided."}</div>
           )}
-
           {isEditing && (
             <div className="save-footer">
-              <button 
-                className="revert-button detail-revert-btn" 
-                onClick={handleRevert}
-                disabled={!hasChanges()}
-                title="Discard unsaved changes"
-              >
-                Revert Changes ↺
+              <button className="revert-btn" onClick={handleRevert} disabled={!hasChanges()}>
+                ↺
               </button>
-              <button 
-                className="confirm-save-btn" 
-                onClick={handleSave}
-                disabled={!hasChanges()}
-              >
+              <button className="confirm-save-btn" onClick={handleSave} disabled={!hasChanges()}>
                 Save Changes
               </button>
             </div>

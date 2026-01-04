@@ -258,7 +258,16 @@ export const UserProvider = ({ children }) => {
 
             setOriginalData(JSON.parse(JSON.stringify(finalUserData)));
             setContactData(finalUserData);
-            resetLocalStates();
+            // resetLocalStates();
+
+            // Clear the file previews/pending objects
+            if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+            if (coverPreview) URL.revokeObjectURL(coverPreview);
+            setPendingAvatar(null);
+            setPendingCover(null);
+            setAvatarPreview(null);
+            setCoverPreview(null);
+            setIsEditing(false);
         } catch (error) {
             console.error("Failed to update profile:", error);
             alert("Update failed. Please try again.");

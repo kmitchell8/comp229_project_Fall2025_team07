@@ -72,11 +72,11 @@ export const Profile = ({ managedUserId = null }) => {
     //  Use effect to tell the Context which ID to load. 
     // This is the specific logic switch needed to stop it from defaulting to the Admin's own profile.
     useEffect(() => {
-        if (setSelectedUserId) {
+        if (managedUserId && setSelectedUserId) {
             setSelectedUserId(managedUserId);
         }
         return () => {
-            if (setSelectedUserId) setSelectedUserId(null);
+            if (setSelectedUserId && !managedUserId) setSelectedUserId(null);
         };
     }, [managedUserId, setSelectedUserId]);
 
@@ -111,7 +111,11 @@ export const Profile = ({ managedUserId = null }) => {
     const resetForm = () => {
         resetLocalStates();
     };
+const onRevert = () => {
 
+    resetLocalStates();
+    setIsEditing(true);
+};
     return (
         <div className={`media ${isSaving ? 'processing-blur' : ''}`}>
             {/* Hidden Inputs for Picture Uploading */}
@@ -172,11 +176,19 @@ export const Profile = ({ managedUserId = null }) => {
                                     >
                                         {isSaving ? 'Saving...' : 'Submit Changes'}
                                     </button>
+                                    <button
+                                        className="button-group revert-btn"
+                                        onClick={ onRevert}
+                                        disabled={!hasChanges || loading}
+                                        title="Discard unsaved changes"
+                                    >
+                                        ↺
+                                    </button>
                                 </div>
                             )}
                         </div>
                         {/*Password Reset*/}
-                       {isOwnProfile && ( <div className="detail-entry">
+                        {isOwnProfile && (<div className="detail-entry">
                             <label>Security</label>
                             <button
                                 className="media-back-btn security-reset-btn"

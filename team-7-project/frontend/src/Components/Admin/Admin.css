@@ -924,11 +924,11 @@ select.editable-input option,
         box-shadow: 0 4px 15px var(--shadow-main);
         /* Updated to variable */
         margin: 0 auto 25px auto !important;
-        /*CENTERING */
+        /* <--- CENTERING */
         max-width: 500px;
-        /*PREVENT STRETCHING */
+        /* <--- PREVENT STRETCHING */
         box-sizing: border-box;
-        /*FOR ACCURATE WIDTH */
+        /* <--- FOR ACCURATE WIDTH */
 
     }
 
@@ -984,6 +984,6 @@ select.editable-input option,
         box-shadow: none;
         margin: 10px auto;
         min-width: unset !important;
-        /*TO CLEAR DESKTOP 800px */
+        /* <--- TO CLEAR DESKTOP 800px */
     }
 }

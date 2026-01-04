@@ -1,36 +1,73 @@
-/* Profile.css*/
+/* Profile.css */
 
 :root {
-    /* Existing variables */
+    /* Backgrounds */
     --bg-dark-primary: #1a1a1a;
     --bg-dark-secondary: #2d2d2d;
-    --shadow-main: rgba(0, 0, 0, 0.5);
-    --accent-color: #3498db;
-    --hover-overlay-light: rgba(255, 255, 255, 0.1);
     --preview-bg: #252525;
-    
-    /* Extracted from JSX */
+
+    /* Brand & Accents */
+    --accent-color: #3498db;
     --success-green: #2ecc71;
+    --success-green-disabled: #27ae60;
     --error-red: #e74c3c;
-    --debug-opacity: 0.6;
-    
-    /* Overlay colors for editing */
+
+    /* Shadows & Overlays */
+    --shadow-main: rgba(0, 0, 0, 0.5);
+    --hover-overlay-light: rgba(255, 255, 255, 0.1);
     --edit-overlay: rgba(0, 0, 0, 0.6);
+    --border-subtle: #444444;
+
+    /* UI States */
+    --debug-opacity: 0.6;
+    --white: #ffffff;
+
+    /* Toast Specifics (Following MediaProvider pattern) */
+    --toast-success-bg: #d4edda;
+    --toast-success-text: #155724;
+    --toast-success-border: #28a745;
+    --toast-error-bg: #f8d7da;
+    --toast-error-text: #721c24;
+    --toast-error-border: #dc3545;
 }
 
-/* Profile-specific overrides to Media Card CSS */
+/* Floating Toast Notification Styling */
+.toast-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    z-index: 9999;
+    box-shadow: 0 4px 12px var(--shadow-main);
+    animation: slideIn 0.3s ease-out;
+    min-width: 250px;
+}
+
+.toast-notification.success {
+    background-color: var(--toast-success-bg);
+    color: var(--toast-success-text);
+    border-left: 5px solid var(--toast-success-border);
+}
+
+.toast-notification.error {
+    background-color: var(--toast-error-bg);
+    color: var(--toast-error-text);
+    border-left: 5px solid var(--toast-error-border);
+}
+
+/* Profile-specific overrides */
 
 .profile-avatar-overlay {
     width: 120px;
     height: 120px;
-    margin: -60px auto 0 auto; /* Pulls avatar up into the cover image space */
+    margin: -60px auto 0 auto;
     position: relative;
     z-index: 5;
     border-radius: 50%;
-    overflow: hidden; /* Ensures the hover hint stays within the circle */
+    overflow: hidden;
 }
 
-/* State-based cursor change */
 .profile-avatar-overlay.clickable-edit {
     cursor: pointer;
 }
@@ -39,49 +76,38 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    border-radius: 50%; /* Circular avatar */
+    border-radius: 50%;
     border: 4px solid var(--bg-dark-secondary);
     box-shadow: 0 4px 15px var(--shadow-main);
     background: var(--bg-dark-primary);
-    /*transition: transform 0.3s ease;*/
-    /* ADDED: Smooth transition for multiple properties */
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), filter 0.3s ease;
-    
-    /* ADDED: Set the anchor point to the center-bottom */
-    /* This keeps the bottom of the circle "locked" while it grows upwards and outwards */
     transform-origin: bottom center;
 }
 
-/* Hover effect for the avatar when editing */
- .avatar-img:hover {
-   /* transform: scale(1.05);
-    filter: brightness(70%); */
-
+.avatar-img:hover {
     transform: scale(1.1) translateY(-2px);
     filter: brightness(85%);
     border-color: var(--accent-color);
 }
 
-/* Hint overlay that appears on the avatar during edit mode */
 .edit-hint-overlay {
     position: absolute;
     bottom: 0;
     left: 0;
     width: 100%;
     background: var(--edit-overlay);
-    color: #ffffff;
+    color: var(--white);
     font-size: 0.75rem;
     padding: 8px 0;
     text-align: center;
-    pointer-events: none; /* Allows clicks to pass through to the container */
+    pointer-events: none;
     text-transform: uppercase;
     letter-spacing: 1px;
 }
 
 .media-cover-frame {
-    /* Base frame remains standard, but allows cursor feedback if needed */
     overflow: hidden;
-    position: relative; /* Ensure the frame acts as a stable base for the overlap */
+    position: relative;
 }
 
 .media-cover-frame img {
@@ -99,7 +125,6 @@
     border-radius: 10px;
 }
 
-/* Prompt styling for missing fields */
 .inline-add {
     background: transparent;
     border: 1px dashed var(--accent-color);
@@ -114,41 +139,59 @@
     background: var(--hover-overlay-light);
 }
 
-/* Layout & Action Classes moved from JSX */
 .edit-actions-group {
     display: flex;
     gap: 10px;
     width: 100%;
 }
 
-.edit-actions-group .media-back-btn,
-.edit-actions-group .admin-edit-toggle {
-    flex: 1;
-}
-
-/* Contextual button overrides */
 .cancel-btn {
     background: var(--bg-dark-secondary);
-    border-color: #444;
+    border-color: var(--border-subtle);
 }
 
-.save-btn {
+.save-btn{
     background: var(--success-green);
-    color: white;
+    color: var(--white);
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+    box-shadow: 0 0 15px var(--success-green);
 }
 
-.save-btn:disabled {
-    background: #27ae60;
-    opacity: 0.7;
+.save-btn:hover {
+    filter: brightness(1.1);
+    box-shadow: 0 0 20px var(--success-green);
+}
+
+.revert-btn {
+    background: transparent;
+    border: 1px solid var(--update-color);
+    color: var(--update-color);
+    padding: 12px 25px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.revert-btn:hover:not(:disabled) {
+    background: var(--update-color);
+    color: var(--bg-dark-primary);
+}
+
+.revert-btn:disabled {
+    opacity: 0.5;
     cursor: not-allowed;
+    border-color: var(--disabled-bg);
+    color: var(--disabled-bg);
 }
-
-.security-reset-btn {
-    padding: 5px 10px;
-}
-
-.library-open-btn {
-    margin-top: 20px;
+.save-btn:disabled {
+    background: var(--success-green-disabled);
+    opacity: 0.6;
+    cursor: not-allowed;
+    box-shadow: none;
+    filter: grayscale(0.3);
 }
 
 .debug-footer {
@@ -156,16 +199,24 @@
     opacity: var(--debug-opacity);
 }
 
-/* Responsive Override for Profile */
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
 @media (max-width: 1100px) {
     .profile-avatar-overlay {
-        /* Maintain the negative margin even in portrait/small screens */
-        /* If the overlap feels too deep on small screens,  adjust -60px to -40px */
-        margin: -60px auto 0 auto; 
+        margin: -60px auto 0 auto;
     }
-    
-    /* Ensure the container below doesn't hide the overlapped avatar */
+
     .media-visual-pane {
-        padding-top: 20px; 
+        padding-top: 20px;
     }
 }

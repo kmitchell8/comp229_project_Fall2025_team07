@@ -577,12 +577,14 @@ h1 {
 .reload-button {
     background-color: var(--accent-color);
     color: var(--bg-dark-secondary);
-    width: 140px; 
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
+    /* Remove width: 140px; */
+    /* Remove height: 40px; */
+    /* Remove display: flex; */
+    
+    padding: 8px 20px; /* Let padding define the size based on text */
+    display: inline-block; /* Revert to File 1 behavior */
+    text-align: center;
+    min-width: fit-content;
 }
 
 .reload-button:hover:not(:disabled) {

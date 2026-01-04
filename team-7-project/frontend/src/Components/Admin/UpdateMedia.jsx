@@ -362,7 +362,7 @@ const UpdateMedia = ({ pathId }) => {
             <div className="table-header-controls">
                 <h1>Media Directory</h1>
                 <div className="filter-group">
-                    <label htmlFor="type-filter">Filter By: </label>
+                    {/*<label htmlFor="type-filter">Filter By: </label>*/}
                     <select id="type-filter" value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className="filter-select">
                         <option value="all">All Media</option>
                         {Object.keys(mediaTypesConfig).map(t => (

@@ -4,7 +4,8 @@
  * Student ID: 301508202
  * Date: December 07, 2025
  * Note: AI assisted styling (Gemini) 
- */.admin {
+ */
+.admin {
     display: flex;
     flex-direction: column;
     /* align-items: left;
@@ -12,6 +13,7 @@
     gap: 60px;
     margin: 60px 5%;
 }
+
 :root {
     /* Main Palette */
     --primary-text: #ffffff;
@@ -46,7 +48,7 @@
     --success-bg-dark: #1c4a1c;
     --view-btn-hover: #0056b3;
     --update-btn-hover: #e6b200;
-    
+
     /* Hard-coded RGBA values for shadows/transparency */
     --shadow-main: #00000080;
     --shadow-table: rgba(0, 0, 0, 0.6);
@@ -56,6 +58,7 @@
     --preview-bg: rgba(0, 0, 0, 0.2);
     --table-row-hover: rgba(56, 18, 177, 0.31);
 }
+
 /*============================
 CreateMedia.jsx
 =============================*/
@@ -335,6 +338,7 @@ CreateMedia.jsx
     margin-right: 10px;
     font-size: 1.2rem;
 }
+
 /*===================
 UpdateUser.jsx/UpdateBook.jsx
 ====================*/
@@ -349,7 +353,8 @@ UpdateUser.jsx/UpdateBook.jsx
     padding: 25px;
     background-color: var(--bg-dark-secondary);
     border-radius: 12px;
-    box-shadow: var(--shadow-table); /* Updated to variable */
+    box-shadow: var(--shadow-table);
+    /* Updated to variable */
     font-family: 'Outfit', sans-serif;
     color: var(--primary-text);
     overflow-x: auto;
@@ -423,7 +428,8 @@ h1 {
 /* Usually Email or Genre */
 
 .user-table tbody tr:hover {
-    background-color: var(--table-row-hover); /* Updated to variable */
+    background-color: var(--table-row-hover);
+    /* Updated to variable */
 }
 
 /* Editable Field Styling (Inputs) */
@@ -443,7 +449,8 @@ h1 {
     border-color: var(--accent-color);
     background-color: var(--bg-dark-primary);
     /* Darker on focus for contrast */
-    box-shadow: 0 0 0 4px var(--shadow-accent); /* Updated to variable */
+    box-shadow: 0 0 0 4px var(--shadow-accent);
+    /* Updated to variable */
 }
 
 /* Role Radio Buttons in Table */
@@ -499,12 +506,14 @@ h1 {
 }
 
 .feedback-error {
-    background-color: var(--error-bg-dark); /* Updated to variable */
+    background-color: var(--error-bg-dark);
+    /* Updated to variable */
     color: var(--error-color);
 }
 
 .feedback-success {
-    background-color: var(--success-bg-dark); /* Updated to variable */
+    background-color: var(--success-bg-dark);
+    /* Updated to variable */
     color: var(--success-color);
 }
 
@@ -536,14 +545,16 @@ h1 {
 }
 
 .view-button:hover:not(:disabled) {
-    background-color: var(--view-btn-hover); /* Updated to variable */
+    background-color: var(--view-btn-hover);
+    /* Updated to variable */
     /* Darker blue on hover */
     transform: translateY(-1px);
 }
 
 /* Update Button specific style (Default/Disabled) */
 .update-button {
-    background-color: var(--disabled-bg); /* Updated to variable */
+    background-color: var(--disabled-bg);
+    /* Updated to variable */
     color: var(--primary-text);
     cursor: not-allowed;
 }
@@ -551,12 +562,14 @@ h1 {
 /* Highlight the button when changes are present (has-changes) */
 .update-button.has-changes {
     background-color: var(--update-color);
-    color: var(--bg-dark-primary); /* Updated to variable for contrast */
+    color: var(--bg-dark-primary);
+    /* Updated to variable for contrast */
     cursor: pointer;
 }
 
 .update-button.has-changes:hover:not(:disabled) {
-    background-color: var(--update-btn-hover); /* Updated to variable */
+    background-color: var(--update-btn-hover);
+    /* Updated to variable */
     transform: translateY(-1px);
 }
 
@@ -564,6 +577,12 @@ h1 {
 .reload-button {
     background-color: var(--accent-color);
     color: var(--bg-dark-secondary);
+    width: 140px; 
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 }
 
 .reload-button:hover:not(:disabled) {
@@ -638,17 +657,21 @@ Refined Update Layout
 .action-button-group-cell {
     display: flex;
     gap: 10px;
-    justify-content: flex-end; /* Align buttons to the right */
+    justify-content: flex-end;
+    /* Align buttons to the right */
     align-items: center;
-    min-width: 220px !important; /* Fixed width to prevent jumping */
+    min-width: 220px !important;
+    /* Fixed width to prevent jumping */
     padding-right: 20px !important;
 }
 
 /* Compact Table Cells */
 .user-table td {
-    padding: 10px 12px; /* Reduced vertical padding */
+    padding: 10px 12px;
+    /* Reduced vertical padding */
     font-size: 0.95rem;
-    white-space: nowrap; /* Prevent text wrapping from stretching rows */
+    white-space: nowrap;
+    /* Prevent text wrapping from stretching rows */
     overflow: hidden;
     text-overflow: ellipsis;
 }
@@ -667,14 +690,16 @@ Refined Update Layout
 /* Inputs that fill the cell without stretching it */
 .editable-input {
     width: 100%;
-    padding: 6px 10px; /* Slimmer inputs */
+    padding: 6px 10px;
+    /* Slimmer inputs */
     font-size: 0.9rem;
     background-color: var(--input-bg);
 }
 
 /* Improve the Table Container Scrollbar */
 .user-table-container {
-    padding: 15px; /* Tighter padding */
+    padding: 15px;
+    /* Tighter padding */
     scrollbar-width: thin;
     scrollbar-color: var(--accent-color) var(--bg-dark-primary);
 }
@@ -693,18 +718,21 @@ Refined Update Layout
 .user-table td:last-child {
     position: sticky;
     right: 0;
-    z-index: 5; /* This keeps them above the scrolling text */
+    z-index: 5;
+    /* This keeps them above the scrolling text */
     box-shadow: -5px 0 10px var(--shadow-main);
 }
 
 .user-table th:last-child {
     background-color: var(--table-header-bg);
-    z-index: 6; /* Header must be slightly higher than cells to stay on top */
+    z-index: 6;
+    /* Header must be slightly higher than cells to stay on top */
 }
 
 .user-table td:last-child {
     background-color: var(--bg-dark-secondary);
 }
+
 /*============================
 Dropdown & Select Styling
 =============================*/
@@ -723,7 +751,8 @@ Dropdown & Select Styling
 
 .filter-select:focus {
     border-color: var(--accent-color);
-    box-shadow: 0 0 0 3px var(--shadow-accent-light); /* Updated to variable */
+    box-shadow: 0 0 0 3px var(--shadow-accent-light);
+    /* Updated to variable */
     outline: none;
 }
 
@@ -775,71 +804,48 @@ select.editable-input option,
         gap: 15px;
     }
 
-    .form-input, 
+    .form-input,
     .file-upload-label,
     .button-primary {
         width: 100%;
         max-width: none;
     }
-    
+
     .user-table-container {
         width: 100%;
         margin: 20px 0;
         border-radius: 0;
     }
 }
+
 /* ============================================================
-   Mobile View (Max-width: 768px)
+   Mobile View (Max-width: 768px) 
    ============================================================ */
 @media screen and (max-width: 768px) {
+    /* Container Logic */
     .create-media-container {
         margin: 20px 10px;
         padding: 15px;
         width: auto;
-    }
-
-    .form-title {
-        font-size: 1.6em;
-        margin-bottom: 20px;
-    }
-
-    .form-section-group {
-        grid-template-columns: 1fr;
-        padding: 12px;
-        gap: 15px;
-    }
-
-    .form-input, 
-    .file-upload-label,
-    .button-primary {
-        width: 100%;
-        max-width: none;
-        font-size: 16px; 
     }
 
     .user-table-container {
         width: 100%;
         margin: 20px 0;
         border-radius: 0;
-        min-width: unset;
-    }
-}
-/* ============================================================
-   Mobile View (Max-width: 768px)
-   ============================================================ */
-@media screen and (max-width: 768px) {
-    .create-media-container {
-        margin: 20px 10px;
-        padding: 15px;
-        width: auto;
+        /* Logic: This clears the desktop 800px constraint causing horizontal shift */
+        min-width: unset !important; 
     }
 
+    /* Titles */
     .form-title {
         font-size: 1.6em;
         margin-bottom: 20px;
     }
 
+    /* Media Selector Group */
     .media-type-selector {
+        display: flex;
         flex-wrap: wrap;
         gap: 8px;
     }
@@ -850,20 +856,25 @@ select.editable-input option,
         font-size: 0.9em;
     }
 
+    /* Form Layout */
     .form-section-group {
+        display: grid;
         grid-template-columns: 1fr;
         padding: 12px;
         gap: 15px;
     }
 
-    .form-input, 
+    /* Global Input/Button Sizing */
+    .form-input,
     .file-upload-label,
     .button-primary {
         width: 100%;
         max-width: none;
+        /* Logic: 16px prevents auto-zoom on mobile browsers */
         font-size: 16px; 
     }
 
+    /* Checkbox & File Upload Refinement */
     .checkbox-inline-group {
         padding: 10px 0;
     }
@@ -886,19 +897,13 @@ select.editable-input option,
         text-align: center;
     }
 
-    .button-primary {
-        width: 100%;
-    }
-/* ============================================================
-   Mobile View: Table-to-Card Transformation (Max-width: 768px)
-   ============================================================ */
 
     /* Remove the table structure */
-    .user-table, 
-    .user-table thead, 
-    .user-table tbody, 
-    .user-table th, 
-    .user-table td, 
+    .user-table,
+    .user-table thead,
+    .user-table tbody,
+    .user-table th,
+    .user-table td,
     .user-table tr {
         display: block;
         width: 100%;
@@ -916,10 +921,14 @@ select.editable-input option,
         border: 1px solid var(--border-color);
         border-radius: 12px;
         padding: 15px;
-        box-shadow: 0 4px 15px var(--shadow-main); /* Updated to variable */
-        margin: 0 auto 25px auto !important; /* <--- CENTERING */
-        max-width: 500px;                    /* <--- PREVENT STRETCHING */
-    box-sizing: border-box;              /* <--- FOR ACCURATE WIDTH */
+        box-shadow: 0 4px 15px var(--shadow-main);
+        /* Updated to variable */
+        margin: 0 auto 25px auto !important;
+        /*CENTERING */
+        max-width: 500px;
+        /*PREVENT STRETCHING */
+        box-sizing: border-box;
+        /*FOR ACCURATE WIDTH */
 
     }
 
@@ -928,15 +937,18 @@ select.editable-input option,
         display: flex;
         flex-direction: column;
         padding: 10px 0;
-        border-bottom: 1px solid var(--hover-overlay-light); /* Updated to variable */
-        white-space: normal; /* Allow text wrapping */
+        border-bottom: 1px solid var(--hover-overlay-light);
+        /* Updated to variable */
+        white-space: normal;
+        /* Allow text wrapping */
         min-width: unset !important;
         max-width: unset !important;
     }
 
     .user-table td:last-child {
         border-bottom: none;
-        position: static; /* Disable sticky on mobile */
+        position: static;
+        /* Disable sticky on mobile */
         background-color: transparent;
         box-shadow: none;
         padding-top: 20px;
@@ -945,7 +957,7 @@ select.editable-input option,
     /* "pseudo-labels" for context since headers are hidden */
     /* Example: Add data labels via CSS if you have data-attributes, 
        otherwise, the inputs themselves serve as the guide */
-    
+
     .editable-input {
         max-width: 100% !important;
         margin-top: 5px;
@@ -959,7 +971,8 @@ select.editable-input option,
     }
 
     .button-group {
-        flex: 1; /* Make buttons equal width on mobile */
+        flex: 1;
+        /* Make buttons equal width on mobile */
         text-align: center;
         padding: 12px;
     }
@@ -970,6 +983,7 @@ select.editable-input option,
         background-color: transparent;
         box-shadow: none;
         margin: 10px auto;
-        min-width: unset !important;         /* <--- TO CLEAR DESKTOP 800px */
+        min-width: unset !important;
+        /*TO CLEAR DESKTOP 800px */
     }
 }

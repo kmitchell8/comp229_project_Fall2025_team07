@@ -58,13 +58,20 @@
    Outer Container & Layout Logic
    ============================================================ */
 
-.media {
-    min-height: 100vh;
-    background-color: var(--bg-dark-primary);
-    padding-top: 120px;
+.media-type {
     display: flex;
+    flex-direction: column;
+    align-items: flex-start;
     justify-content: center;
-    /* Centering the card */
+    gap: 60px;
+    width: 100%;             
+    max-width: 1200px;
+    background-color: var(--bg-dark-secondary);
+    padding: 60px;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 10px 40px var(--shadow-main);
+    box-sizing: border-box;  /* Added to prevent padding from pushing width */
 }
 
 .media-type {

@@ -176,13 +176,13 @@ export const Profile = ({ managedUserId = null }) => {
                             )}
                         </div>
                         {/*Password Reset*/}
-                        <div className="detail-entry">
+                       {isOwnProfile && ( <div className="detail-entry">
                             <label>Security</label>
                             <button
                                 className="media-back-btn security-reset-btn"
                                 onClick={handlePasswordResetRequest}
                             >Reset Password</button>
-                        </div>
+                        </div>)}
                     </aside>
 
                     {/* RIGHT PANE: Identity & Metadata */}

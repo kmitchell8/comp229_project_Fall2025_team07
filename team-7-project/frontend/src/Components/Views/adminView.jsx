@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../StateProvider/authState/useAuth';
 //import { getHash } from '../Api/getPage';
-import {ROUTES, ADMIN_SUB_VIEWS} from '../Api/routingConfig'
+import { ROUTES, ADMIN_SUB_VIEWS } from '../Api/routingConfig'
 import CreateMedia from '../Admin/CreateMedia';
 import UpdateMedia from '../Admin/UpdateMedia';
 import UpdateUser from '../Admin/UpdateUser';
@@ -27,11 +27,8 @@ const AdminView = ({ pathSegments: parentSegments = [] }) => {
       return internalSegment;
     }
     return 'admin';
-    
-    ////Do not lose code: This code is a concise way to handle nested views as nested hashes 
-    //!VERY IMPORTANT. the hash gets split into an array and that array is then checked
-    //Split the hash once into all segments and get the primary key profileview. The code looks at the primary segment
-    //and in profileView code the code looks at the second segment [1]
+
+
   }, [userRole, internalSegment]);
 
   //State stores both the primary view key and the full path segments
@@ -49,18 +46,28 @@ const AdminView = ({ pathSegments: parentSegments = [] }) => {
   }
 
   const NavigationLinks = ({ currentView }) => { //need to be outside the render or it will continually lose it's state
+    const isDetailView = !!itemId; // Now isDetailView is strictly true or false
     return (
       <div className="admin-nav-footer">
         {currentView !== ROUTES.ADMIN && (
-          
-          <button 
-          onClick={() => (window.location.hash = ROUTES.ADMIN)}
+
+          <button
+            onClick={() => window.history.back()}
             className="admin-go-back"
           >
-            Go Back
+            &#8592; {/*ICON FOR LEFT POINTING ARROW*/}
+          </button>
+        )}       {isDetailView && (
+
+          <button
+            onClick={() => (window.location.hash = ROUTES.ADMIN)}
+            className="admin-go-back admin-go-home" 
+          >
+            Home
           </button>
         )}
       </div>
+
     );
   };
 
@@ -73,9 +80,9 @@ const AdminView = ({ pathSegments: parentSegments = [] }) => {
       case ROUTES.UPDATE_MEDIA:
         return <UpdateMedia pathId={itemId} />;
       case ROUTES.UPDATE_USER:
-        return itemId?<Profile managedUserId={itemId} /> : <UpdateUser />;
-        //return <UpdateUser parentSegment={parentSegments} />; //Uncomment once UpdateUser accepts parentSegmentsd internally
-                                                                //and handles <Profile /> subview logic
+        return itemId ? <Profile managedUserId={itemId} /> : <UpdateUser />;
+      //return <UpdateUser parentSegment={parentSegments} />; //Uncomment once UpdateUser accepts parentSegmentsd internally
+      //and handles <Profile /> subview logic
       case ROUTES.ADMIN:
       default:
         return (
@@ -108,7 +115,7 @@ const AdminView = ({ pathSegments: parentSegments = [] }) => {
           <NavigationLinks currentView={currentView} />
         </main>
       </div>
-      
+
       <p className="test-message">this is another test message</p>
 
       <div className="admin-footer-info">

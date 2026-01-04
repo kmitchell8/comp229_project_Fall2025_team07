@@ -29,8 +29,9 @@ export const UserProvider = ({ children }) => {
         role: 'user'
     });
 
-    // FIX: Moving managedUserId to state so the Provider can react to changes 
-    // when the Admin clicks different users.
+
+    // Moving managedUserId to state so the Provider can react to changes 
+    // when the Admin clicks different users in UpdateUser.
     const [selectedUserId, setSelectedUserId] = useState(null);
 
     const [originalData, setOriginalData] = useState(null);
@@ -56,18 +57,22 @@ export const UserProvider = ({ children }) => {
 
     // Load User Data - Consolidated to handle both Fetching and Snapshotting
     useEffect(() => {
+
+        let isMounted = true; // Prevents state updates on unmounted components
+
         const loadUserData = async () => {
+            const targetId = selectedUserId || userInfo?._id;
+            if (!targetId) return;
+
+            // MediaProvider Pattern: We set loading to true which the UI uses to 
+            // unmount/hide the old data before the new data arrives.
+            setLoading(true);
             try {
-                setLoading(true); // Ensure loading is true when starting
-
-                // FIX: Use the selectedUserId (set by Profile.jsx) or fallback to logged-in user
-                const targetId = selectedUserId || userInfo?._id;
-
                 if (targetId) {
                     // Use .read to match your userApi.jsx
                     const data = await userApi.read(targetId, getToken);
 
-                    if (data) {
+                    if (data && isMounted) {
                         // Normalize the data immediately for the form inputs
                         const normalizedData = {
                             ...data,
@@ -96,12 +101,13 @@ export const UserProvider = ({ children }) => {
                         // Update both states at once to keep them in sync
                         setContactData(normalizedData);
                         setOriginalData(JSON.parse(JSON.stringify(normalizedData)));
+                        setIsEditing(false); // Reset editing mode automatically on data switch
                     }
                 }
             } catch (err) {
                 console.error("Error loading user into Context:", err);
             } finally {
-                setLoading(false); // End loading state
+                if (isMounted) setLoading(false); // End loading state
             }
         };
 
@@ -109,7 +115,6 @@ export const UserProvider = ({ children }) => {
         if (!authLoading || selectedUserId) {
             loadUserData();
         }
-        // FIX: Dependency array now watches selectedUserId
     }, [selectedUserId, userInfo?._id, getToken, authLoading]);
 
     // Fetch country and regional data from API on component mount
@@ -135,8 +140,6 @@ export const UserProvider = ({ children }) => {
 
     // Derived Logic: Determine if the person logged in is looking at their own profile
     const isOwnProfile = useMemo(() => {
-        // If selectedUserId is null, we are viewing ourselves.
-        // If it exists, it must match userInfo._id to be "own profile"
         return !selectedUserId || selectedUserId === userInfo?._id;
     }, [selectedUserId, userInfo?._id]);
 
@@ -160,7 +163,6 @@ export const UserProvider = ({ children }) => {
         setContactData(prev => {
             if (isAddress) {
                 const updatedAddress = { ...prev.address, [field]: value };
-                // If the country changes, clear the state/province to avoid mismatched data
                 if (field === 'Country') updatedAddress.province = '';
                 return { ...prev, address: updatedAddress };
             }
@@ -175,7 +177,7 @@ export const UserProvider = ({ children }) => {
             if (avatarPreview) URL.revokeObjectURL(avatarPreview);
             setPendingAvatar(file);
             setAvatarPreview(URL.createObjectURL(file));
-            e.target.value = ''; // Reset input to allow re-selection of same file
+            e.target.value = '';
         }
     };
 
@@ -185,7 +187,7 @@ export const UserProvider = ({ children }) => {
             if (coverPreview) URL.revokeObjectURL(coverPreview);
             setPendingCover(file);
             setCoverPreview(URL.createObjectURL(file));
-            e.target.value = ''; // Reset input to allow re-selection of same file
+            e.target.value = '';
         }
     };
 
@@ -225,20 +227,17 @@ export const UserProvider = ({ children }) => {
 
         setIsSaving(true);
         try {
-            // Always use the ID from contactData to ensure we edit the correct person
             const targetId = contactData._id;
 
             let finalAvatar = contactData.profileImage;
             let finalCover = contactData.coverImage;
 
-            // Process Avatar Upload
             if (pendingAvatar) {
                 const { payload, fullName } = prepareUpload(pendingAvatar, 'user', targetId);
                 await userApi.uploadPictures(payload, getToken);
                 finalAvatar = fullName;
             }
 
-            // Process Cover Upload
             if (pendingCover) {
                 const { payload, fullName } = prepareUpload(pendingCover, 'cover', targetId);
                 await userApi.uploadPictures(payload, getToken);
@@ -251,15 +250,12 @@ export const UserProvider = ({ children }) => {
                 coverImage: finalCover
             };
 
-            // Call the update method
             const updatedUser = await userApi.update(finalUserData, targetId, getToken);
 
-            // Only update the Top-Right Admin Header if the Admin edited THEMSELVES
             if (isOwnProfile && updateUserInfo) {
                 updateUserInfo(updatedUser);
             }
 
-            // Update local snapshot so the "Save" button disables after success
             setOriginalData(JSON.parse(JSON.stringify(finalUserData)));
             setContactData(finalUserData);
             resetLocalStates();
@@ -271,7 +267,6 @@ export const UserProvider = ({ children }) => {
         }
     };
 
-    // Resets UI states back to original data
     const resetLocalStates = () => {
         setIsEditing(false);
         if (avatarPreview) URL.revokeObjectURL(avatarPreview);
@@ -284,16 +279,11 @@ export const UserProvider = ({ children }) => {
             setContactData(JSON.parse(JSON.stringify(originalData)));
         }
     };
-    // Safe navigation to bypass the "Aggressive" UserProvider lock
+
     const handlePasswordResetRequest = () => {
-        // Lower the gates in the UserProvider state first
-        //setIsEditing(false);
-        //!hasChanges;
-        // Then navigate using the hash AccessView expects
-        // setTimeout(() => {
-            window.location.href = `./access.html#${ROUTES.RESET}`;
-        //}, 10);
+        window.location.href = `./access.html#${ROUTES.RESET}`;
     };
+
     const value = {
         contactData, setContactData,
         originalData,
@@ -315,7 +305,7 @@ export const UserProvider = ({ children }) => {
         handleImgError,
         userActivity,
         availableRoles, isAdmin,
-        setSelectedUserId,
+        selectedUserId, setSelectedUserId, // Explicitly exposed for UpdateUser list
         handlePasswordResetRequest
     };
 

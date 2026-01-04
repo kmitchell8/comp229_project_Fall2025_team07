@@ -1,7 +1,6 @@
 /*Contact.css*/
-
 :root {
-    /*  Aligned with Library.css Primary Palette  */
+    /* Aligned with Library.css Primary Palette  */
     --primary-text: #ffffff;
     --secondary-text: #bdbdff;
     --bg-dark-primary: #0d0249;
@@ -10,19 +9,19 @@
     --border-color: #3812b1;
     --input-bg: #1a0867;
     
-    /*  System & Validation  */
+    /* System & Validation  */
     --success-color: #4CAF50;
     --error-color: #F44336;
     --shadow-heavy: #000000cc;
     --glow-accent-soft: #79a6ff66;
     --hover-overlay: rgba(255, 255, 255, 0.05);
 
-    /*  Library Title Gradient Match  */
+    /* Library Title Gradient Match  */
     --title-gradient-mid: #4facfe;
     --title-gradient-end: #00f2fe;
     --contact-brand-gradient: linear-gradient(110deg, var(--accent-color) 15%, var(--title-gradient-mid) 25%, var(--title-gradient-end) 60%);
     
-    /*  Animation  */
+    /* Animation  */
     --transition-standard: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -37,9 +36,10 @@
     width: 100%;
     min-height: 80vh;
     overflow-x: hidden;
+    box-sizing: border-box; /* Ensure padding doesn't push width */
 }
 
-/*  Title Section  */
+/* Title Section  */
 .contact-title {
     text-align: center;
 }
@@ -61,7 +61,7 @@
     border-radius: 2px;
 }
 
-/*  Main Layout Frame  */
+/* Main Layout Frame  */
 .contact-sections {
     display: flex;
     flex-wrap: wrap;
@@ -74,18 +74,16 @@
     box-shadow: 0 15px 30px var(--shadow-heavy);
     width: 100%;
     max-width: 950px;
-    box-sizing: border-box;
+    box-sizing: border-box; /* for mobile push */
 }
 
-/*  Left Column: Branding  */
+/* Left Column: Branding  */
 .contact-left {
     display: flex;
     flex-direction: column;
     gap: 20px;
-    flex: 1;
-    min-width: 280px;
     flex: 1 1 280px; 
-    min-width: 0;
+    min-width: 0; /* Allows shrinking on mobile */
 }
 
 .contact-left h1 {
@@ -124,15 +122,15 @@
     transform: translateX(8px);
 }
 
-/*  Right Column: Form  */
+/* Right Column: Form  */
 .contact-right {
     display: flex;
     flex-direction: column;
     gap: 15px;
-   flex: 1.2 1 300px;
-    min-width: 280px;
+    flex: 1.2 1 300px;
+    min-width: 0; /* allow content to shrink below 300px on narrow phones */
     max-width: 100%;
-   /* max-width: 420px; */
+    box-sizing: border-box;
 }
 
 .form-group {
@@ -156,7 +154,7 @@
     letter-spacing: 1px;
 }
 
-/*  Input Styling (Small & Deep Blue)  */
+/* Input Styling  */
 .contact-right input,
 .contact-right select,
 .contact-right textarea {
@@ -169,7 +167,7 @@
     font-family: inherit;
     transition: var(--transition-standard);
     width: 100%;
-    box-sizing: border-box;
+    box-sizing: border-box; /* for input expansion */
 }
 
 .contact-right input:focus,
@@ -185,7 +183,7 @@
     resize: vertical;
 }
 
-/*  Buttons  */
+/* Buttons  */
 .form-action-group {
     display: flex;
     gap: 12px;
@@ -195,7 +193,7 @@
 .submit {
     flex: 2;
     background: var(--contact-brand-gradient);
-    color: var(--bg-dark-primary); /* Dark text on bright gradient for legibility */
+    color: var(--bg-dark-primary); 
     border: none;
     padding: 10px 25px;
     font-size: 15px;
@@ -229,14 +227,14 @@
     color: var(--primary-text);
 }
 
-/*  Error State  */
+/* Error State  */
 .input-error {
     border-color: var(--error-color) !important;
 }
 
-/*  Success Modal Specifics  */
+/* Success Modal Specifics  */
 .success-modal {
-    max-width: 500px; /* Smaller than the media preview modal */
+    max-width: 500px;
     text-align: center;
     border: 2px solid var(--accent-color);
     box-shadow: 0 0 30px var(--glow-accent-soft);
@@ -251,33 +249,22 @@
     margin-bottom: 10px;
 }
 
-.success-modal .modal-info {
-    align-items: center;
-}
-
-.success-modal .modal-description {
-    text-align: center;
-    font-size: 1.1rem;
-    color: var(--secondary-text);
-}
-
-.success-modal .modal-read-more {
-    align-self: center;
-    margin-top: 20px;
-}
-/* Responsive Adjustments  */
+/* Responsive Adjustments (Adapted from Media.css ) */
 @media (max-width: 768px) {
     .contact {
-        padding: 0 15px;
+        padding: 0 10px; /* Reduced side padding for more screen real estate */
     }
 
     .contact-sections {
         padding: 20px; 
         max-width: 100%;
+        margin: 10px;
+        gap: 30px; /* Tighter gap for small screens */
     }
     
     .contact-right {
-        min-width: 100%;
+        min-width: 0;
+        width: 100%;
     }
 
     .form-row {
@@ -285,6 +272,12 @@
     }
 
     .contact-left {
-        min-width: 100%;
+        min-width: 0;
+        width: 100%;
+        text-align: center; /* Centered branding on mobile */
+    }
+    
+    .contact-detail {
+        justify-content: center;
     }
 }

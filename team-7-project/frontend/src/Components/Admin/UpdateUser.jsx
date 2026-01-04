@@ -1,6 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import userApi from '../Api/userApi'; // 
+import React, { useState, useEffect, useCallback} from 'react';
+import userApi from '../Api/userApi'; 
 import { useAuth } from '../StateProvider/authState/useAuth'; // Authentication context
+import { useUser } from '../StateProvider/userState/useUser'; // Import the Context
+import Profile from '../Profile/Profile'; // Ensure this is imported
 import './Admin.css';
 
 const formatDate = (dateString) => {
@@ -122,20 +124,24 @@ const UserRow = React.memo(({
 
 const UpdateUser = ({ pathId }/*{parentSegment}*/) => { //pass the _id path to be able to create an Id subview
 
-    // const userId = pathId; // Extracts _Id to create a _Id subview (pathId can also be parentSegment[2])
-    //This information is passed down from the profileView segment anytime 
-    //anything in the profile.html# path is invoked at any point in the routing   
-    //see profileView and Adminview to understand the routing
+    // Use Context to access UserProvider states and actions
+    const { 
+        setSelectedUserId, 
+        availableRoles: providerRoles, 
+        resetSelectedUser 
+    } = useUser();
 
-    const { role: userRole, getToken, userInfo, availableRoles} = useAuth(); // Destructured ROLES from useAuth
+    const { role: userRole, getToken, userInfo, availableRoles: authRoles } = useAuth(); 
+    
+    // Logic: Favor roles from Provider, fallback to Auth, fallback to empty array
+    const rolesToUse = providerRoles || authRoles || [];
+
     const [feedbackMessage, setFeedbackMessage] = useState({});
     const [users, setUsers] = useState([]); // Original Source of Truth
     const [editedUsers, setEditedUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setErr] = useState(null);
 
-    // Default to common roles if useAuth doesn't provide them yet, but uses hook data as source
-    
     const currentUserId = userInfo ? userInfo._id : null;
     const canChangeRole = userRole === 'admin';
 
@@ -242,7 +248,8 @@ const UpdateUser = ({ pathId }/*{parentSegment}*/) => { //pass the _id path to b
     };
 
     const handleViewUser = (userId) => {
-        // Activated similarly to updateMedia using hash-based navigation
+        // Prime the UserProvider with the ID before navigating
+        setSelectedUserId(userId);
         window.location.hash = `admin/updateuser/${userId}`;
     };
 
@@ -265,29 +272,35 @@ const UpdateUser = ({ pathId }/*{parentSegment}*/) => { //pass the _id path to b
         );
     }
 
-if (pathId) {
+    if (pathId) {
         return (
             <div className="admin-subview-container">
                 <div className="admin-subview-header">
                     <button 
-                        onClick={() => window.location.hash = 'admin/updateuser'} 
+                        onClick={() => {
+                            resetSelectedUser(); // Clear Provider state when returning to list
+                            window.location.hash = 'admin/updateuser';
+                        }} 
                         className="media-back-btn"
                     >
                         ← Back to User Directory
                     </button>
                 </div>
-                {/* Pass the pathId to Profile. 
-                    update Profile.jsx to look for this prop 
+                {/* Profile.jsx consumes context, so it will automatically 
+                    react to the selectedUserId we set in handleViewUser 
                 */}
                 <Profile managedUserId={pathId} />
             </div>
         );
     }
+
     return (
-
-
         <div className="user-table-container">
             <div className="table-header-controls">
+                {/*  RETURN TO ADMIN BUTTON 
+                <button onClick={() => window.location.hash = 'admin'} className="admin-nav-btn">
+                    Return to Admin
+                </button>*/}
                 <h1>User Directory</h1>
                 <button
                     onClick={loadUsers}
@@ -325,7 +338,7 @@ if (pathId) {
                             canChangeRole={canChangeRole}
                             currentUserId={currentUserId}
                             loading={loading}
-                            availableRoles={availableRoles}
+                            availableRoles={rolesToUse}
                         />
                     );
                 })}

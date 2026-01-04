@@ -117,6 +117,16 @@ adminView.jsx Styles
   margin-top: 30px;
 }
 
+/* "Go Back" Navigation Styles */
+.admin-nav-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px; /* Creates space between Back and Home when both are visible */
+  margin-top: 30px;
+  width: 100%;
+}
+
 .admin-go-back {
   background-color: var(--admin-bg-color);
   color: var(--primary-color);
@@ -126,13 +136,27 @@ adminView.jsx Styles
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  /* Flex basis ensures buttons don't shrink too much on small screens */
+  min-width: 80px; 
 }
 
 .admin-go-back:hover {
   background-color: var(--accent-color);
   color: var(--card-bg-color);
+  transform: translateY(-2px);
 }
 
+/* Specific Style for the Home Button to make it stand out */
+.admin-go-home {
+  background-color: var(--card-bg-color);
+  border: 1px solid var(--accent-color);
+  color: var(--accent-color);
+}
+
+.admin-go-home:hover {
+  background-color: var(--accent-color);
+  color: var(--card-bg-color);
+}
 /* Footer / Info Text */
 .admin .test-message {
   font-size: 1.1em;

@@ -1,10 +1,10 @@
 import React from 'react';
 import './Navbar.css';
-//import mediaApi from '../Api/mediaApi';
-import { useMedia } from '../StateProvider/mediaState/useMedia'; // Consume the context hook
+import { useMedia } from '../StateProvider/mediaState/useMedia'; 
+import { useLibrary } from '../StateProvider/libraryState/useLibrary'; // Import Library Context
+import { ROUTES } from '../Api/routingConfig';
 
 const LibraryNavBar = ({ isScrolled, shelfNames }) => {
-    // 1. Pull logic/state directly from Context instead of props
     const {
         viewMode, setViewMode,
         sortBy, setSortBy,
@@ -14,37 +14,25 @@ const LibraryNavBar = ({ isScrolled, shelfNames }) => {
         mediaTypes
     } = useMedia();
 
-   
+    // Consume Library Context for Breadcrumb Data
+    const { activeIds, currentLibrary, getBranchName } = useLibrary();
+    const { tenantId, branchId } = activeIds;
 
     const handleJump = (e, name) => {
-        e.preventDefault(); //  stops the state reset
-
-        // Create the ID format exactly as it appears in Library.jsx
+        e.preventDefault();
         const targetId = `shelf-${name.replace(/\s+/g, '-')}`;
         const element = document.getElementById(targetId);
 
         if (element) {
             const navHeight = 180;
             const elementPosition = element.getBoundingClientRect().top + window.scrollY;
-
             window.scrollTo({
                 top: elementPosition - navHeight - 10,
                 behavior: 'smooth'
             });
-            // Update URL bar without reloading the component
-            //window.history.pushState(null, null, `#${targetId}`);
         }
     };
 
-    // Logic to determine the sort label dynamically
-   /* const getSortLabel = () => {
-        if (filterType === 'book') return "Author";
-        if (filterType === 'movie') return "Director";
-        if (filterType === 'game') return "Developer";
-        return "Creator"; // Default for 'all' or others
-    };
-*/
-    // Logic for search placeholder
     const getSearchPlaceholder = () => {
         const label = getSortLabel().toLowerCase();
         return `Search by title or ${label}...`;
@@ -52,10 +40,35 @@ const LibraryNavBar = ({ isScrolled, shelfNames }) => {
 
     return (
         <nav className={`library-nav-container ${isScrolled ? 'scrolled' : ''}`}>
+            
+            {/* --- NEW: Breadcrumb Row --- */}
+            <div className="breadcrumb-nav">
+                <span onClick={() => window.location.hash = ROUTES.LIBRARY} className="breadcrumb-link">
+                    Library
+                </span>
+                {tenantId && (
+                    <>
+                        <span className="bc-sep">/</span>
+                        <span 
+                            onClick={() => window.location.hash = `${ROUTES.LIBRARY}/${tenantId}`}
+                            className={`breadcrumb-link ${!branchId ? 'active' : ''}`}
+                        >
+                            {currentLibrary?.name || "Loading..."}
+                        </span>
+                    </>
+                )}
+                {branchId && (
+                    <>
+                        <span className="bc-sep">/</span>
+                        <span className="breadcrumb-link active">
+                            {getBranchName(branchId)}
+                        </span>
+                    </>
+                )}
+            </div>
+
             {/* Main Controls Row */}
             <div className="navbar library-nav">
-
-                {/* Mobile Dropdown Triggers - Only visible on mobile */}
                 <div className="mobile-library-triggers">
                     <select value={viewMode} onChange={(e) => setViewMode(e.target.value)} className="lib-select-trigger">
                         <option value="genre">View: Genre</option>
@@ -64,7 +77,6 @@ const LibraryNavBar = ({ isScrolled, shelfNames }) => {
 
                     <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="lib-select-trigger">
                         <option value="all">Show: All</option>
-                        {/* Dynamic integration based on mediaApi types */}
                         {mediaTypes.map((type) => (
                             <option key={type} value={type}>
                                 Show: {type.charAt(0).toUpperCase() + type.slice(1)}s
@@ -78,47 +90,26 @@ const LibraryNavBar = ({ isScrolled, shelfNames }) => {
                     </select>
                 </div>
 
-                {/* Desktop Menu - Uses desktop-links-only to hide on mobile */}
                 <ul className="nav-menu desktop-links-only">
-                    {/* View Modes */}
-                    <li>
-                        <a onClick={() => setViewMode('genre')} className={viewMode === 'genre' ? 'active-link' : ''}>
-                            Genre
-                        </a>
-                    </li>
-                    <li>
-                        <a onClick={() => setViewMode('alphabetical')} className={viewMode === 'alphabetical' ? 'active-link' : ''}>
-                            A - Z
-                        </a>
-                    </li>
+                    <li><a onClick={() => setViewMode('genre')} className={viewMode === 'genre' ? 'active-link' : ''}>Genre</a></li>
+                    <li><a onClick={() => setViewMode('alphabetical')} className={viewMode === 'alphabetical' ? 'active-link' : ''}>A - Z</a></li>
                     <li className="nav-divider">|</li>
 
-                    {/* Media Type Filters - Now Dynamic */}
                     <li className="nav-label-container"><span className="nav-label">Show:</span></li>
                     <li><a onClick={() => setFilterType('all')} className={filterType === 'all' ? 'active-link' : ''}>All</a></li>
 
-                    {/* Mapping through mediaTypes from API to replace hardcoded links */}
                     {mediaTypes.map((type) => (
                         <li key={type}>
-                            <a
-                                onClick={() => setFilterType(type)}
-                                className={filterType === type ? 'active-link' : ''}
-                            >
+                            <a onClick={() => setFilterType(type)} className={filterType === type ? 'active-link' : ''}>
                                 {type.charAt(0).toUpperCase() + type.slice(1)}s
                             </a>
                         </li>
                     ))}
 
                     <li className="nav-divider">|</li>
-
-                    <li className="nav-label-container">
-                        <span className="nav-label">Sort By:</span>
-                    </li>
+                    <li className="nav-label-container"><span className="nav-label">Sort By:</span></li>
+                    <li><a onClick={() => setSortBy('title')} className={sortBy === 'title' ? 'active-sort' : ''}>Title</a></li>
                     <li>
-                        <a onClick={() => setSortBy('title')} className={sortBy === 'title' ? 'active-sort' : ''}>Title</a>
-                    </li>
-                    <li>
-                        {/* Dynamic label: Synchronized with current filter */}
                         <a onClick={() => setSortBy('author')} className={sortBy === 'author' ? 'active-sort' : ''}>
                             {getSortLabel()}
                         </a>
@@ -143,7 +134,7 @@ const LibraryNavBar = ({ isScrolled, shelfNames }) => {
                     {shelfNames.map(name => (
                         <a
                             key={name}
-                            href={`#shelf-${name.replace(/\s+/g, '-')}`}//accessibility fallback
+                            href={`#shelf-${name.replace(/\s+/g, '-')}`}
                             onClick={(e) => handleJump(e, name)}
                             className="jump-link"
                         >

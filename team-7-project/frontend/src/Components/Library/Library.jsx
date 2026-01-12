@@ -3,6 +3,8 @@ import './Library.css';
 import mediaApi from '../Api/mediaApi';
 import LibraryNavBar from '../Navbar/LibraryNavBar';
 import Media from '../Media/Media';
+import { ROUTES } from '../Api/routingConfig';
+import { getHash } from '../Api/getPage';
 import { useMedia } from '../StateProvider/mediaState/useMedia';
 
 const truncateText = (text, limit) => {
@@ -12,21 +14,21 @@ const truncateText = (text, limit) => {
 
 const Library = ({ pathId }) => {
   // CONSUME CONTEXT 
-  const { 
-    loading, 
-    shelfData, 
+  const {
+    loading,
+    shelfData,
     mediaTypeConfigs,
     viewMode, setViewMode,
     sortBy, setSortBy,
     searchTerm, setSearchTerm,
-    filterType, setFilterType 
+    filterType, setFilterType
   } = useMedia();
 
-  // --- LOCAL UI STATE ---
-  const [descriptions, setDescriptions] = useState({}); 
-  const [expandedId, setExpandedId] = useState(null);    
-  const [selectedMedia, setSelectedMedia] = useState(null); 
-  const [showButton, setShowButton] = useState(false); 
+  // LOCAL UI STATE
+  const [descriptions, setDescriptions] = useState({});
+  const [expandedId, setExpandedId] = useState(null);
+  const [selectedMedia, setSelectedMedia] = useState(null);
+  const [showButton, setShowButton] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
   // Scroll Listeners
@@ -191,8 +193,13 @@ const Library = ({ pathId }) => {
                 </div>
 
                 <button className="modal-read-more" onClick={() => {
-                    window.location.hash = `library/${selectedMedia._id || selectedMedia.id}`;
-                    setSelectedMedia(null);
+                  const mId = selectedMedia._id || selectedMedia.id;
+                  const currentHash = getHash();
+                  // Determine the base: If empty, use ROUTES.LIBRARY. If not, use currentHash.
+                  const base = currentHash ? currentHash : ROUTES.LIBRARY;
+                  window.location.hash = `${base}/${mId}`;
+
+                  setSelectedMedia(null);
                 }}>
                   View Full Details
                 </button>

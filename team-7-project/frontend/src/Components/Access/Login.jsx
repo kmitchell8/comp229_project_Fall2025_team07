@@ -5,6 +5,7 @@ import { signIn } from '../Api/authApi.jsx';
 //import { getPage, getHash } from '../Api/getPage.jsx';
 //import './Login.css';
 import './Access.css';
+import { ROUTES } from '../Api/routingConfig.js';
 
 
 function Login() {
@@ -100,7 +101,7 @@ function Login() {
 
                     <p className="switch-text">
                         Don't have an account? <span>
-                            <a href="./access.html#register">Signup</a></span>
+                            <a href={`./access.html#${ROUTES.REGISTER}`}>Signup</a></span>
                     </p>
                     {/*Login Button*/}
                     <button type="submit" className="login-button" disabled={loading}>

@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useMemo } from 'react';
 import { useUser } from '../StateProvider/userState/useUser.jsx';
+//import { useAuth } from '../StateProvider/authState/useAuth.jsx';
 import { useMedia } from '../StateProvider/mediaState/useMedia.jsx';
 import { ROUTES } from '../Api/routingConfig.js';
 import userApi from '../Api/userApi.jsx';
@@ -20,7 +21,7 @@ const ADDRESS_FIELD_CONFIG = [
 export const Profile = ({ managedUserId = null }) => {
     // Consume the context provided by UserProvider
     const {
-        contactData,
+        userData,
         isEditing,
         setIsEditing,
         isSaving,
@@ -37,12 +38,17 @@ export const Profile = ({ managedUserId = null }) => {
         onCoverSelected,
         handleImgError,
         userActivity,
-        availableRoles,
-        isAdmin,
+        availableRoles: providerRoles,
+        hasAdminPrivileges,
         setSelectedUserId,
         handlePasswordResetRequest
     } = useUser();
 
+    const rolesToUse = useMemo(() => {
+        if (!providerRoles) return [];
+        // Combines all arrays within the object into one: ['user', 'admin', 'libraryAdmin', 'branchAdmin']
+        return Object.values(providerRoles).flat();
+    }, [providerRoles]);
     // Consume MediaContext
     const {
         media,
@@ -90,8 +96,8 @@ export const Profile = ({ managedUserId = null }) => {
     }
 
     // Logic for image paths: Priority is Preview (Blob) > Database Image > Default Placeholder
-    const profilePath = avatarPreview || userApi.getImages(contactData.profileImage || 'profileimage');
-    const coverPath = coverPreview || userApi.getImages(contactData.coverImage || 'coverimage');
+    const profilePath = avatarPreview || userApi.getImages(userData.profileImage || 'profileimage');
+    const coverPath = coverPreview || userApi.getImages(userData.coverImage || 'coverimage');
 
     // Click handlers for the frames
     const handleAvatarClick = () => {
@@ -117,6 +123,7 @@ const onRevert = () => {
     setIsEditing(true);
 };
     return (
+        
         <div className={`media ${isSaving ? 'processing-blur' : ''}`}>
             {/* Hidden Inputs for Picture Uploading */}
             <input type="file" ref={avatarInputRef} style={{ display: 'none' }} accept="image/*" onChange={onAvatarSelected} />
@@ -146,7 +153,7 @@ const onRevert = () => {
                         >
                             <img
                                 src={profilePath}
-                                alt={contactData?.name}
+                                alt={userData?.name}
                                 className="avatar-img"
                                 onError={(e) => handleImgError(e, 'avatar')}
                             />
@@ -200,7 +207,7 @@ const onRevert = () => {
                     {/* RIGHT PANE: Identity & Metadata */}
                     <section className="media-info-pane">
                         <div className="media-title-area">
-                            <h1>{contactData.username || 'Guest User'}</h1>
+                            <h1>{userData.username || 'Guest User'}</h1>
                             <span className="media-badge">{userActivity.libraryCard} Access</span>
                         </div>
 
@@ -211,7 +218,7 @@ const onRevert = () => {
                                     <label>Username</label>
                                     <input
                                         type="text"
-                                        value={contactData.username}
+                                        value={userData.username}
                                         onChange={(e) => handleInputChange(e, 'username')}
                                         className="editable-input"
                                     />
@@ -224,12 +231,12 @@ const onRevert = () => {
                                 {isEditing && isOwnProfile ? (
                                     <input
                                         type="text"
-                                        value={contactData.name}
+                                        value={userData.name}
                                         onChange={(e) => handleInputChange(e, 'name')}
                                         className="editable-input"
                                     />
                                 ) : (
-                                    <p>{contactData.name}</p>
+                                    <p>{userData.name}</p>
                                 )}
                             </div>
 
@@ -237,35 +244,35 @@ const onRevert = () => {
                             {isOwnProfile && (
                                 <>
                                     {/* Primary Email - Logic-based visibility */}
-                                    {(isEditing || contactData.preferredContact === 'email') && (
+                                    {(isEditing || userData.preferredContact === 'email') && (
                                         <div className="detail-entry">
                                             <label>Primary Email</label>
                                             {isEditing ? (
                                                 <input
                                                     type="email"
-                                                    value={contactData.email}
+                                                    value={userData.email}
                                                     onChange={(e) => handleInputChange(e, 'email')}
                                                     className="editable-input"
                                                 />
                                             ) : (
-                                                <p>{contactData.email}</p>
+                                                <p>{userData.email}</p>
                                             )}
                                         </div>
                                     )}
 
                                     {/* Secondary Email */}
-                                    {(isEditing || contactData.preferredContact === 'altEmail') && (
+                                    {(isEditing || userData.preferredContact === 'altEmail') && (
                                         <div className="detail-entry">
                                             <label>Secondary Email</label>
                                             {isEditing ? (
                                                 <input
                                                     type="email"
-                                                    value={contactData.altEmail}
+                                                    value={userData.altEmail}
                                                     onChange={(e) => handleInputChange(e, 'altEmail')}
                                                     className="editable-input"
                                                 />
                                             ) : (
-                                                <p>{contactData.altEmail || "None Provided"}</p>
+                                                <p>{userData.altEmail || "None Provided"}</p>
                                             )}
                                         </div>
                                     )}
@@ -276,12 +283,12 @@ const onRevert = () => {
                                         {isEditing ? (
                                             <input
                                                 type="date"
-                                                value={contactData.dob}
+                                                value={userData.dob}
                                                 onChange={(e) => handleInputChange(e, 'dob')}
                                                 className="editable-input"
                                             />
                                         ) : (
-                                            <p>{contactData.dob || "Not Set"}</p>
+                                            <p>{userData.dob || "Not Set"}</p>
                                         )}
                                     </div>
 
@@ -291,7 +298,7 @@ const onRevert = () => {
                                             <label>Contact Phone</label>
                                             <input
                                                 type="tel"
-                                                value={contactData.phone}
+                                                value={userData.phone}
                                                 onChange={(e) => handleInputChange(e, 'phone')}
                                                 className="editable-input"
                                                 placeholder="555-555-5555"
@@ -308,7 +315,7 @@ const onRevert = () => {
                                                     <label>{field.label}</label>
                                                     <input
                                                         type="text"
-                                                        value={contactData.address[field.id] || ''}
+                                                        value={userData.address[field.id] || ''}
                                                         onChange={(e) => handleInputChange(e, field.id, true)}
                                                         className="editable-input"
                                                     />
@@ -319,7 +326,7 @@ const onRevert = () => {
                                             <div className="detail-entry">
                                                 <label>Country</label>
                                                 <select
-                                                    value={contactData.address.Country}
+                                                    value={userData.address.Country}
                                                     onChange={(e) => handleInputChange(e, 'Country', true)}
                                                     className="editable-input"
                                                 >
@@ -328,19 +335,19 @@ const onRevert = () => {
                                             </div>
                                             <div className="detail-entry">
                                                 <label>State / Province</label>
-                                                {countryData.regionalOptions[contactData.address.Country] ? (
+                                                {countryData.regionalOptions[userData.address.Country] ? (
                                                     <select
-                                                        value={contactData.address.province}
+                                                        value={userData.address.province}
                                                         onChange={(e) => handleInputChange(e, 'province', true)}
                                                         className="editable-input"
                                                     >
                                                         <option value="">Select...</option>
-                                                        {countryData.regionalOptions[contactData.address.Country].map(s => <option key={s} value={s}>{s}</option>)}
+                                                        {countryData.regionalOptions[userData.address.Country].map(s => <option key={s} value={s}>{s}</option>)}
                                                     </select>
                                                 ) : (
                                                     <input
                                                         type="text"
-                                                        value={contactData.address.province}
+                                                        value={userData.address.province}
                                                         onChange={(e) => handleInputChange(e, 'province', true)}
                                                         className="editable-input"
                                                     />
@@ -353,18 +360,18 @@ const onRevert = () => {
 
                             {/* ADMIN ROLE MANAGEMENT */}
                             {/* Strictly hidden from the user themselves. Only Admin can change roles for others. */}
-                            {isAdmin && !isOwnProfile && isEditing && (
+                            {hasAdminPrivileges && !isOwnProfile && isEditing && (
                                 <div className="detail-entry full-width">
                                     <label>User Role (Administrative Access Only)</label>
                                     <div className="role-radio-group-table">
-                                        {Array.isArray(availableRoles) && availableRoles.length > 0 ? (
-                                            availableRoles.map(role => (
+                                        {Array.isArray(rolesToUse) && rolesToUse.length > 0 ? (
+                                            rolesToUse.map(role => (
                                                 <label key={role} className="role-radio-label-table" style={{ display: 'flex', alignItems: 'center', marginBottom: '8px', cursor: 'pointer' }}>
                                                     <input
                                                         type="radio"
                                                         name="user-role-profile"
                                                         value={role}
-                                                        checked={contactData.role === role}
+                                                        checked={userData.role === role}
                                                         onChange={(e) => handleInputChange(e, 'role')}
                                                         style={{ width: 'auto', marginRight: '10px', opacity: 1, visibility: 'visible', position: 'relative' }}
                                                     />
@@ -427,7 +434,7 @@ const onRevert = () => {
                 </div>
                 {!isOwnProfile && isEditing && (
                     <div className="admin-notice">
-                        <p>Managing permissions for <strong>{contactData.username}</strong>. Personal contact details are restricted.</p>
+                        <p>Managing permissions for <strong>{userData.username}</strong>. Personal contact details are restricted.</p>
                     </div>
                 )}
                 {/* DEBUG FOOTER */}
@@ -436,7 +443,7 @@ const onRevert = () => {
                     <div className="description-separator"></div>
                     <div className="text-content">
                         <p><strong>System Message:</strong> Profile Validation Mode.</p>
-                        <p><strong>Role:</strong> {contactData.role || 'N/A'}</p>
+                        <p><strong>Role:</strong> {userData.role || 'N/A'}</p>
                         <p><strong>Context:</strong> {ROUTES.ADMIN ? 'Admin Route' : 'User Route'}</p>
                     </div>
                 </footer>

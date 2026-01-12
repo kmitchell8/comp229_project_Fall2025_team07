@@ -5,6 +5,7 @@ import { ROUTES, ACCESS_VIEWS } from '../Api/routingConfig.js'; // Import route-
 import Register from '../Access/Register.jsx'
 import Login from '../Access/Login.jsx'
 import ResetPassword from '../Access/ResetPassword.jsx'
+import RegisterLibrary from '../Access/RegisterLibrary.jsx';
 import Navbar from '../Navbar/Navbar.jsx'
 
 
@@ -95,7 +96,7 @@ export const AccessView = () => {
     const getHashString = getHash();
     //logic to ensure user does not get to the login/regster pages if logged in
     useEffect(() => {
-        // Only act if we are sure the user is authenticated and loading is finished
+        // Only act if sure the user is authenticated and loading is finished
         if (!loading && isAuthenticated) {
             const isOnAuthPage =
                 getPageString === ROUTES.LOGIN
@@ -108,6 +109,12 @@ export const AccessView = () => {
                 window.location.replace('./profile.html');
             }
         }
+
+        if (!isAuthenticated && ROUTES.REGISTER_LIBRARY) {           
+                console.log("Authenticated user detected on Auth page. Redirecting to home.");
+                window.location.replace('./');
+            }
+        
     }, [isAuthenticated, loading, getPageString, getHashString]);
     if ((getPageString === ROUTES.LOGIN
         || getHashString === ROUTES.LOGIN
@@ -131,6 +138,8 @@ export const AccessView = () => {
             case ROUTES.RESET:
                 return <ResetPassword pathSegments={[...pathSegments]} />;//measure against stale prop references.
             //ecountered during trouble shooting (keep for future reference)
+            case ROUTES.REGISTER_LIBRARY:
+                return <RegisterLibrary />;
             case ROUTES.REGISTER:
                 return <Register />;
             default:

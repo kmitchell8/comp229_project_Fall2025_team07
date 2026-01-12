@@ -1,19 +1,24 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import mediaApi from '../Api/mediaApi';
 import { useAuth } from '../StateProvider/authState/useAuth';
-import { useMedia } from '../StateProvider/mediaState/useMedia'; 
+import { useMedia } from '../StateProvider/mediaState/useMedia';
+import { useLibrary } from '../StateProvider/libraryState/useLibrary';
 import { ROUTES } from '../Api/routingConfig';
 import './Media.css';
 
 const Media = ({ mediaId, viewContext, onUpdate }) => {
   const { getToken, isAdmin } = useAuth();
-  const { mediaTypeConfigs, refreshMedia, genres:masterGenres} = useMedia();
+  const { mediaTypeConfigs, refreshMedia, genres: masterGenres } = useMedia();
+  const { activeIds, refreshLibrary, currentLibrary } = useLibrary(); // Get the IDs resolved by the Provider
+  const { tenantId, branchId } = activeIds;
+  // Determine the context for the drop library/drop down
+  const isMasterView = !tenantId;
 
   const [media, setMedia] = useState(null);
-  const [editData, setEditData] = useState(null); 
+  const [editData, setEditData] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [description, setDescription] = useState("");
-  const [genres, setGenres] = useState([]); 
+  const [genres, setGenres] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -32,23 +37,20 @@ const Media = ({ mediaId, viewContext, onUpdate }) => {
       ]);*/
 
       // Get the description text
-    let text = "";
-    if (data.description) {
-      text = await mediaApi.getDescriptionText(data.description);
-    }
+      let text = "";
+      if (data.description) {
+        text = await mediaApi.getDescriptionText(data.description);
+      }
 
-    // 2Attach the raw text to the data object before setting state
-    // This allows hasChanges() to compare the live textarea vs this original value
-    data._originalDescriptionText = text;
+      // Attach the raw text to the data object before setting state
+      // This allows hasChanges() to compare the live textarea vs this original value
+      data._originalDescriptionText = text;
 
       setMedia(data);
-      setEditData(JSON.parse(JSON.stringify(data))); 
+      setEditData(JSON.parse(JSON.stringify(data)));
       setGenres(masterGenres);
+      setDescription(text);
 
-      if (data.description) {
-        const text = await mediaApi.getDescriptionText(data.description);
-        setDescription(text);
-      }
     } catch (err) {
       setError("Failed to load media details.");
       console.error(err);
@@ -71,7 +73,7 @@ const Media = ({ mediaId, viewContext, onUpdate }) => {
         finalValue = (typeof value === 'string' && value.trim() === '')
           ? []
           : (typeof value === 'string' ? value.split(',').map(v => v.trim()) : value);
-      } 
+      }
       else if (inputType === 'number' || inputType === 'integer') {
         finalValue = value === '' ? 0 : Number(value);
       }
@@ -83,7 +85,7 @@ const Media = ({ mediaId, viewContext, onUpdate }) => {
   };
 
   // State Comparison Logic 
-const hasChanges = () => {
+  const hasChanges = () => {
     if (!media || !editData) return false;
 
     // Check if the description text has changed
@@ -91,47 +93,48 @@ const hasChanges = () => {
     // Note: 'media.description' is just the filename, so check against the 
     // text stored during fetchFullDetails (might want a 'originalDescription' state for 100% accuracy)
     // For now, compare against the text content.
-   const descChanged = description !== (media._originalDescriptionText || "");
+    const descChanged = description !== (media._originalDescriptionText || "");
     if (descChanged) return true;
 
     // Check dynamic fields
     const currentConfig = mediaTypeConfigs[media.mediaType] || [];
     const keysToCheck = [
-        'title', 
-        'genre', 
-        ...currentConfig.map(f => f.name.includes('.') ? f.name.split('.')[1] : f.name)
+      'title',
+      'genre',
+      ...currentConfig.map(f => f.name.includes('.') ? f.name.split('.')[1] : f.name)
     ];
 
     return keysToCheck.some(key => {
-        const orig = media[key];
-        const edit = editData[key];
-        if (Array.isArray(orig) || Array.isArray(edit)) {
-            return JSON.stringify(orig || []) !== JSON.stringify(edit || []);
-        }
-        return String(orig ?? '') !== String(edit ?? '');
+      const orig = media[key];
+      const edit = editData[key];
+      if (Array.isArray(orig) || Array.isArray(edit)) {
+        return JSON.stringify(orig || []) !== JSON.stringify(edit || []);
+      }
+      return String(orig ?? '') !== String(edit ?? '');
     });
-};
+  };
 
- const handleRevert = async () => {
+  const handleRevert = async () => {
     setEditData(JSON.parse(JSON.stringify(media)));
-    
+
     // Re-fetch or re-set the description text if it was changed
     if (media.description) {
-        const text = await mediaApi.getDescriptionText(media.description);
-        setDescription(text);
+      const text = await mediaApi.getDescriptionText(media.description);
+      setDescription(text);
     } else {
-        setDescription("");
+      setDescription("");
     }
   };
-  
+
   const handleCancel = () => { handleRevert(); setIsEditing(false); };
 
   const handleSave = async () => {
     try {
       const allowedKeys = [
-        'title', 
-        'genre', 
+        'title',
+        'genre',
         ...(mediaTypeConfigs[media.mediaType]?.map(f => f.name.includes('.') ? f.name.split('.')[1] : f.name) || [])
+
       ];
 
       const updatePayload = allowedKeys.reduce((acc, key) => {
@@ -145,12 +148,15 @@ const hasChanges = () => {
       const savedData = JSON.parse(JSON.stringify(editData));
       savedData._originalDescriptionText = description;
       setMedia(savedData);
+      if (refreshLibrary)
+        refreshLibrary();
       setIsEditing(false);
-      refreshMedia(); 
-      onUpdate?.(); 
+      refreshMedia();
+      onUpdate?.();
     } catch (err) {
       alert("Update failed: " + err.message);
     }
+
   };
 
   // Helper for Creator Info (Correction Implemented)
@@ -162,7 +168,18 @@ const hasChanges = () => {
     const label = field.label.split('.')[1] || field.label;
     return { label: label.charAt(0).toUpperCase() + label.slice(1), value: item[key] || "" };
   };
-
+  const handleBackToLibrary = () => {
+    if (!tenantId) {
+      // No tenant means  Master Library
+      window.location.hash = ROUTES.LIBRARY;
+    } else if (!branchId) {
+      // in a specific Library, but no specific branch
+      window.location.hash = `${ROUTES.LIBRARY}/${tenantId}`;
+    } else {
+      // within a specific Branch
+      window.location.hash = `${ROUTES.LIBRARY}/${tenantId}/${branchId}`;
+    }
+  };
   if (loading) return <div className="media-status">Loading entry...</div>;
   if (error) return <div className="media-status error">{error}</div>;
   if (!media) return null;
@@ -171,7 +188,7 @@ const hasChanges = () => {
     <div className="media">
       <div className="media-type">
         <div className="media-split-container">
-          
+          {/* Visual Pane */}
           <div className="media-visual-pane">
             <div className="media-cover-frame">
               <img src={mediaApi.getCoverUrl(media.cover)} alt={media.title} />
@@ -186,7 +203,7 @@ const hasChanges = () => {
                 </button>
               )}
               {isLibraryView && (
-                <button className="media-back-btn" onClick={() => window.location.hash = ROUTES.LIBRARY}>
+                <button className="media-back-btn" onClick={handleBackToLibrary}>
                   Back to Library
                 </button>
               )}
@@ -213,16 +230,17 @@ const hasChanges = () => {
             </header>
 
             <div className="media-details-grid">
+              {/* Genre and Dynamic Fields */}
               <div className="detail-entry">
                 <label>Genre</label>
                 {isEditing ? (
-                    <select 
-                        className="edit-field"
-                        value={editData.genre || ''} 
-                        onChange={(e) => handleDynamicChange('genre', e.target.value, 'select')}
-                    >
-                        {genres.map(g => <option key={g} value={g}>{g}</option>)}
-                    </select>
+                  <select
+                    className="edit-field"
+                    value={editData.genre || ''}
+                    onChange={(e) => handleDynamicChange('genre', e.target.value, 'select')}
+                  >
+                    {genres.map(g => <option key={g} value={g}>{g}</option>)}
+                  </select>
                 ) : <p>{media.genre || 'N/A'}</p>}
               </div>
 
@@ -249,7 +267,45 @@ const hasChanges = () => {
             </div>
           </div>
         </div>
-
+        {/* Availability Section */}
+        <div className="media-availability-zone">
+          {isMasterView ? (
+            <div className="availability-card">
+              <label>Available at these Libraries</label>
+              {/* holdings should be an array of { libraryName, libraryId } */}
+              {media.holdings?.length > 0 ? (
+                <select
+                  className="library-navigator-select"
+                  onChange={(e) => window.location.hash = `${ROUTES.LIBRARY}/${e.target.value}`}
+                >
+                  <option value="">Select a Library to view...</option>
+                  {media.holdings.map(h => (
+                    <option key={h.libraryId} value={h.libraryId}>
+                      {h.libraryName}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <p className="no-availability">Only available in Master Collection</p>
+              )}
+            </div>
+          ) : (
+            <div className="availability-card">
+              <label>Available at Branches in {currentLibrary?.name}</label>
+              <ul className="branch-availability-list">
+                {/* Filter holdings to only show branches belonging to current tenant */}
+                {media.holdings
+                  ?.filter(h => h.libraryId === tenantId)
+                  .map(h => (
+                    <li key={h.branchId} className="branch-tag">
+                      {h.branchName || "Main Branch"}
+                    </li>
+                  )) || <li>Main Branch</li>}
+              </ul>
+            </div>
+          )}
+        </div>
+        {/*Description Area */}
         <div className="media-full-description">
           <h2>Summary</h2>
           <div className="description-separator"></div>

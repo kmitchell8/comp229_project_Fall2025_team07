@@ -1,6 +1,6 @@
 /*
  * File Name: users.js
- * Author(s): Adrian Myers, Kevon Mitchell
+ * Author(s): Kevon Mitchell
  * Student ID (s): , 301508202
  * Date: November 10, 2025
  * Note: code based on slides from week6 "AUTHENTICATION (16) (2) (5).pptx" in comp229(Centennial College)
@@ -12,7 +12,10 @@ const bcrypt = require('bcrypt');
 const fs = require('fs');
 const path = require('path');
 const filePath = path.resolve(process.cwd(), 'public', 'documents', 'userRoles.json');
-const roles = JSON.parse(fs.readFileSync(filePath), 'utf8');
+const rolesData = JSON.parse(fs.readFileSync(filePath), 'utf8');
+
+// Flatten the object values into a single array: ["user", "admin", "libraryAdmin", "branchAdmin"]
+const roles = [...rolesData.user, ...rolesData.admin];
 
 // 10 is a good standard default.
 const SALT_ROUNDS = 10;
@@ -20,6 +23,12 @@ const SALT_ROUNDS = 10;
 const UserSchema = new mongoose.Schema({
     name: { type: String, required: true },
     username: { type: String },
+    // MANAGEMENT ACCESS
+    managementAccess: {
+        libraryId: { type: String, default: null },//sent in jwt token payload. Upload context in authController const.token if value changes
+        branchId: { type: String, default: null },
+        //role: { type: String, default: 'patron' }
+    },
     profileImage: {
         type: String,
         required: true,
@@ -78,6 +87,9 @@ const UserSchema = new mongoose.Schema({
     // Auto inputs the date in the correct format
     timestamps: { createdAt: 'created', updatedAt: 'updated' }
 });
+
+// Index the management fields for fast permission checks
+UserSchema.index({ "managementAccess.libraryId": 1, "managementAccess.branchId": 1 });
 
 UserSchema.virtual('password').set(function (password) {//checks given password against encrypted password
     this._password = password;

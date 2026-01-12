@@ -8,6 +8,7 @@ import './index.css'
 import { AuthProvider } from './Components/StateProvider/authState/authProvider.jsx';
 import { MediaProvider } from './Components/StateProvider/mediaState/mediaProvider.jsx';
 import { UserProvider } from './Components/StateProvider/userState/userProvider.jsx';
+import { LibraryProvider } from './Components/StateProvider/libraryState/libraryProvider.jsx';
 import { ProfileView } from './Components/Views/profileView.jsx';
 
 
@@ -17,9 +18,11 @@ createRoot(document.getElementById('root')).render(
     <StrictMode>
         <AuthProvider>
             <UserProvider>
-                <MediaProvider>
-                    <ProfileView />
-                </MediaProvider>
+                <LibraryProvider>
+                    <MediaProvider>
+                        <ProfileView />
+                    </MediaProvider>
+                </LibraryProvider>
             </UserProvider>
         </AuthProvider>
     </StrictMode>,

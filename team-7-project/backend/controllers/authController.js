@@ -9,7 +9,7 @@
 
 //import express from 'express'; //using tpye: "module"
 //const express = require('express');//using type="commonjs"
-const User = require('../models/users');
+const User = require('../models/user');
 //import User from '..models/users';
 const jwt = require('jsonwebtoken');
 //import jwt from 'jsonwebtoken';
@@ -18,7 +18,11 @@ const crypto = require('crypto'); // Built-in Node module for secure tokens (bes
 //const { response } = require('express'); //for HTTP cookie
 //const userCtrl = require('./userController');
 //import {expressJwt} from 'express-jwt';
-
+const fs = require('fs');
+const path = require('path');
+const filePath = path.resolve(process.cwd(), 'public', 'documents', 'userRoles.json');
+const rolesData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+const adminRoles = rolesData.admin; // ["admin", "libraryAdmin", "branchAdmin"]
 
 //Define config 
 const config = {
@@ -73,7 +77,14 @@ const signin = async (req, res) => {
         const userObject = user.toObject(); //cleaner implimentation
         delete userObject.password; //removes the password from the object
         //Generate the token //isAdmin role will be looked at later
-        const token = jwt.sign({ _id: user._id, role: user.role }, config.jwtSecret);
+        const token = jwt.sign(
+            {
+                _id: user._id,
+                role: user.role,
+                libraryId: user.managementAccess?.libraryId, // tenant context user.js management access
+                branchId: user.managementAccess?.branchId
+            },
+            config.jwtSecret);
 
         const responseData = {
             token: token,
@@ -171,23 +182,52 @@ const requireSignin = expressjwt({
 //hasAuthorization
 const hasAuthorization = (req, res, next) => {
     // Check if profile ID matches auth ID OR if the user is an admin
-    const isOwner = req.profile && req.auth &&
-        (req.profile._id.toString() === req.auth._id.toString())
-    const isAdmin = req.auth && req.auth.role === 'admin';//admin role for later implimentation
-    const authorized = isOwner || isAdmin;
-    if (!(authorized)) {
-        return res.status(403).json({
-            error: "User is not authorized"
-        });
+    /*  const isOwner = req.profile && req.auth &&
+          (req.profile._id.toString() === req.auth._id.toString())
+      const isAdmin = req.auth && req.auth.role === 'admin';//admin role for later implimentation
+      const authorized = isOwner || isAdmin;
+      if (!(authorized)) {
+          return res.status(403).json({
+              error: "User is not authorized"
+          });
+      }
+      next();
+  */
+    // Global Admin Check (Superuser)
+    const auth = req.auth;
+    const role = auth.role;
+
+    // Super Admin (Global access)
+    const isGlobalAdmin = role === 'admin';
+    // Library Admin (Specific to their tenant)
+    // Checks if the library being accessed matches the admin's libraryId in JWT
+    const isLibraryAdmin = (role === 'libraryAdmin') && 
+        req.library && (req.library._id.toString() === auth.libraryId);
+
+    // Branch Admin (Specific to their branch)
+    // Also allows a Library Admin to access any branch belonging to their library
+    const isBranchAdmin = (role === 'branchAdmin' && req.branch && req.branch._id.toString() === auth.branchId) ||
+                          (role === 'libraryAdmin' && req.branch && req.branch.libraryId?.toString() === auth.libraryId);
+    
+    // Profile Owner Check (Self-service for users)
+        const isProfileOwner = req.profile && (req.profile._id.toString() === auth._id.toString());
+ 
+
+ if (isGlobalAdmin || isLibraryAdmin || isBranchAdmin || isProfileOwner) {
+        return next();
     }
-    next();
+
+    return res.status(403).json({
+        error: "Access Denied: You do not have permission for this resource."
+    });
 };
 
 //isAdmin: Checks if the logged-in user is an administrator //used and implimented later
 //requires update to schema. currently defining "role" as String but may change to boolean
 const isAdmin = (req, res, next) => {
+    const userRole = req.auth && req.auth.role;
     // Requires that the user's role was added to the JWT payload during login
-    if (!req.auth || req.auth.role !== 'admin') {
+   if (!req.auth || !adminRoles.includes(userRole)){
         return res.status(403).json({
             error: "User is not authorized. Admin access required."
         });
@@ -195,50 +235,7 @@ const isAdmin = (req, res, next) => {
     next();
 };
 
-/*
-const signin = async (req, res) => {
-    try {
-        let user = await User.findOne({ "email": req.body.email }) //searches for user using email
-        if (!user)
-            return res.status('401').json({ error: "User not found" })
-        if (!user.authenticate(req.body.password)) {
-            return res.status('401').send({ error: "Email and password don't match." })
-        }
-        const token = jwt.sign({ _id: user._id }, config.jwtSecret)
-        res.cookie('t', token, { expire: new Date() + 9999 }) //creates a token cookie to store signin status
-        return res.json({
-            token,
-            user: {
-                _id: user._id,
-                name: user.name,
-                email: user.email
-            }
-        })
-    } catch (err) {
-        return res.status('401').json({ error: "Could not sign in" })
-    }
-}
-const signout = (req, res) => {
-    res.clearCookie("t")//clears cookie created in signin function
-    return res.status('200').json({ message: "signed out" })
 
-}
-const requireSignin = expressJwt({
-    secret: config.jwtSecret,
-    userProperty: 'auth'
-})
-
-const hasAuthorization = (req, res, next) => {
-    const authorized = req.profile && req.auth
-        && req.profile._id == req.auth._id
-    if (!(authorized)) {
-        return res.status('403').json({
-            error: "User is not authorized"
-        })
-    }
-    next()
-}
-*/
 module.exports = {
     register,
     signin,

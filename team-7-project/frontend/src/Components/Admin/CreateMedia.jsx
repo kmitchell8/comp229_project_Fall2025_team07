@@ -8,13 +8,13 @@ const CreateMedia = (/*{parentSegment}*/) => {
 
     const { getToken } = useAuth();
     // Consuming Media Context
-    const { 
-        mediaTypeConfigs, 
-        refreshMedia, 
-        genres: contextGenres = [], 
-        loading: contextLoading 
+    const {
+        mediaTypeConfigs,
+        refreshMedia,
+        genres: contextGenres = [],
+        loading: contextLoading
     } = useMedia();
-
+    const coverInputRef = React.useRef(null);
     const [mediaType, setMediaType] = useState('');
     // mediaTypesConfig state removed as it is now provided by Context
     const [mediaData, setMediaData] = useState({ //can be reused in the UpdateMedia component
@@ -35,13 +35,13 @@ const CreateMedia = (/*{parentSegment}*/) => {
     // availableMediaTypes derived directly from context keys
     const availableMediaTypes = Object.keys(mediaTypeConfigs || {});
 
-    // FIX 2: Universal State Comparison Logic
+    //  Universal State Comparison Logic
     // This allows the button to enable/disable based on any field in the dynamic config
     const hasChanges = useCallback(() => {
         if (mediaData.title.trim() !== '') return true;
         if (descriptionText.trim() !== '') return true;
         if (coverFile !== null) return true;
-        
+
         // Check if genre is different from the default first genre
         if (mediaData.genre !== (contextGenres[0] || '')) return true;
 
@@ -49,6 +49,7 @@ const CreateMedia = (/*{parentSegment}*/) => {
         const dynamicKeys = Object.keys(mediaData).filter(k => !['title', 'genre', 'cover'].includes(k));
         return dynamicKeys.some(key => {
             const val = mediaData[key];
+            if (val === undefined || val === null) return false;
             // If it's a string, check if not empty. If it's boolean, check if true.
             return typeof val === 'string' ? val.trim() !== '' : !!val;
         });
@@ -68,7 +69,7 @@ const CreateMedia = (/*{parentSegment}*/) => {
     useEffect(() => {
         setFeedbackMessage({});
         setErr('');
-        
+
         // Clear dynamic fields when switching types to ensure clean state
         setMediaData(prev => ({
             title: prev.title,
@@ -83,7 +84,7 @@ const CreateMedia = (/*{parentSegment}*/) => {
         } else {
             // Handle "creator.xxx" dot notation while keeping the flat object structure
             const dataKey = name.includes('.') ? name.split('.')[1] : name;
-            
+
             // FIX 1: Keep value as raw string during typing. 
             // This prevents the cursor jumping/trimming issues when typing lists with commas.
             setMediaData({ ...mediaData, [dataKey]: event.target.value });
@@ -105,6 +106,35 @@ const CreateMedia = (/*{parentSegment}*/) => {
             cover: file ? file.name : ''
         }));
     };
+    /**
+     * handleReset: Reverts all media data and UI states
+     * Clears files, dynamic metadata, and feedback messages.
+     */
+    const handleReset = useCallback(() => {
+        // Reset standard and dynamic media fields
+        setMediaData({
+            title: '',
+            genre: contextGenres[0] || '',
+            cover: ''
+            // Dynamic fields are cleared because we are defining a fresh object
+        });
+
+        //  Clear text-based description
+        setDescriptionText('');
+
+        // Clear File states and the actual DOM input via Ref
+        setCoverFile(null);
+        //if (document.getElementById('cover-upload')) document.getElementById('cover-upload').value = null;
+        if (coverInputRef.current) {
+            coverInputRef.current.value = "";
+        }
+
+        // Clear all UI alerts
+        setErr(null);
+        setSuccessMessage(null);
+        setFeedbackMessage({});
+    }, [contextGenres]);
+
 
     const handleSubmit = useCallback(async (e) => {
         e.preventDefault();
@@ -120,7 +150,7 @@ const CreateMedia = (/*{parentSegment}*/) => {
             // UPLOAD COVER FILE
             if (!coverFile) {
                 setFeedbackMessage(prev => ({ ...prev, coverFile: 'Cover image is required.' }));
-                setLoading(false); 
+                setLoading(false);
                 return;
             }
             const uploadResult = await mediaApi.uploadCover(coverFile, getToken);
@@ -159,7 +189,7 @@ const CreateMedia = (/*{parentSegment}*/) => {
                     const dataKey = field.name.includes('.') ? field.name.split('.')[1] : field.name;
                     let value = mediaData[dataKey];
 
-                    // FIX 1 (Part B): Transform string into array ONLY at submission time
+                    // Transform string into array ONLY at submission time
                     if ((field.type === 'list' || field.type === 'array') && typeof value === 'string') {
                         value = value.split(',').map(v => v.trim()).filter(v => v !== '');
                     }
@@ -177,16 +207,8 @@ const CreateMedia = (/*{parentSegment}*/) => {
 
             // Refresh Library context to include new item
             refreshMedia();
-
-            // Clear form state and inputs
-            setMediaData({
-                title: '',
-                genre: contextGenres[0] || '',
-                cover: ''
-            });
-            setDescriptionText('');
-            if (document.getElementById('cover-upload')) document.getElementById('cover-upload').value = null;
-            setCoverFile(null);
+            // Reset Form
+            handleReset();
 
         } catch (submitError) {
             let message = submitError.message || 'Media creation failed.';
@@ -222,13 +244,13 @@ const CreateMedia = (/*{parentSegment}*/) => {
         } finally {
             setLoading(false);
         }
-    }, [mediaData, coverFile, descriptionText, mediaType, getToken, contextGenres, mediaTypeConfigs, refreshMedia]);
+    }, [mediaData, coverFile, descriptionText, mediaType, getToken, handleReset, mediaTypeConfigs, refreshMedia]);
 
     const renderInput = (name, label, type = 'text', required = false) => {
         // Clean up "creator.xxx" labels for display
         const displayLabel = label.includes('.') ? label.split('.')[1] : label;
         const dataKey = name.includes('.') ? name.split('.')[1] : name;
-        
+
         const isError = feedbackMessage[name];
         const value = mediaData[dataKey];
 
@@ -254,7 +276,7 @@ const CreateMedia = (/*{parentSegment}*/) => {
 
     const renderSelect = (name, label, options = [], required = false) => {
         const isError = feedbackMessage[name];
-        const value = mediaData[name];
+        const value = mediaData[name] || (name === 'genre' ? contextGenres[0] : '');
 
         return (
             <div className="form-group" key={name}>
@@ -312,7 +334,7 @@ const CreateMedia = (/*{parentSegment}*/) => {
                     {/* DYNAMIC FIELD RENDERING ENGINE */}
                     {mediaType && mediaTypeConfigs[mediaType]?.map(field => {
                         const dataKey = field.name.includes('.') ? field.name.split('.')[1] : field.name;
-                        
+
                         // Handle Array/List types (e.g., platforms)
                         if (field.type === 'list' || field.type === 'array') {
                             return (
@@ -361,8 +383,16 @@ const CreateMedia = (/*{parentSegment}*/) => {
                     <div className="form-group cover-upload-group">
                         <label className="form-label">Media Cover <span className="required">*</span></label>
                         <div className="custom-file-upload">
-                            <input type="file" id="cover-upload" accept=".jpg,.jpeg,.png,.gif,.webp" onChange={handleFileChange} className="hidden-file-input" required />
-                            <label htmlFor="cover-upload" className="file-upload-label">
+                            <input
+                                type="file" 
+                                id="cover-upload"
+                                ref={coverInputRef}
+                                accept=".jpg,.jpeg,.png,.gif,.webp"
+                                onChange={handleFileChange}
+                                className="hidden-file-input"
+                                required
+                            />
+                            <label  htmlFor="cover-upload" className="file-upload-label">
                                 <span className="upload-icon">📁</span>
                                 {coverFile ? 'Change Cover' : 'Choose Cover File'}
                             </label>
@@ -380,12 +410,20 @@ const CreateMedia = (/*{parentSegment}*/) => {
                 </div>
 
                 <div className="form-action-group">
-                    <button 
-                        type="submit" 
-                        disabled={loading || !hasChanges()} 
+                    <button
+                        type="submit"
+                        disabled={loading || !hasChanges()}
                         className={`button-primary ${!hasChanges() ? 'disabled' : ''}`}
                     >
                         {loading ? 'Creating...' : 'Create Media'}
+                    </button>
+                    <button
+                        type="button"
+                        className="revert-btn"
+                        onClick={handleReset}
+                        disabled={loading || !hasChanges()}
+                    >
+                        ↺
                     </button>
                 </div>
             </form>

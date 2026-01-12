@@ -21,10 +21,10 @@ const CONTACT_FIELD_CONFIG = [
 
 const Contact = () => {
     // Consume dynamic data from UserProvider (consistent with Profile.jsx)
-    const { contactData: userProfile, countryData } = useUser();
+    const { userData: userProfile, countryData, loading: userProviderLoading } = useUser();
     
     const [showSuccess, setShowSuccess] = useState(false); 
-    const [loading, setLoading] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [feedbackMessage, setFeedbackMessage] = useState({}); // Stores validation errors for the UI
 
     const [formData, setFormData] = useState({
@@ -42,7 +42,7 @@ const Contact = () => {
 
     // Effect: Pre-fill form if user is logged in
     useEffect(() => {
-        if (userProfile && userProfile.email) {
+        if (!userProviderLoading && userProfile?.email) {
             setFormData(prev => ({
                 ...prev,
                 name: userProfile.name || '',
@@ -56,7 +56,7 @@ const Contact = () => {
                 postalCode: userProfile.address?.postalCode || '',
             }));
         }
-    }, [userProfile]);
+    }, [userProfile,userProviderLoading]);
 
     // Source countries/regions from API context (matching Profile.jsx cleanup)
     const countries = countryData?.countries || [];
@@ -89,11 +89,11 @@ const Contact = () => {
         e.preventDefault();
         if (!validateForm()) return;
 
-        setLoading(true);
+        setIsSubmitting(true);
         // Link to submission API logic here (e.g., contactApi.send(formData))
         
         setTimeout(() => {
-            setLoading(false);
+            setIsSubmitting(false);
             setShowSuccess(true); 
         }, 1200);
     };
@@ -202,8 +202,8 @@ const Contact = () => {
                     </div>
 
                     <div className="form-action-group">
-                        <button type="submit" className="submit" disabled={loading}>
-                            {loading ? 'Sending...' : 'Submit'}
+                        <button type="submit" className="submit" disabled={isSubmitting}>
+                            {isSubmitting ? 'Sending...' : 'Submit'}
                         </button>
                         <button type="button" className="reset-btn" onClick={handleReset}>
                             Reset

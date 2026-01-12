@@ -1,7 +1,7 @@
 import React, { /*createContext, */useState, useEffect, useCallback } from 'react';
 import { AuthContext } from './authContext';
 import { getUserRoles, signOut, forgotPassword, resetPassword } from '../../Api/authApi';
-
+import { ROUTES } from '../../Api/routingConfig';
 
 // AuthProvider component handles the state and logic,
 
@@ -12,28 +12,31 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true); // New state for initial loading
 
     // Derived state: the simplified role
-// 1. Fetch the roles from the backend on mount
+    // 1. Fetch the roles from the backend on mount
     useEffect(() => {
         const fetchRoles = async () => {
             try {
                 const data = await getUserRoles();
-                // If JSON is { "roles": [...] }, use data.roles. If just [...], use data.
-                setAvailableRoles(data.roles || data);
+                // If JSON is roles: { user: [...], admin: [...] }
+                setAvailableRoles(data);
             } catch (err) {
                 console.error("Error loading user roles from backend:", err);
                 // Optional: Fallback roles if the file is missing
-                setAvailableRoles(['user', 'moderator', 'admin']);
+                setAvailableRoles({
+                    user: ['user'],
+                    admin: ['admin', 'libraryAdmin', 'branchAdmin']
+                });
             }
         };
         fetchRoles();
     }, []);
-    const role = userInfo ? (userInfo.role || 'user') : 'signedOut';//state based on user role
- 
+    //const role = userInfo ? (userInfo.role || 'user') : 'signedOut';//state based on user role
+
     //Authentication Logic 
 
     // Reads token/user from localStorage on app load
     const checkAuthState = useCallback(() => {
-        const storedUser = localStorage.getItem('user');
+        const storedUser = localStorage.getItem('user'); //check and see if all user data is stored in StoredUser
         //const storedToken = localStorage.getItem('jwt');
         if (storedUser /*&& storedToken*/) {
             try {
@@ -60,6 +63,8 @@ export const AuthProvider = ({ children }) => {
     // Handler for successful Login (called by Login.jsx)
     const login = (user) => {
         // Assume JWT ('jwt') and user data ('user') are already stored in localStorage by the Login component
+        // Sync the new user data (with the libraryId) to storage
+        //localStorage.setItem('user', JSON.stringify(user));
         setUserInfo(user);
         setView('authenticated');
         //window.location.replace('./profile.html');
@@ -94,30 +99,42 @@ export const AuthProvider = ({ children }) => {
     const handleResetPassword = async (token, newPassword) => {
         return await resetPassword(token, newPassword);
     };
-    // Context Value
 
+    const userRole = userInfo?.role || 'signedOut';
+    const hasAdminPrivileges = (availableRoles?.admin || []).includes(userRole);
+    // Context Value
     const value = {
         availableRoles,
-        isAdmin: userInfo?.role === 'admin',
         userInfo,
-        role, // Universal role state
-        view, // Universal view state
-        loading,
-        login, // Universal login function
-        logout, // Universal logout function
-        handleForgotPassword, // Universal reset
-        handleResetPassword,
-        setView, // Universal function to switch views ('login', 'register')
+        role: userRole,
         isAuthenticated: !!userInfo,
-        // Helper to get the token for authenticated API calls (using 'jwt')
+        loading,
+
+        // SaaS & Permission Helpers (Now Dynamic!)
+        hasAdminPrivileges,
+        isAdmin: userRole === 'admin',
+        isLibraryAdmin: userRole === 'libraryAdmin',
+        isBranchAdmin: userRole === 'branchAdmin',
+
+        // Tenant context
+        tenantId: userInfo?.managementAccess?.libraryId || null,
+        BranchId: userInfo?.managementAccess?.branchId || null,
+
+        // Actions
+        login,
+        logout,
+        setView,
+        view,
+        handleForgotPassword,
+        handleResetPassword,
         getToken: () => {
             const raw = localStorage.getItem('jwt');
             if (!raw) return null;
             try {
                 const obj = JSON.parse(raw);
-                return obj.token; // This extracts the actual string the API needs
+                return obj.token;
             } catch {
-                return raw; // Fallback for plain strings
+                return raw;
             }
         },
     };

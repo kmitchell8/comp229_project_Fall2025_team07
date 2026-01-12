@@ -25,6 +25,7 @@ const mongoUri = process.env.NODE_ENV === 'production'
     ? process.env.MONGO_URI    // Cloud server (Live)
     : process.env.MONGO_LOCAL; // Local server (Dev)
 //API Routes
+const libraryRoutes = require('./routes/libraryRoutes');
 const contactRoutes = require('./routes/contactRoutes');
 const userRoutes = require('./routes/userRoutes');
 const mediaRoutes = require('./routes/mediaRoutes');
@@ -65,9 +66,10 @@ app.use('/documents', express.static(path.join(__dirname, 'public', 'documents')
 //app.use('/documents/description', express.static(path.join(__dirname, 'public', 'documents', 'description')));
 app.use('/images/cover', express.static(path.join(__dirname, 'public', 'images', 'cover')));
 //JSON
-app.use('/api/contacts', contactRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/medias', mediaRoutes);
+app.use('/api/library', libraryRoutes);
+app.use('/api/contact', contactRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/media', mediaRoutes);
 app.use('/api', authRoutes);
 
 app.get('/', (_req, res,) => {

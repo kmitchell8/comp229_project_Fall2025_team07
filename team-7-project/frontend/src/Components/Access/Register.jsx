@@ -4,6 +4,7 @@ import { signUp } from '../Api/authApi.jsx';
 //import { getPage,getHash } from '../Api/getPage.jsx'
 //import './Register.css'
 import './Access.css';
+import { ROUTES } from '../Api/routingConfig.js';
 
 
 const Register = () => {
@@ -25,7 +26,7 @@ const Register = () => {
 
     try {
       await signUp(name, email, password);
-      window.location.href = './access.html#login';
+      window.location.href = `./access.html#${ROUTES.LOGIN}`;
 
     } catch (err) {
       console.error('Registration error:', err.message);

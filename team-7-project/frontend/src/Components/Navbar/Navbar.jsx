@@ -3,7 +3,7 @@ import './Navbar.css'
 //import logo from '/images/team_7_logo.png'
 import { useAuth } from '../StateProvider/authState/useAuth';
 import { getPage, getHash } from '../Api/getPage.jsx'
-import {ROUTES/*, ADMIN_SUB_VIEWS*/} from '../Api/routingConfig'
+import { ADMIN_SUB_VIEWS, ROUTES/*, ADMIN_SUB_VIEWS*/, ROLE_TO_ROUTE_MAP } from '../Api/routingConfig'
 
 
 
@@ -11,28 +11,37 @@ import {ROUTES/*, ADMIN_SUB_VIEWS*/} from '../Api/routingConfig'
 
 
 const Navbar = () => {
-    const { _view, isAuthenticated, role, logout, _setView } = useAuth();
+    const { _view, isAuthenticated, role, logout, _setView, hasAdminPrivileges } = useAuth();
     const [currentHash, setCurrentHash] = useState(getHash());
     const [menuOpen, setMenuOpen] = useState(false) //toggle mobile view
+
+    //Path Logic
+    const baseAdminRoute = ROLE_TO_ROUTE_MAP[role] || ROUTES.ADMIN;
+    const currentPath = getHash();
+    const currentPage = getPage().toLowerCase();
+    const pageString = currentPage === "index" ? '' : ` / ${currentPage.charAt(0).toUpperCase() + currentPage.slice(1)}`;
+    const isLogOrReg = currentPath.includes(ROUTES.LOGIN) || currentPath.includes(ROUTES.REGISTER);
+    // Helper: Turn "libraryAdmin" into "Library Admin"
+    const formatRoleLabel = (str) => {
+        if (!str || str === 'signedOut') return '';
+        return str.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase()).trim();
+    };
+
+    
     useEffect(() => {
         const handleHashChange = () => {
             setCurrentHash(getHash());
         };
+        window.addEventListener('hashchange', handleHashChange);// Listen for hash changes (e.g., clicking the link or browser back/forward)
+        return () => window.removeEventListener('hashchange', handleHashChange);// Clean up listener on unmount
 
-        // Listen for hash changes (e.g., clicking the link or browser back/forward)
-        window.addEventListener('hashchange', handleHashChange);
-
-        // Clean up listener on unmount
-        return () => window.removeEventListener('hashchange', handleHashChange);
     }, []);
 
-    const currentPath = getHash();
-    const isLogOrReg = currentPath.includes(ROUTES.LOGIN) || currentPath.includes(ROUTES.REGISTER);
 
     //capitalising the first letter of the string and creating a value to display the current file path
-    const getPageString = getPage().charAt(0).toUpperCase() + getPage().slice(1);
+    //const getPageString = getPage().charAt(0).toUpperCase() + getPage().slice(1);
     //const pageString = ` / ${getPageString}`;
-    const pageString = getPageString === "Index" ? '' : ` / ${getPageString}`;
+    // const pageString = getPageString === "Index" ? '' : ` / ${getPageString}`;
 
 
 
@@ -41,9 +50,6 @@ const Navbar = () => {
             <li><a href="./">Go Back Home</a></li>
 
         </ul>
-
-        // Only run if the user is authenticated AND the current page is login or register
-
     );
 
     //function to render links for unauthenticated users
@@ -62,9 +68,9 @@ const Navbar = () => {
 
     //function to render links for authenticated users
     const renderAuthenticatedLinks = () => {
-        const isAdminActive = currentHash.includes(ROUTES.ADMIN);
-        const currentPage = getPage().toLowerCase();
-        const isProfileActive = (currentPage!==ROUTES.PROFILE && currentPage !== 'profile.html') && !isAdminActive;
+        const isAdminActive = currentHash.includes(baseAdminRoute);
+        //const currentPage = getPage().toLowerCase();
+        const isProfileActive = (currentPage === ROUTES.PROFILE || currentPage === 'profile.html') && !isAdminActive;
 
         return (
 
@@ -79,13 +85,13 @@ const Navbar = () => {
 
                 {/* Admin-Specific Link */}
                 {/* Check if the user's role is exactly ROUTES.ADMIN (case-sensitive) */}
-                {role === ROUTES.ADMIN && (
+                {hasAdminPrivileges && (
                     <li>
                         <a
-                            href="./profile.html#admin"
+                            href={`./profile.html#${baseAdminRoute}`}
                             className={`admin-btn ${isAdminActive ? 'is-active' : 'pulse-glow'}`}
                         >
-                            Admin Dashboard
+                            {formatRoleLabel(role)} Dashboard
                         </a>
                     </li>
                 )}

@@ -16,6 +16,7 @@ export const getPage = () => {
 
 export const getHash = () => {
     const hash = window.location.hash.slice(1);
-    return hash;//return the name of the hash
+    //replace any leading/trailing slashes to keep the string clean.
+    return hash.replace(/^\/|\/$/g, "");//return the name of the hash
 }
 

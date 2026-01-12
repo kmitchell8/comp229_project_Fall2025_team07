@@ -62,7 +62,7 @@
 /* Sidebar behavior */
 .media-visual-pane {
     flex: 0 0 320px;
-    position: sticky;
+   /* position: sticky;*/
     top: 20px;
 }
 
@@ -291,7 +291,7 @@
 
     .media-visual-pane {
         width: 100%;
-        position: static;
+       /* position: static;*/
         flex: none;
     }
 

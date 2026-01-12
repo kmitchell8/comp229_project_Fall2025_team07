@@ -1,8 +1,12 @@
 import React, { /*createContext,*/ useState, useEffect, useCallback, useMemo } from 'react';
 import { MediaContext } from './mediaContext.jsx';
+import { useLibrary } from '../libraryState/useLibrary.jsx';
 import mediaApi from '../../Api/mediaApi';
 
 export const MediaProvider = ({ children }) => {
+
+    const { currentLibrary, selectedBranchId } = useLibrary();
+
     const [media, setMedia] = useState([]);
     const [loading, setLoading] = useState(true);
     const [mediaTypeConfigs, setMediaTypeConfigs] = useState({});
@@ -15,60 +19,86 @@ export const MediaProvider = ({ children }) => {
     const [filterType, setFilterType] = useState('all');
     const [configStrings, setConfigStrings] = useState({ ignoredSuffixes: [], ignoredPrefixes: [] });
 
-        const [mediaTypes, setMediaTypes] = useState([]);
-    
-        // following the loadMediaTypes pattern from CreateMedia.jsx //REmoved from LibraryNavBar.jsx
-       /* useEffect(() => {
-            const loadMediaTypes = async () => {
-                try {
-                    const data = await mediaApi.getConfigDoc('mediaTypes');
-                    // data is { "book": [...], "movie": [...] } 
-                    const typeKeys = data ? Object.keys(data) : [];
-                    setMediaTypes(typeKeys);
-                    // eslint-disable-next-line no-unused-vars
-                } catch (err) {
-                    console.error("Could not load media type definitions.");
-                }
-            };
-    
-            loadMediaTypes();
-        }, []);
+    const [mediaTypes, setMediaTypes] = useState([]);
+
+    // following the loadMediaTypes pattern from CreateMedia.jsx //REmoved from LibraryNavBar.jsx
+    /* useEffect(() => {
+         const loadMediaTypes = async () => {
+             try {
+                 const data = await mediaApi.getConfigDoc('mediaTypes');
+                 // data is { "book": [...], "movie": [...] } 
+                 const typeKeys = data ? Object.keys(data) : [];
+                 setMediaTypes(typeKeys);
+                 // eslint-disable-next-line no-unused-vars
+             } catch (err) {
+                 console.error("Could not load media type definitions.");
+             }
+         };
+ 
+         loadMediaTypes();
+     }, []);
 */
-    const loadData = useCallback(async () => {
-        setLoading(true);
-        try {
-            // Logic: Fetch all configuration pieces in parallel
-            const [mediaData, typeConfigs, genreList, prefixSuffixData] = await Promise.all([
-                mediaApi.list(),
-                mediaApi.getConfigDoc('mediaTypes'),
-                mediaApi.getConfigDoc('genres'),
-                mediaApi.getConfigDoc('prefixSuffix')
-            ]);
+    // mediaProvider.jsx
 
-            //Process Media List
-            if (Array.isArray(mediaData)) setMedia(mediaData);
-            // Process Media Type Configurations
-            const configs = typeConfigs || {};
-            setMediaTypeConfigs(configs);            
-            // Extract the keys (e.g., "book", "movie") for components that need a simple list
-            setMediaTypes(Object.keys(configs));
+// 1. New dedicated function for global configs
+const loadGlobalConfigs = useCallback(async () => {
+    try {
+        const [typeConfigs, genreList, prefixSuffixData] = await Promise.all([
+            mediaApi.getConfigDoc('mediaTypes'),
+            mediaApi.getConfigDoc('genres'),
+            mediaApi.getConfigDoc('prefixSuffix')
+        ]);
 
-            setGenres(Array.isArray(genreList) ? genreList : []);
+        const configs = typeConfigs || {};
+        setMediaTypeConfigs(configs);
+        setMediaTypes(Object.keys(configs));
+        setGenres(Array.isArray(genreList) ? genreList : []);
+        if (prefixSuffixData) setConfigStrings(prefixSuffixData);
+    } catch (error) {
+        console.error('Error fetching global configurations:', error);
+    }
+}, []);
 
-            // 4. Process Strings
-            if (prefixSuffixData) setConfigStrings(prefixSuffixData);
+// 2. Updated loadData (Focuses only on Media Items)
+const loadData = useCallback(async () => {
+    // We always want to try and fetch the global config first/concurrently
+    // but if we don't have an ID, we only fetch the config, not the media.
+    
+    // NOTE: For Master Library, your backend might expect 'null' 
+    // or a specific keyword. If your backend supports fetching "Master" 
+    // media via null, remove this if-check.
+    if (currentLibrary?._id === undefined && !currentLibrary?.isMaster) {
+        setLoading(false);
+        return;
+    }
 
-        } catch (error) {
-            console.error('Error fetching media context:', error);
-        } finally {
-            setLoading(false);
+    setLoading(true);
+    try {
+        // Fetch media items for the current context (Master or Tenant)
+        // We pass currentLibrary?._id which will be null for Master
+        const mediaData = await mediaApi.list(currentLibrary?._id || null, selectedBranchId);
+        
+        if (Array.isArray(mediaData)) {
+            setMedia(mediaData);
+        } else {
+            setMedia([]);
         }
-    }, []);
+    } catch (error) {
+        console.error('Error fetching media list:', error);
+        setMedia([]);
+    } finally {
+        setLoading(false);
+    }
+}, [currentLibrary?._id, currentLibrary?.isMaster, selectedBranchId]);
 
-    // Initial Load
-    useEffect(() => { 
-        loadData(); 
-    }, [loadData]);
+// 3. Updated Effects
+useEffect(() => {
+    loadGlobalConfigs(); // Load tabs/genres once on mount
+}, [loadGlobalConfigs]);
+
+useEffect(() => {
+    loadData(); // Load items whenever the library/branch changes
+}, [loadData]);
 
     // Sorting Helper for Labels
     const getSortLabel = useCallback(() => {
@@ -123,7 +153,7 @@ export const MediaProvider = ({ children }) => {
             let key;
             if (viewMode === 'genre') {
                 const rawGenre = item.genre || "Other";
-                key = rawGenre.charAt(0).toUpperCase() + rawGenre.slice(1).toLowerCase();
+                key = rawGenre;//.charAt(0).toUpperCase() + rawGenre.slice(1).toLowerCase();
             } else {
                 let sortValue = (item[sortBy] || item.title || "#").toString().trim();
                 if (sortBy === 'author') {

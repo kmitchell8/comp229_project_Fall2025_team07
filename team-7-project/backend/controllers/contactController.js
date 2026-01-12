@@ -3,7 +3,6 @@
  * Author(s): Kevon Mitchell    
  * Student ID (s): 301508202
  * Date: November 11, 2025
- * Note: using code from contactController.js
  */
 
 const Contact = require('../models/contacts');

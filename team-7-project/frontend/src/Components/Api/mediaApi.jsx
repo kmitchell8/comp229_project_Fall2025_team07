@@ -1,34 +1,39 @@
 //import React from 'react';
 import { API_URL } from "../../../config";
-const BASE_URL = `${API_URL}/medias`;
-const DOMAIN_URL = BASE_URL.replace('/api/medias', '');
+const BASE_URL = `${API_URL}/media`;
+const DOMAIN_URL = BASE_URL.replace('/api/media', '');
 
 
 //getting the header and making it global for all modules
+// 1. Updated for optional auth (Guest-friendly)
 const getAuthHeaders = async (getToken) => {
-    const jwt = await getToken();
-    if (!jwt) {
-        // If the token is missing, throw an error immediately before fetching
-        throw new Error('User not authorized. Please Login.');
+    const headers = { 'Content-Type': 'application/json' };
+    if (typeof getToken === 'function') {
+        try {
+            const jwt = await getToken();
+            if (jwt) headers['Authorization'] = `Bearer ${jwt}`;
+        // eslint-disable-next-line no-unused-vars
+        } catch (e) {
+            console.warn("Guest access: No token retrieved.");
+        }
     }
-    return {
-        'Content-Type': 'application/json',//ensure information is listed in json format
-        'Authorization': `Bearer ${jwt}`, //manually add token to header
-    };
-};
-const getAuthHeadersNoJson = async (getToken) => {
-    const jwt = await getToken();
-    if (!jwt) {
-        // If the token is missing, throw an error immediately before fetching
-        throw new Error('User not authorized. Please Login.');
-    }
-    return {
-        //'Content-Type': 'application/json',//ensure information is listed in json format
-        //this authheader is for files/data that cannot/should not be processed as json
-        'Authorization': `Bearer ${jwt}`, //manually add token to header
-    };
+    return headers;
 };
 
+// 2. Updated for File Uploads (Guest-friendly)
+const getAuthHeadersNoJson = async (getToken) => {
+    const headers = {};
+    if (typeof getToken === 'function') {
+        try {
+            const jwt = await getToken();
+            if (jwt) headers['Authorization'] = `Bearer ${jwt}`;
+        // eslint-disable-next-line no-unused-vars
+        } catch (e) {
+            console.warn("Guest access: No token retrieved.");
+        }
+    }
+    return headers;
+};
 //necessary to ensure that fetch works the way it should
 //in this asynchronous environment the getAutHeader does not hold the actual header
 //it holds the promise of an header thats called in the API helpers
@@ -37,10 +42,10 @@ const fetchHelper = async (url, options) => {
 
     //code standardised and no longer needed in every API helper
     try {
-        const response = await fetch(url, options);//url = api urls options = options for the data
+        const response = await fetch(url, options);//url = api urls & options = options for the data
 
         const contentType = response.headers.get("content-type");
-        // try parse JSON data / other data regardless of response status for detailed error messages
+        // try to parse JSON data / other data regardless of response status for detailed error messages
         const rawData = await response.text();//only checks the incoming stream once
         let data;
         const isTextFile = (contentType && contentType.includes("text/plain")) || url.endsWith('.txt');
@@ -119,7 +124,7 @@ const removeCover = async (filename, getToken) => {
 
 const getCoverUrl = (filename) => {
     if (!filename) return '../../assets/default_cover.png';
-    const domainName = BASE_URL.replace('/api/medias', '');
+    const domainName = BASE_URL.replace('/api/media', '');
 
     return `${domainName}/images/cover/${filename}`;
 };
@@ -144,7 +149,7 @@ const uploadDescription = async (data, getToken) => {
 const getDescriptionUrl = (descriptionPath) => {
     if (!descriptionPath) return null;
 
-    const domainName = BASE_URL.replace('/api/medias', '');
+    const domainName = BASE_URL.replace('/api/media', '');
     return `${domainName}${descriptionPath}`;
 
 }
@@ -160,11 +165,29 @@ const getDescriptionText = async (descriptionPath) => {
 
 }
 //List all media
-const list = async (type = null, getToken=null) => {
+const list = async (libraryId, branchId = 'all', type = null, getToken = null) => {
     // Handle 'all' or null to return the base URL
-    const isFiltered = type && type !== 'all';
-    const url = isFiltered ? `${BASE_URL}?type=${type}` : BASE_URL;
-    const headers = getToken ? await getAuthHeaders(getToken) : {};
+    /* const isFiltered = type && type !== 'all';
+     const url = isFiltered ? `${BASE_URL}?type=${type}` : BASE_URL;
+    */
+
+    // Construct the Query Parameters
+    // libraryId which is mandatory for SaaS structure
+    const params = new URLSearchParams();
+    if (libraryId && libraryId !== 'library') {
+        params.append('libraryId', libraryId);
+    }
+    if (branchId && branchId !== 'all') {
+        params.append('branchId', branchId);
+    }
+    if (type && type !== 'all') {
+        params.append('type', type);
+    }
+
+    const queryString = params.toString();
+    const url = queryString ? `${BASE_URL}?${queryString}` : BASE_URL;
+    const headers = await getAuthHeaders(getToken);
+
     return fetchHelper(url, {
         method: 'GET',
         headers: headers
@@ -213,7 +236,7 @@ const remove = async (mediaId, getToken) => {
 };
 
 const getConfigDoc = async (docName) => {
-        // Dynamically point to any JSON file in the documents folder
+    // Dynamically point to any JSON file in the documents folder
     const url = `${DOMAIN_URL}/documents/${docName}.json`;
     return fetchHelper(url, {
         method: 'GET'

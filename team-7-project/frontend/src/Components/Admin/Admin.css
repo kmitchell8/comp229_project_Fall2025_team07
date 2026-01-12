@@ -5,14 +5,6 @@
  * Date: December 07, 2025
  * Note: AI assisted styling (Gemini) 
  */
-.admin {
-    display: flex;
-    flex-direction: column;
-    /* align-items: left;
-    justify-content: center;*/
-    gap: 60px;
-    margin: 60px 5%;
-}
 
 :root {
     /* Main Palette */
@@ -51,12 +43,12 @@
 
     /* Hard-coded RGBA values for shadows/transparency */
     --shadow-main: #00000080;
-    --shadow-table: rgba(0, 0, 0, 0.6);
-    --shadow-accent: rgba(121, 166, 255, 0.15);
-    --shadow-accent-light: rgba(121, 166, 255, 0.2);
-    --hover-overlay-light: rgba(121, 166, 255, 0.1);
-    --preview-bg: rgba(0, 0, 0, 0.2);
-    --table-row-hover: rgba(56, 18, 177, 0.31);
+    --shadow-table: #00000099;
+    --shadow-accent: #79a6ff26;
+    --shadow-accent-light: #79a6ff33;
+    --hover-overlay-light: #79a6ff1a;
+    --preview-bg: #00000033;
+    --table-row-hover: #3812b14f;
 }
 
 /*============================
@@ -178,6 +170,36 @@ CreateMedia.jsx
     background-color: var(--disabled-bg);
     cursor: not-allowed;
     opacity: 0.7;
+}
+
+/* Revert button logic: remains fixed-square on desktop */
+.revert-btn {
+    flex: 0 0 44px;
+    height: 44px;
+    width: 44px;
+    /*background: transparent;*/
+    border: 1px solid var(--update-color);
+    color: var(--update-color);
+    border-radius: 6px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 10px var(--update-color);
+}
+
+.revert-btn:hover:not(:disabled) {
+    background: var(--update-color);
+    color: var(--bg-dark-primary);
+}
+
+.revert-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    border-color: var(--disabled-bg);
+    color: var(--disabled-bg);
 }
 
 .info-box {
@@ -580,9 +602,11 @@ h1 {
     /* Remove width: 140px; */
     /* Remove height: 40px; */
     /* Remove display: flex; */
-    
-    padding: 8px 20px; /* Let padding define the size based on text */
-    display: inline-block; /* Revert to File 1 behavior */
+
+    padding: 8px 20px;
+    /* Let padding define the size based on text */
+    display: inline-block;
+    /* Revert to File 1 behavior */
     text-align: center;
     min-width: fit-content;
 }
@@ -792,38 +816,131 @@ select.editable-input option,
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
+/*============================================================
+   CreateBranch.jsx 
+============================================================*/
 
-/* Mobile View Extension */
-@media screen and (max-width: 768px) {
-    .create-media-container {
-        margin: 20px 10px;
-        padding: 15px;
-    }
-
-    .form-section-group {
-        grid-template-columns: 1fr;
-        padding: 12px;
-        gap: 15px;
-    }
-
-    .form-input,
-    .file-upload-label,
-    .button-primary {
-        width: 100%;
-        max-width: none;
-    }
-
-    .user-table-container {
-        width: 100%;
-        margin: 20px 0;
-        border-radius: 0;
-    }
+.create-branch-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+    margin: 40px auto;
+    padding: 0 20px;
+    background-color: var(--bg-dark-primary);
+    width: 100%;
+    min-height: 80vh;
+    box-sizing: border-box;
 }
+
+/* Header Logic (Contact style with Admin Colors) */
+.create-branch-container .branch-title h1 {
+    font-size: clamp(32px, 6vw, 48px);
+    font-weight: 700;
+    color: var(--accent-color);
+    /* Admin Accent Blue */
+    text-transform: uppercase;
+}
+
+.create-branch-container .branch-title hr {
+    height: 4px;
+    border: none;
+    background: linear-gradient(90deg, var(--accent-color), var(--view-color));
+    width: 100px;
+    margin: 10px auto;
+    border-radius: 2px;
+}
+
+/* Main Container (The Card) */
+.create-branch-container .branch-right {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    background: var(--bg-dark-secondary);
+    /* Admin Secondary Purple */
+    padding: 40px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 15px 30px var(--shadow-main);
+    width: 100%;
+    max-width: 800px;
+    box-sizing: border-box;
+}
+
+/* Groupings & Labels */
+.create-branch-container .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.create-branch-container .form-sub-header {
+    color: var(--secondary-text);
+    font-size: 1.1rem;
+    margin: 20px 0 10px 0;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 5px;
+}
+
+.create-branch-container label {
+    color: var(--secondary-text);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Input & Select (Admin Palette) */
+.create-branch-container input,
+.create-branch-container select {
+    background-color: var(--input-bg);
+    /* Dark Purple/Blue */
+    border: 1px solid var(--border-color);
+    color: var(--primary-text);
+    padding: 10px 14px;
+    font-size: 14px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.create-branch-container input:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px var(--shadow-accent-light);
+    outline: none;
+}
+
+/* Address Grid Logic */
+.address-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.create-branch-container .reset-btn {
+    flex: 1;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--secondary-text);
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* Error Hints */
+.error-hint {
+    color: var(--error-color);
+    font-size: 0.7rem;
+    font-weight: bold;
+}
+
+
+
 
 /* ============================================================
    Mobile View (Max-width: 768px) 
    ============================================================ */
 @media screen and (max-width: 768px) {
+
     /* Container Logic */
     .create-media-container {
         margin: 20px 10px;
@@ -836,7 +953,7 @@ select.editable-input option,
         margin: 20px 0;
         border-radius: 0;
         /* Logic: This clears the desktop 800px constraint causing horizontal shift */
-        min-width: unset !important; 
+        min-width: unset !important;
     }
 
     /* Titles */
@@ -873,7 +990,7 @@ select.editable-input option,
         width: 100%;
         max-width: none;
         /* Logic: 16px prevents auto-zoom on mobile browsers */
-        font-size: 16px; 
+        font-size: 16px;
     }
 
     /* Checkbox & File Upload Refinement */
@@ -947,6 +1064,12 @@ select.editable-input option,
         max-width: unset !important;
     }
 
+    .revert-btn {
+        width: 100%;
+        flex: none;
+        height: 50px;
+    }
+
     .user-table td:last-child {
         border-bottom: none;
         position: static;
@@ -987,5 +1110,19 @@ select.editable-input option,
         margin: 10px auto;
         min-width: unset !important;
         /* <--- TO CLEAR DESKTOP 800px */
+    }
+
+
+    .address-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .create-branch-container .branch-right {
+        padding: 20px;
+    }
+
+    .create-branch-container .form-row {
+        flex-direction: column;
+        gap: 15px;
     }
 }

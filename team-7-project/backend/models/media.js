@@ -77,6 +77,8 @@ const saveMediaTypesJson = () => {
 };
 
 const MediaSchema = new mongoose.Schema({
+    libraryId: { type: String, default: null },
+    branchId: { type: String, default: null },
     title: {
         type: String,
         required: true,
@@ -86,9 +88,18 @@ const MediaSchema = new mongoose.Schema({
                 if (!this.isModified('title') && !this.isNew) return true;
                 const Media = this.constructor;
 
+                // SCOPED QUERY: Only look for duplicates within the same "context"
+                // If libraryId is null, we check for other nulls (Master level).
+                // If libraryId exists, we check only within that specific branch.
+                const query = {
+                    title: titleValue,
+                    libraryId: this.libraryId,
+                    branchId: this.branchId,
+                    _id: { $ne: this._id }
+                };
+
                 // Case A: Has ISBN (primarily for Books)
                 if (this.ISBN_10 || this.ISBN_13) {
-                    const query = { title: titleValue, _id: { $ne: this._id } };
                     if (this.ISBN_10) query.ISBN_10 = this.ISBN_10;
                     if (this.ISBN_13) query.ISBN_13 = this.ISBN_13;
                     const duplicate = await Media.findOne(query);
@@ -97,15 +108,14 @@ const MediaSchema = new mongoose.Schema({
 
                 // Case B: No ISBN (Movies, Games, etc)
                 const duplicateNoIsbn = await Media.findOne({
-                    title: titleValue,
+                    ...query,
                     mediaType: this.mediaType,
                     ISBN_10: { $exists: false },
-                    ISBN_13: { $exists: false },
-                    _id: { $ne: this._id }
+                    ISBN_13: { $exists: false }
                 });
                 return !duplicateNoIsbn;
             },
-            message: 'A work with this title already exists in the library.'
+            message: 'A work with this title already exists in this specific library/branch context.'
         }
     },
     cover: {
@@ -128,11 +138,76 @@ const MediaSchema = new mongoose.Schema({
     relatedEntries: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Media' }]
 }, baseOptions);
 
+//IDEXES
+
+//ISBN
 // existing ISBN indexes (sparse means they only apply if the field exists)
-MediaSchema.index({ ISBN_10: 1 }, { unique: true, sparse: true });//needed for other documents where ISBN does not exist or is optional
-MediaSchema.index({ ISBN_13: 1 }, { unique: true, sparse: true });
+// GLOBAL MASTER ISBN INDEX
+// Ensures only ONE "Master" record exists for a specific ISBN in the whole system.
+MediaSchema.index(
+    { ISBN_10: 1 },
+    {
+        unique: true,
+        sparse: true,
+        partialFilterExpression: { libraryId: { $type: "null" } }
+    }
+);//needed for other documents where ISBN does not exist or is optional
+MediaSchema.index(
+    { ISBN_13: 1 },
+    {
+        unique: true,
+        sparse: true,
+        partialFilterExpression: { libraryId: { $type: "null" } }
+    }
+);
+// BRANCH LEVEL ISBN INDEX
+// Allows different libraries to have the same ISBN, 
+// but prevents a single branch from having the same ISBN twice.
+MediaSchema.index(
+    { libraryId: 1, branchId: 1, ISBN_10: 1 },
+    {
+        unique: true,
+        sparse: true,
+        partialFilterExpression: { libraryId: { $exists: true, $ne: null } }
+    }
+);
+
+MediaSchema.index(
+    { libraryId: 1, branchId: 1, ISBN_13: 1 },
+    {
+        unique: true,
+        sparse: true,
+        partialFilterExpression: { libraryId: { $exists: true, $ne: null } }
+    }
+);
+
+//LIBRARIES
+
+// The "Global" Index
+// This ensures that if libraryId is null, only ONE document can exist for that mediaId.
+// We use a partial filter to only apply this to the "Master" records.
+MediaSchema.index(
+    { title: 1, mediaType: 1 },
+    {
+        unique: true,
+        partialFilterExpression: { libraryId: { $type: "null" } }
+    }
+);
+
+// The "Branch" Index
+// This ensures that a specific branch cannot have duplicate mediaIds.
+// We only apply this where a libraryId actually exists.
+MediaSchema.index(
+    { libraryId: 1, branchId: 1, title: 1, mediaType: 1},
+    {
+        unique: true,
+        partialFilterExpression: { libraryId: { $exists: true, $ne: null } }
+    }
+);
 
 const Media = mongoose.model('Media', MediaSchema);
+
+//DISCRIMINATORS
 
 // This adds Book-specific fields to the Media model
 const Book = Media.discriminator('book', new mongoose.Schema({

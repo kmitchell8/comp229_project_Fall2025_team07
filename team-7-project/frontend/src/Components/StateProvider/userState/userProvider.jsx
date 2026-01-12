@@ -7,11 +7,10 @@ import userApi from '../../Api/userApi.jsx';
 
 export const UserProvider = ({ children }) => {
     // userInfo and getToken come from your Auth logic
-    const { userInfo, loading: authLoading, getToken, updateUserInfo, availableRoles, isAdmin } = useAuth();
+    const { userInfo, loading: authLoading, getToken, availableRoles, hasAdminPrivileges, login } = useAuth();
 
     // Core States
-    const [contactData, setContactData] = useState({
-        name: '',
+    const [userData, setUserData] = useState({ 
         username: 'N/A',
         email: '',
         altEmail: '',
@@ -69,7 +68,7 @@ export const UserProvider = ({ children }) => {
             setLoading(true);
             try {
                 if (targetId) {
-                    // Use .read to match your userApi.jsx
+                    // Use .read to match userApi.jsx
                     const data = await userApi.read(targetId, getToken);
 
                     if (data && isMounted) {
@@ -95,11 +94,12 @@ export const UserProvider = ({ children }) => {
                             },
                             preferredContact: data.preferredContact || 'email',
                             role: data.role || 'user',
-                            _id: data._id
+                            _id: data._id,
+                            managementAccess: data.managementAccess|| { libraryId: null, branchId: null }
                         };
 
                         // Update both states at once to keep them in sync
-                        setContactData(normalizedData);
+                        setUserData(normalizedData);
                         setOriginalData(JSON.parse(JSON.stringify(normalizedData)));
                         setIsEditing(false); // Reset editing mode automatically on data switch
                     }
@@ -146,21 +146,21 @@ export const UserProvider = ({ children }) => {
     // Check for actual changes to enable/style the save button
     const hasChanges = useMemo(() => {
         if (!originalData) return false;
-        const textChanged = JSON.stringify(contactData) !== JSON.stringify(originalData);
+        const textChanged = JSON.stringify(userData) !== JSON.stringify(originalData);
         return textChanged || !!pendingAvatar || !!pendingCover;
-    }, [contactData, originalData, pendingAvatar, pendingCover]);
+    }, [userData, originalData, pendingAvatar, pendingCover]);
 
     // Local state for the "Activity" data - placeholder for library stats
     const userActivity = useMemo(() => ({
-        libraryCard: contactData.role || 'Standard',
-        mediaInventory: contactData.mediaInventory || [],
-        ratings: contactData.ratings || []
-    }), [contactData.role, contactData.mediaInventory, contactData.ratings]);
+        libraryCard: userData.role || 'Standard',
+        mediaInventory: userData.mediaInventory || [],
+        ratings: userData.ratings || []
+    }), [userData.role, userData.mediaInventory, userData.ratings]);
 
     // Reusable handler to support the flatter structure used in the Contact form
     const handleInputChange = (e, field, isAddress = false) => {
         const { value } = e.target;
-        setContactData(prev => {
+        setUserData(prev => {
             if (isAddress) {
                 const updatedAddress = { ...prev.address, [field]: value };
                 if (field === 'Country') updatedAddress.province = '';
@@ -193,8 +193,9 @@ export const UserProvider = ({ children }) => {
 
     // Standard Error Handler for images
     const handleImgError = (e, type) => {
+        const targetId = userData._id;
         const placeholder = type === 'cover' ? 'coverimage' : 'profileimage';
-        const fallbackUrl = userApi.getImages(placeholder);
+        const fallbackUrl = userApi.getImages(placeholder, targetId);
         if (e.target.src !== fallbackUrl) {
             e.target.onerror = null;
             e.target.src = fallbackUrl;
@@ -218,7 +219,9 @@ export const UserProvider = ({ children }) => {
         };
     };
 
-    // Save Logic: Logic to handle the API update when 'Submit Changes' is clicked
+    // Save Logic: Logic to handle the API update when 'Submit Changes' is clicked // 
+
+    //logic is questionable ==future troubleshooting
     const submitUpdates = async () => {
         if (!hasChanges) { setIsEditing(false); return; }
 
@@ -227,10 +230,10 @@ export const UserProvider = ({ children }) => {
 
         setIsSaving(true);
         try {
-            const targetId = contactData._id;
+            const targetId = userData._id;
 
-            let finalAvatar = contactData.profileImage;
-            let finalCover = contactData.coverImage;
+            let finalAvatar = userData.profileImage;
+            let finalCover = userData.coverImage;
 
             if (pendingAvatar) {
                 const { payload, fullName } = prepareUpload(pendingAvatar, 'user', targetId);
@@ -245,19 +248,19 @@ export const UserProvider = ({ children }) => {
             }
 
             const finalUserData = {
-                ...contactData,
+                ...userData,
                 profileImage: finalAvatar,
                 coverImage: finalCover
             };
 
             const updatedUser = await userApi.update(finalUserData, targetId, getToken);
 
-            if (isOwnProfile && updateUserInfo) {
-                updateUserInfo(updatedUser);
+            if (isOwnProfile && userInfo) {
+                userInfo(updatedUser);
             }
 
             setOriginalData(JSON.parse(JSON.stringify(finalUserData)));
-            setContactData(finalUserData);
+            setUserData(finalUserData);
             // resetLocalStates();
 
             // Clear the file previews/pending objects
@@ -285,7 +288,7 @@ export const UserProvider = ({ children }) => {
         setPendingCover(null);
         setCoverPreview(null);
         if (originalData) {
-            setContactData(JSON.parse(JSON.stringify(originalData)));
+            setUserData(JSON.parse(JSON.stringify(originalData)));
         }
     };
 
@@ -294,7 +297,9 @@ export const UserProvider = ({ children }) => {
     };
 
     const value = {
-        contactData, setContactData,
+        login,
+        userInfo,
+        userData, setUserData,
         originalData,
         isEditing, setIsEditing,
         isSaving,
@@ -313,7 +318,8 @@ export const UserProvider = ({ children }) => {
         onCoverSelected,
         handleImgError,
         userActivity,
-        availableRoles, isAdmin,
+        availableRoles, 
+        hasAdminPrivileges,
         selectedUserId, setSelectedUserId, // Explicitly exposed for UpdateUser list
         handlePasswordResetRequest
     };

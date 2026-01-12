@@ -8,9 +8,13 @@
  * (user controllers are needed to complete code in "AUTHENTICATION (16) (2) (5).pptx")
  */
 
-const User = require('../models/users');
+const User = require('../models/user');
 const _ = require('lodash'); // Used for cleaning up request bodies
-
+const jwt = require('jsonwebtoken');
+//Define config 
+const config = {
+    jwtSecret: process.env.JWT_SECRET
+};
 // Middleware to pre-load a user profile based on the 'userId' parameter in the route
 const userByID = async (req, res, next, id) => {
     try {
@@ -22,7 +26,7 @@ const userByID = async (req, res, next, id) => {
         }
         // Attach the found user object to the request, stripping the password hash for security.
         //password 
-        const { password, ...safeUser } = user.toObject(); 
+        const { password, ...safeUser } = user.toObject();
         req.profile = safeUser;
         next();
     } catch (err) {
@@ -53,9 +57,24 @@ const update = async (req, res, next) => {
         user.updatedAt = Date.now();
         await user.save();
 
+        // GENERATE A NEW TOKEN
+        // This ensures the frontend receives a token containing the NEW role and libraryId
+        const token = jwt.sign(
+            {
+                _id: user._id,
+                role: user.role,
+                // Include managementAccess so the LibraryProvider can resolve hierarchy immediately
+                libraryId: user.managementAccess?.libraryId || null
+            },
+            config.jwtSecret, // Use your actual secret key variable
+            { expiresIn: '24h' }
+        );
         //Prepare the response profile (strip password hash)
-        const { password, ...safeUser } = user.toObject(); 
-        res.json(safeUser);
+        const { password, ...safeUser } = user.toObject();
+        res.json({
+            token: token,
+            user: safeUser
+        });
 
     } catch (err) {
         // Handle validation or save errors
@@ -71,10 +90,10 @@ const remove = async (req, res, next) => {
         const user = req.profile; // User object from req.profile
         //const deletedUser = await user.remove(); //depricated
         const deletedUser = await user.deleteOne();
-        
+
         // Prepare response profile (strip password hash)
-        const { password, ...safeUser } = deletedUser.toObject(); 
-        res.json({ message: "User successfully deleted."});
+        const { password, ...safeUser } = deletedUser.toObject();
+        res.json({ message: "User successfully deleted." });
 
     } catch (err) {
         return res.status(400).json({

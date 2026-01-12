@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback} from 'react';
+import React, { useState, useEffect, useCallback,useMemo} from 'react';
 import userApi from '../Api/userApi'; 
 import { useAuth } from '../StateProvider/authState/useAuth'; // Authentication context
 import { useUser } from '../StateProvider/userState/useUser'; // Import the Context
@@ -131,10 +131,14 @@ const UpdateUser = ({ pathId }/*{parentSegment}*/) => { //pass the _id path to b
         resetSelectedUser 
     } = useUser();
 
-    const { role: userRole, getToken, userInfo, availableRoles: authRoles } = useAuth(); 
+    const { role: userRole, getToken, userInfo} = useAuth(); 
     
     // Logic: Favor roles from Provider, fallback to Auth, fallback to empty array
-    const rolesToUse = providerRoles || authRoles || [];
+    const rolesToUse = useMemo(() => {
+        if (!providerRoles) return [];
+        // Combines all arrays within the object into one: ['user', 'admin', 'libraryAdmin', 'branchAdmin']
+        return Object.values(providerRoles).flat();
+    }, [providerRoles]);
 
     const [feedbackMessage, setFeedbackMessage] = useState({});
     const [users, setUsers] = useState([]); // Original Source of Truth

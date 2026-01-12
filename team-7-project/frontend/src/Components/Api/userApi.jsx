@@ -1,6 +1,6 @@
 //import React from 'react';
 import { API_URL } from "../../../config";
-const BASE_URL = `${API_URL}/users`;
+const BASE_URL = `${API_URL}/user`;
 
 //getting the header and making it global for all modules
 const getAuthHeaders = async (getToken) => {
@@ -123,7 +123,7 @@ const remove = async (userId, getToken) => {
 
 //PROFILE
 const getCountries = async () => {
-    const domainName = BASE_URL.replace('/api/users', '');
+    const domainName = BASE_URL.replace('/api/user', '');
     const url = `${domainName}/documents/country.json`;
 
     return fetchHelper(url, {
@@ -134,7 +134,7 @@ const getCountries = async () => {
 };
 
 const getImages = (image, userId) => {
-    const domainName = BASE_URL.replace('/api/users', '');
+    const domainName = BASE_URL.replace('/api/user', '');
     // METHOD A: The "Placeholder" Path
     const isPlaceholder = image === 'coverimage' || image === 'profileimage'
     if (isPlaceholder) {
@@ -142,8 +142,8 @@ const getImages = (image, userId) => {
         // Result: http://localhost:5000/images/temp/profileimage.png
     }
     // METHOD B: The "Dedicated User" Path
-    return `${domainName}/users/${userId}/${image}`;
-    // Result: http://localhost:5000/users/64abc.../profile_123.jpg
+    return `${domainName}/user/${userId}/${image}`;
+    // Result: http://localhost:5000/user/64abc.../profile_123.jpg
 };
 
 
@@ -155,9 +155,9 @@ const uploadPictures = async (data, getToken) => {
 
     const headers = await getAuthHeadersNoJson(getToken);
     const userFolder = data._id.toString();
-    const domainName = BASE_URL.replace('/api/users', '');
+    const domainName = BASE_URL.replace('/api/user', '');
 
-    const url = `${domainName}/users/${userFolder}/`;
+    const url = `${domainName}/user/${userFolder}/`;
     const formData = new FormData();
 
     // The actual image file (from your file input)

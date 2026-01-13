@@ -46,20 +46,32 @@ const BranchRow = React.memo(({
 
             <tr>
                 {columns.map((col) => {
-                    const currentValue = col.isAddress 
-                        ? (branch.address?.[col.fieldKey] || '') 
-                        : (branch[col.fieldKey] || '');
-                    
+                    // Because we flattened the data in the parent, we access values directly
+                    const currentValue = branch[col.fieldKey] || '';
                     const isEditable = col.editable;
 
                     return (
                         <td key={col.key}>
-                            {isEditable ? (
-                                // Editable text inputs for Branch Details
+                            {/* Logic for the Main Branch Toggle in the column */}
+                            {col.fieldKey === 'mainBranch' ? (
+                                <div className="checkbox-wrapper">
+                                    <input
+                                        type="checkbox"
+                                        checked={!!currentValue}
+                                        onChange={(e) => onCellChange(branch._id, col.fieldKey, e.target.checked)}
+                                        className="form-checkbox"
+                                        disabled={loading}
+                                    />
+                                    <label className="checkbox-label-text">
+                                        {currentValue ? 'Main' : 'Standard'}
+                                    </label>
+                                </div>
+                            ) : isEditable ? (
+                                // Editable text inputs for Branch Details (Flattened Keys)
                                 <input
                                     type="text"
                                     value={currentValue}
-                                    onChange={(e) => onCellChange(branch._id, col.fieldKey, e.target.value, col.isAddress)}
+                                    onChange={(e) => onCellChange(branch._id, col.fieldKey, e.target.value)}
                                     className="editable-input"
                                     disabled={loading}
                                 />
@@ -101,51 +113,74 @@ const BranchRow = React.memo(({
 
 const UpdateBranch = ({ pathId }) => {
     const { getToken } = useAuth();
-    // Use Context to access LibraryProvider states
-    const { currentLibrary, loading: libraryLoading } = useLibrary(); 
+    const { currentLibrary, branches: contextBranches, loading: libraryLoading, refreshLibrary } = useLibrary(); 
 
     const [feedbackMessage, setFeedbackMessage] = useState({});
-    const [branches, setBranches] = useState([]); // Original Source of Truth
+    const [branches, setBranches] = useState([]); // Master flattened state
     const [editedBranches, setEditedBranches] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setErr] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setErr] = useState(null); 
 
+    const [showOnlyMain, setShowOnlyMain] = useState(false);
+
+    // Columns defined against flattened keys
     const columns = [
         { header: 'Branch Name', key: 'name', fieldKey: 'name', editable: true },
-        { header: 'City', key: 'city', fieldKey: 'city', editable: true, isAddress: true },
-        { header: 'Main', key: 'main', fieldKey: 'mainBranch', editable: false, format: (val) => val ? '⭐ Yes' : 'No' },
+        { header: 'Street', key: 'street', fieldKey: 'street', editable: true },
+        { header: 'City', key: 'city', fieldKey: 'city', editable: true },
+        { header: 'Province', key: 'province', fieldKey: 'province', editable: true },
+        { header: 'Postal Code', key: 'postalCode', fieldKey: 'postalCode', editable: true },
+        { header: 'Main Status', key: 'main', fieldKey: 'mainBranch', editable: true },
         { header: 'Created', key: 'created', fieldKey: 'created', editable: false, format: formatDate },
     ];
 
-    const loadBranches = useCallback(async () => {
-        setLoading(true);
-        setErr(null);
-        setFeedbackMessage({});
+    // Helper: Move nested address fields to top level
+    const flattenBranch = useCallback((branch) => {
+        return {
+            ...branch,
+            street: branch.address?.street || '',
+            addressLineTwo: branch.address?.addressLineTwo || '',
+            city: branch.address?.city || '',
+            province: branch.address?.province || '',
+            postalCode: branch.address?.postalCode || '',
+            Country: branch.address?.Country || ''
+            
+        };
+    }, []);
 
-        try {
-            const data = await libraryApi.listBranches(getToken);
-            setBranches(data);
-            setEditedBranches(JSON.parse(JSON.stringify(data)));
-        } catch (error) {
-            setErr(error.message || "An unknown error occurred while listing branches.");
-        } finally {
-            setLoading(false);
-        }
-    }, [getToken]);
+    // Helper: Reconstruct the address object for API calls
+    const unflattenBranch = (flatBranch) => {
+        const { street, addressLineTwo, city, province, postalCode, Country, ...rest } = flatBranch;
+        return {
+            ...rest,
+            address: {
+                street,
+                addressLineTwo,
+                city,
+                province,
+                postalCode,
+                Country
+            }
+        };
+    };
 
+    // Synchronize local state and flatten on arrival
     useEffect(() => {
-        loadBranches();
-    }, [loadBranches]);
+        if (contextBranches) {
+            const flattened = contextBranches.map(flattenBranch);
+            setBranches(flattened);
+            setEditedBranches(JSON.parse(JSON.stringify(flattened)));
+            setErr(null); 
+        }
+    }, [contextBranches, flattenBranch]);
 
-    const handleCellChange = useCallback((branchId, key, value, isAddress) => {
+    const handleCellChange = useCallback((branchId, key, value) => {
         setEditedBranches(prev => prev.map(branch => {
             if (branch._id === branchId) {
-                if (isAddress) {
-                    return { ...branch, address: { ...branch.address, [key]: value } };
-                }
                 return { ...branch, [key]: value };
             }
             return branch;
+            
         }));
         setErr(null);
     }, []);
@@ -153,11 +188,9 @@ const UpdateBranch = ({ pathId }) => {
     const handleRevertRow = useCallback((branchId) => {
         const original = branches.find(b => b._id === branchId);
         if (!original) return;
-
         setEditedBranches(prev => 
             prev.map(b => b._id === branchId ? JSON.parse(JSON.stringify(original)) : b)
         );
-
         setFeedbackMessage(prev => {
             const newFeedback = { ...prev };
             delete newFeedback[branchId];
@@ -166,23 +199,27 @@ const UpdateBranch = ({ pathId }) => {
     }, [branches]);
 
     const hasChanges = (original, edited) => {
-        // Checking base fields and nested address fields
-        return original.name !== edited.name || 
-               original.address?.city !== edited.address?.city;
+        if (!original || !edited) return false;
+        // Simple top-level comparison because everything is flat
+        return columns.some(col => {
+            if (!col.editable) return false;
+            return original[col.fieldKey] !== edited[col.fieldKey];
+        });
     };
 
     const handleUpdate = async (branchId, branchName) => {
-        const edited = editedBranches.find(b => b._id === branchId);
+        const flatEdited = editedBranches.find(b => b._id === branchId);
+        // Pack the flat fields back into an 'address' object for the database
+        const payload = unflattenBranch(flatEdited);
         
-        const isConfirmed = window.confirm(
-            `Are you sure you want to update branch: ${branchName}?`
-        );
-
+        const isConfirmed = window.confirm(`Are you sure you want to update branch: ${branchName}?`);
         if (!isConfirmed) return;
 
+        setLoading(true);
         try {
-            await libraryApi.updateBranch(branchId, edited, getToken);
-            setBranches(prev => prev.map(b => b._id === branchId ? { ...edited } : b));
+            await libraryApi.updateBranch(branchId, payload, getToken);
+            if (refreshLibrary) await refreshLibrary();
+            
             setFeedbackMessage(prev => ({ 
                 ...prev, 
                 [branchId]: { message: `Branch ${branchName} updated successfully!`, isError: false } 
@@ -192,24 +229,24 @@ const UpdateBranch = ({ pathId }) => {
                 ...prev, 
                 [branchId]: { message: `Update Failed: ${err.message}`, isError: true } 
             }));
+            setErr(err.message); 
+        } finally {
+            setLoading(false);
         }
     };
 
-    // RENDER STATES 
+    const filteredBranches = editedBranches.filter(b => showOnlyMain ? b.mainBranch === true : true);
+
     if ((loading || libraryLoading) && branches.length === 0) {
-        return (
-            <div className="loading-container">
-                <p>Loading Branch Data...</p>
-            </div>
-        );
+        return <div className="loading-container"><p>Loading Branch Data...</p></div>;
     }
 
-    if (error) {
+    if (error && branches.length === 0) {
         return (
             <div className="info-box error-box">
                 <h2>Data Fetch Error</h2>
                 <p>{error}</p>
-                <button onClick={loadBranches} className="admin-nav-btn">Retry Load</button>
+                <button onClick={refreshLibrary} className="admin-nav-btn">Retry Load</button>
             </div>
         );
     }
@@ -218,14 +255,10 @@ const UpdateBranch = ({ pathId }) => {
         return (
             <div className="admin-subview-container">
                 <div className="admin-subview-header">
-                    <button 
-                        onClick={() => window.location.hash = 'admin/update-branch'} 
-                        className="media-back-btn"
-                    >
+                    <button onClick={() => window.location.hash = 'admin/update-branch'} className="media-back-btn">
                         ← Back to Branch Directory
                     </button>
                 </div>
-                {/* Profile consumes context and reacts to branchId */}
                 <BranchProfile branchId={pathId} />
             </div>
         );
@@ -236,31 +269,35 @@ const UpdateBranch = ({ pathId }) => {
             <div className="table-header-controls">
                 <div>
                     <h1>Branch Directory</h1>
-                    <p className="admin-context-label">
-                        Managing: <strong>{currentLibrary?.name}</strong>
-                    </p>
+                    <p className="admin-context-label">Managing: <strong>{currentLibrary?.name}</strong></p>
                 </div>
-                <button
-                    onClick={loadBranches}
-                    className="button-group reload-button"
-                    disabled={loading}
-                >
-                    {loading ? 'Loading...' : 'Reload List'}
+                <div className="form-section-group" style={{ marginBottom: '0', border: 'none', background: 'transparent' }}>
+                    <div className="form-group checkbox-inline-group" style={{ padding: '0' }}>
+                        <div className="checkbox-wrapper">
+                            <input
+                                type="checkbox"
+                                id="mainBranchToggle"
+                                checked={showOnlyMain}
+                                onChange={(e) => setShowOnlyMain(e.target.checked)}
+                                className="form-checkbox"
+                            />
+                            <label htmlFor="mainBranchToggle" className="checkbox-label-text">Show Main Branch Only</label>
+                        </div>
+                    </div>
+                </div>
+                <button onClick={refreshLibrary} className="button-group reload-button" disabled={loading || libraryLoading}>
+                    {(loading || libraryLoading) ? 'Syncing...' : 'Reload List'}
                 </button>
             </div>
 
             <table className="user-table">
                 <thead>
                     <tr>
-                        {columns.map((col) => (
-                            <th key={col.key} scope="col">
-                                {col.header}
-                            </th>
-                        ))}
+                        {columns.map((col) => <th key={col.key} scope="col">{col.header}</th>)}
                         <th className="action-col">Actions</th>
                     </tr>
                 </thead>
-                {editedBranches.map((branch) => {
+                {filteredBranches.map((branch) => {
                     const original = branches.find(b => b._id === branch._id) || {};
                     return (
                         <BranchRow
@@ -273,7 +310,7 @@ const UpdateBranch = ({ pathId }) => {
                             onView={(id) => window.location.hash = `admin/update-branch/${id}`}
                             onUpdate={handleUpdate}
                             onRevert={handleRevertRow}
-                            loading={loading}
+                            loading={loading || libraryLoading}
                         />
                     );
                 })}

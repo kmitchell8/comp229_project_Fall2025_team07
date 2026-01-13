@@ -9,7 +9,7 @@ import RegisterLibrary from '../Access/RegisterLibrary.jsx';
 import Navbar from '../Navbar/Navbar.jsx'
 
 export const AccessView = () => {
-    const { isAuthenticated, loading } = useAuth(); //use the Auth hook to access role of the user
+    const { isAuthenticated, loading, isLibraryAdmin } = useAuth(); //use the Auth hook to access role of the user
     //const [isRedirecting, setIsRedirecting] = useState(false);
 
     const [viewData, setViewData] = useState(null);//set useSate to null to compensate for the use of isAuthenticated
@@ -60,14 +60,23 @@ export const AccessView = () => {
             if ([ROUTES.LOGIN, ROUTES.REGISTER].includes(currentHash)) {
                 console.log("Authenticated user detected on Access page. Redirecting to home.");
                 window.location.replace('./profile.html');
+                return;
+            }
+
+            if (currentHash === ROUTES.REGISTER_LIBRARY && isLibraryAdmin) {
+                console.log("Admins cannot register additional libraries. Redirecting.");
+                // Send to their library dashboard or profile
+                window.location.replace('./profile.html');
+                return;
             }
         } else {
             // Guest trying to hit Register Library - specifically redirecting guests away from protected access views
-            if (currentHash === ROUTES.REGISTER_LIBRARY) {
-                window.location.hash = ROUTES.LOGIN;
-            }
+           if (currentHash === ROUTES.REGISTER_LIBRARY) {
+            console.log("Guest attempted to access protected registration. Redirecting to login.");
+            window.location.hash = ROUTES.LOGIN;
         }
-    }, [isAuthenticated, loading]);
+        }
+    }, [isAuthenticated, loading, isLibraryAdmin]);
 
     // 5. Rendering logic
     if (loading || viewData === null) {

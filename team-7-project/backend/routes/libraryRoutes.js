@@ -22,7 +22,7 @@ router.route('/')
 // GENERAL BRANCH ROUTES (FOR GLOBAL ADMIN)
 
 router.route('/branches')
-  .get(authCtrl.requireSignin, authCtrl.isAdmin,branchCtrl.list)
+  .get(/*authCtrl.requireSignin, authCtrl.isAdmin, */branchCtrl.list)
   .delete(authCtrl.requireSignin, authCtrl.isAdmin, branchCtrl.removeAll);
 
 router.route('/:libraryId')

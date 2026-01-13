@@ -3,7 +3,7 @@ import './Navbar.css'
 //import logo from '/images/team_7_logo.png'
 import { useAuth } from '../StateProvider/authState/useAuth';
 import { getPage, getHash } from '../Api/getPage.jsx'
-import { ADMIN_SUB_VIEWS, ROUTES/*, ADMIN_SUB_VIEWS*/, ROLE_TO_ROUTE_MAP } from '../Api/routingConfig'
+import {ROUTES, ROLE_TO_ROUTE_MAP } from '../Api/routingConfig'
 
 
 
@@ -27,7 +27,7 @@ const Navbar = () => {
         return str.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase()).trim();
     };
 
-    
+
     useEffect(() => {
         const handleHashChange = () => {
             setCurrentHash(getHash());
@@ -79,6 +79,7 @@ const Navbar = () => {
                     {/* Example of link only available when authenticated */}
                     <a
                         href="./profile.html"
+                        onClick={() => setMenuOpen(false)}
                         className={`profile-btn ${isProfileActive ? 'is-active' : ''}`}
                     >Profile</a>
                 </li>
@@ -116,23 +117,23 @@ const Navbar = () => {
                 </button>
             )}
 
-            {isLogOrReg ?
+            {isLogOrReg ? (
                 renderLoginOrRegister()
-                : <ul className={`nav-menu ${menuOpen ? 'open' : ''}`}>
-                    {/* Common link for all views */}
-                    <li><a href="./">Home</a>
+            ) : <ul className={`nav-menu ${menuOpen ? 'open' : ''}`}>
+                {/* Common link for all views */}
+                <li><a href="./">Home</a>
 
-                        {pageString}
-                    </li>
-                    <li><a href="./library.html">Library</a></li>
-                    <li><a href="./services.html">Services</a></li>
-                    <li><a href="./contact.html">Contact</a></li>
-                    <li><a href="./about.html">About</a></li>
-                    {/* rendering based on authentication status */}
-                    {isAuthenticated
-                        ? renderAuthenticatedLinks()
-                        : renderSignedOutLinks()}
-                </ul>
+                    {pageString}
+                </li>
+                <li><a href="./library.html">Library</a></li>
+                <li><a href="./services.html">Services</a></li>
+                <li><a href="./contact.html">Contact</a></li>
+                <li><a href="./about.html">About</a></li>
+                {/* rendering based on authentication status */}
+                {isAuthenticated
+                    ? renderAuthenticatedLinks()
+                    : renderSignedOutLinks()}
+            </ul>
             }
 
 

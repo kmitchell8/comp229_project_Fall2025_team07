@@ -8,9 +8,9 @@ import { getPage, getHash } from '../Api/getPage.jsx'
 
 const LogOrReg = () => {
   //state to hold form data
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, login } = useAuth();
   //const { register } = useAuth();
-  const { login } = useAuth();
+
 
   // Added mode state for button toggle logic
   const [mode, setMode] = useState('signin');

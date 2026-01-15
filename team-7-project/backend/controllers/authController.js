@@ -181,42 +181,21 @@ const requireSignin = expressjwt({
 
 //hasAuthorization
 const hasAuthorization = (req, res, next) => {
-    // Check if profile ID matches auth ID OR if the user is an admin
-    /*  const isOwner = req.profile && req.auth &&
-          (req.profile._id.toString() === req.auth._id.toString())
-      const isAdmin = req.auth && req.auth.role === 'admin';//admin role for later implimentation
-      const authorized = isOwner || isAdmin;
-      if (!(authorized)) {
-          return res.status(403).json({
-              error: "User is not authorized"
-          });
-      }
-      next();
-  */
+
     // Global Admin Check (Superuser)
     const auth = req.auth;
     const role = auth.role;
-
-    // Super Admin (Global access)
-    const isGlobalAdmin = role === 'admin';
-    // Library Admin (Specific to their tenant)
-    // Checks if the library being accessed matches the admin's libraryId in JWT
-    const isLibraryAdmin = (role === 'libraryAdmin') && 
-        req.library && (req.library._id.toString() === auth.libraryId);
-
-    // Branch Admin (Specific to their branch)
-    // Also allows a Library Admin to access any branch belonging to their library
-    const isBranchAdmin = (role === 'branchAdmin' && req.branch && req.branch._id.toString() === auth.branchId) ||
-                          (role === 'libraryAdmin' && req.branch && req.branch.libraryId?.toString() === auth.libraryId);
-    
-    // Profile Owner Check (Self-service for users)
-        const isProfileOwner = req.profile && (req.profile._id.toString() === auth._id.toString());
- 
-
- if (isGlobalAdmin || isLibraryAdmin || isBranchAdmin || isProfileOwner) {
+    // Always allowed (Global access)
+    if (role === 'admin') return next();
+    //  Always allowed to edit themselves
+    const isProfileOwner = req.profile && (req.profile._id.toString() === auth._id.toString());
+    if (isProfileOwner) return next();
+    // ADMIN ROLES (libraryAdmin, branchAdmin): 
+    //  Admin, allowed the update to proceed to the Controller.
+    // The Controller (userCtrl.update) is the final "Border Check."
+    if (adminRoles.includes(role)) {
         return next();
     }
-
     return res.status(403).json({
         error: "Access Denied: You do not have permission for this resource."
     });

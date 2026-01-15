@@ -50,34 +50,62 @@ const update = async (req, res, next) => {
         // Find the user by ID
         let user = await User.findById(req.profile._id);
         if (!user) return res.status(404).json({ error: "User not found during update." });
-
-        // Update the user object with new data from the request body
-        //use loadsh's extend method to merge the changes
+        const adminAuth = req.auth; // The person performing the update
+        /**
+         * SCOPE VALIDATION
+         * Ensures Library/Branch admins don't "escape" their assigned territory.
+         * Global Admins (role: 'admin') bypass these checks automatically.
+         */
+        if (adminAuth.role === 'libraryAdmin') {
+            const requestedLibraryId = req.body.managementAccess?.libraryId;
+            // Only validate if they are trying to set/change a libraryId
+            if (requestedLibraryId && requestedLibraryId !== adminAuth.libraryId) {
+                return res.status(403).json({ error: "You can only assign users to your own library." });
+            }
+        }
+        if (adminAuth.role === 'branchAdmin') {
+            const requestedBranchId = req.body.managementAccess?.branchId;
+            if (requestedBranchId && requestedBranchId !== adminAuth.branchId) {
+                return res.status(403).json({ error: "You can only assign users to your own branch." });
+            }
+        }
+        /**
+         * FIELD PROTECTION
+         * Prevent users from updating their own roles or management status 
+         * unless they are an authorized Admin.
+         */
+        const isSelfUpdate = adminAuth._id === user._id.toString();
+        const isNotGlobalAdmin = adminAuth.role !== 'admin';
+        if (isSelfUpdate && isNotGlobalAdmin) {
+            // Remove sensitive fields from the body so they aren't merged by _.extend
+            delete req.body.role;
+            delete req.body.managementAccess;
+        }
+        // MERGE AND SAVE
+        // use lodash's extend method to merge the changes
         user = _.extend(user, req.body);
         user.updatedAt = Date.now();
         await user.save();
-
         // GENERATE A NEW TOKEN
         // This ensures the frontend receives a token containing the NEW role and libraryId
         const token = jwt.sign(
             {
                 _id: user._id,
                 role: user.role,
-                // Include managementAccess so the LibraryProvider can resolve hierarchy immediately
-                libraryId: user.managementAccess?.libraryId || null
+                libraryId: user.managementAccess?.libraryId || null,
+                branchId: user.managementAccess?.branchId || null
             },
-            config.jwtSecret, // Use your actual secret key variable
+            config.jwtSecret,
             { expiresIn: '24h' }
         );
-        //Prepare the response profile (strip password hash)
+        // Prepare the response profile (strip password hash)
         const { password, ...safeUser } = user.toObject();
+        console.log(`[Update Success] User ${user.email} updated by ${adminAuth.role}`);
         res.json({
             token: token,
             user: safeUser
         });
-
     } catch (err) {
-        // Handle validation or save errors
         return res.status(400).json({
             error: "Could not update user: " + err.message
         });

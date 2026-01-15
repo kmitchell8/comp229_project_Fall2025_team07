@@ -1,11 +1,12 @@
 import React from 'react';
 import './Navbar.css';
-import { useMedia } from '../StateProvider/mediaState/useMedia'; 
+import { useMedia } from '../StateProvider/mediaState/useMedia';
 import { useLibrary } from '../StateProvider/libraryState/useLibrary'; // Import Library Context
 import { ROUTES } from '../Api/routingConfig';
 
 const LibraryNavBar = ({ isScrolled, shelfNames }) => {
     const {
+        media,
         viewMode, setViewMode,
         sortBy, setSortBy,
         searchTerm, setSearchTerm,
@@ -15,8 +16,10 @@ const LibraryNavBar = ({ isScrolled, shelfNames }) => {
     } = useMedia();
 
     // Consume Library Context for Breadcrumb Data
-    const { activeIds, currentLibrary, getBranchName } = useLibrary();
-    const { tenantId, branchId } = activeIds;
+    const { currentLibrary, getBranchName } = useLibrary();
+    const activeMedia = media && media.length > 0 ? media[0] : null;
+    const tenantId = activeMedia?.tenantId ;
+    const branchId = activeMedia?.branchId;
 
     const handleJump = (e, name) => {
         e.preventDefault();
@@ -40,12 +43,14 @@ const LibraryNavBar = ({ isScrolled, shelfNames }) => {
 
     return (
         <nav className={`library-nav-container ${isScrolled ? 'scrolled' : ''}`}>
-            
-            {/* --- NEW: Breadcrumb Row --- */}
+
+            {/* --- Breadcrumb Row --- */}
             <div className="breadcrumb-nav">
+                {/* Always leads to Master Library */}
                 <span onClick={() => window.location.hash = ROUTES.LIBRARY} className="breadcrumb-link">
                     Library
                 </span>
+
                 {tenantId && (
                     <>
                         <span className="bc-sep">/</span>
@@ -53,20 +58,21 @@ const LibraryNavBar = ({ isScrolled, shelfNames }) => {
                             onClick={() => window.location.hash = `${ROUTES.LIBRARY}/${tenantId}`}
                             className={`breadcrumb-link ${!branchId ? 'active' : ''}`}
                         >
-                            {currentLibrary?.name || "Loading..."}
+                            {currentLibrary?.name || "Tenant Library"}
                         </span>
                     </>
                 )}
+
                 {branchId && (
                     <>
                         <span className="bc-sep">/</span>
                         <span className="breadcrumb-link active">
-                            {getBranchName(branchId)}
+                            {/* Uses the media's branchId to get the name */}
+                            {getBranchName(branchId) || "Branch"}
                         </span>
                     </>
                 )}
             </div>
-
             {/* Main Controls Row */}
             <div className="navbar library-nav">
                 <div className="mobile-library-triggers">

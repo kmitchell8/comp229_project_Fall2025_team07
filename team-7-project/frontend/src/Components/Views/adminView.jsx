@@ -16,7 +16,8 @@ const AdminView = ({ pathSegments: parentSegments = [] }) => {
   const { activeIds } = useLibrary(); // Get the current SaaS context
   const internalSegment = parentSegments[1];
   const isAdminRoleRoute = ROLE_TO_ROUTE_MAP[userRole]
-    //const adminViews = useMemo(() => [ROUTES.CREATE_MEDIA, ROUTES.UPDATE_MEDIA, ROUTES.UPDATE_USER], []);//recommended but not necessary keep for future reference
+  const isAdminPath = ADMIN_SUB_VIEWS.includes(parentSegments[0])
+  //const adminViews = useMemo(() => [ROUTES.CREATE_MEDIA, ROUTES.UPDATE_MEDIA, ROUTES.UPDATE_USER], []);//recommended but not necessary keep for future reference
 
   // logic to determine the initial view based on the URL hash
   const getInternalView = useCallback(() => {
@@ -33,8 +34,8 @@ const AdminView = ({ pathSegments: parentSegments = [] }) => {
     return isAdminRoleRoute || ROUTES.ADMIN; // Ensures fallback to 'admin' if role is missing
 
 
-  }, [internalSegment, hasAdminPrivileges,  isAdminRoleRoute]);
- //State stores both the primary view key and the full path segments
+  }, [internalSegment, hasAdminPrivileges, isAdminRoleRoute]);
+  //State stores both the primary view key and the full path segments
   const [currentView, setCurrentView] = useState(() => getInternalView());
   // listen for hash changes and update the state
   useEffect(() => {
@@ -50,16 +51,16 @@ const AdminView = ({ pathSegments: parentSegments = [] }) => {
     const currentHash = window.location.hash; // e.g., "#admin/update-user/123"
     // Find the position of the last slash and slice the string up to that point
     const parentPath = currentHash.substring(0, currentHash.lastIndexOf('/'));
-   
+
     // Fallback: if parentPath is empty, go to the assigned dashboard route
     window.location.hash = parentPath.length > 1 ? parentPath : `#${isAdminRoleRoute}`;
   };
-  
+
   const NavigationLinks = ({ currentView }) => { //need to be outside the render or it will continually lose it's state
     const isDetailView = !!itemId; // Now isDetailView is strictly true or false
     return (
       <div className="admin-nav-footer">
-        {currentView !== ROUTES.ADMIN && (
+        {currentView !== isAdminPath && (
 
           <button
             onClick={handleStepBack}
@@ -86,11 +87,11 @@ const AdminView = ({ pathSegments: parentSegments = [] }) => {
   const renderView = () => {
     switch (currentView) {
       case ROUTES.CREATE_BRANCH:
-        return <CreateBranch/>;
-        case ROUTES.UPDATE_BRANCH:
-    // If ID in the URL segments (#admin/update-branch/ID), show the profile
-    // Otherwise, show the list of branches (assuming you have a BranchList component)
-    return itemId ? <UpdateBranch pathId={itemId} /> : <UpdateBranch />;
+        return <CreateBranch />;
+      case ROUTES.UPDATE_BRANCH:
+        // If ID in the URL segments (#admin/update-branch/ID), show the profile
+        // Otherwise, show the list of branches (assuming you have a BranchList component)
+        return itemId ? <UpdateBranch pathId={itemId} /> : <UpdateBranch />;
       case ROUTES.CREATE_MEDIA:
         return <CreateMedia
           libraryId={activeIds.tenantId}
@@ -103,7 +104,7 @@ const AdminView = ({ pathSegments: parentSegments = [] }) => {
       //return <UpdateUser parentSegment={parentSegments} />; //Uncomment once UpdateUser accepts parentSegmentsd internally
       //and handles <Profile /> subview logic
 
-     // Dashboards (Default view for the specific role)
+      // Dashboards (Default view for the specific role)
       case ROUTES.LIBRARY_ADMIN:
       case ROUTES.BRANCH_ADMIN:
       case ROUTES.ADMIN:

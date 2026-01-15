@@ -21,26 +21,7 @@ export const MediaProvider = ({ children }) => {
 
     const [mediaTypes, setMediaTypes] = useState([]);
 
-    // following the loadMediaTypes pattern from CreateMedia.jsx //REmoved from LibraryNavBar.jsx
-    /* useEffect(() => {
-         const loadMediaTypes = async () => {
-             try {
-                 const data = await mediaApi.getConfigDoc('mediaTypes');
-                 // data is { "book": [...], "movie": [...] } 
-                 const typeKeys = data ? Object.keys(data) : [];
-                 setMediaTypes(typeKeys);
-                 // eslint-disable-next-line no-unused-vars
-             } catch (err) {
-                 console.error("Could not load media type definitions.");
-             }
-         };
- 
-         loadMediaTypes();
-     }, []);
-*/
-    // mediaProvider.jsx
 
-    // 1. New dedicated function for global configs
     const loadGlobalConfigs = useCallback(async () => {
         try {
             const [typeConfigs, genreList, prefixSuffixData] = await Promise.all([

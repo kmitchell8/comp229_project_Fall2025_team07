@@ -61,72 +61,55 @@ export const LibraryProvider = ({ children }) => {
         }
     };
 
-const loadLibraryData = useCallback(async () => {
-    if (authLoading) return;
-    setLoading(true);
+    const loadLibraryData = useCallback(async () => {
+        if (authLoading) return;
+        setLoading(true);
 
-    try {
-        if (tenantId) {
-            // Strict guard against the string "undefined" coming from Auth context
-            const hasValidBranchId = branchId && 
-                                     branchId !== 'undefined' && 
-                                     branchId !== 'null' && 
-                                     branchId.length > 5;
+        try {
+            if (tenantId) {
+                // Check if we are looking at a specific branch
+                const hasValidBranchId = branchId &&
+                    branchId !== 'undefined' &&
+                    branchId !== 'null' &&
+                    branchId !== 'all' &&
+                    branchId.length > 5;
 
-            console.log("LibraryProvider: Fetching context for Tenant:", tenantId, "BranchID:", branchId);
+                const [libData, branchesListResult, branchInfo] = await Promise.all([
+                    libraryApi.read(tenantId, getToken),
+                    libraryApi.listBranchesByLibrary(tenantId, getToken),
+                    hasValidBranchId
+                        ? libraryApi.readBranch(tenantId, branchId, getToken)
+                        : Promise.resolve(null)
+                ]);
 
-            const [libData, branchesListResult, branchInfo] = await Promise.all([
-                libraryApi.read(tenantId, getToken),
-                libraryApi.listBranchesByLibrary(tenantId, getToken),
-                hasValidBranchId 
-                    ? libraryApi.readBranch(tenantId, branchId, getToken) 
-                    : Promise.resolve(null)
-            ]);
+                // Set the library as it exists in the DB
+                setCurrentLibrary(libData);
+                setBranches(branchesListResult || []);
+                setCurrentBranch(branchInfo);
+                setLibraryData(libData);
+                setBranchesList(branchesListResult || []);
+                setBranchData(branchInfo || {});
 
-            // 1. Set Primary Reference States
-            setCurrentLibrary(libData);
-            setBranches(branchesListResult); // For the sidebar/general lists
-            setCurrentBranch(branchInfo);
+                setOriginalData(JSON.parse(JSON.stringify({
+                    library: libData,
+                    branch: branchInfo || {}
+                })));
 
-            // 2. Initialize Editable Library State
-            setLibraryData(libData);
-            
-            // 3. Handle Branch-Specific State Logic
-            // We ALWAYS set branchesList to the array for your UpdateBranch table
-            setBranchesList(branchesListResult || []);
-
-            if (branchInfo) {
-                // If we are looking at a specific branch (e.g., Update/Edit view)
-                setBranchData(branchInfo);
-            } else if (libData?.mainBranchId && branchesListResult?.length > 0) {
-                // Fallback to Main Branch if no specific ID is provided
-                const main = branchesListResult.find(b => b._id === libData.mainBranchId);
-                setBranchData(main || {}); 
             } else {
-                // Default to empty object to prevent "controlled/uncontrolled" input errors
-                setBranchData({});
+                // AUTOMATIC GLOBAL VIEW: No artificial "Master" object created.
+                // just clear the specific IDs so the MediaProvider knows to show everything.
+                setCurrentLibrary(null);
+                const allBranches = await libraryApi.listAllBranches(getToken);
+                setBranches(allBranches || []);
+                setBranchesList(allBranches || []);
+                setCurrentBranch(null);
             }
-
-            // 4. Create Snapshot for "Reset" functionality
-            setOriginalData(JSON.parse(JSON.stringify({ 
-                library: libData, 
-                branch: branchInfo || (libData?.mainBranchId ? branchesListResult.find(b => b._id === libData.mainBranchId) : {}) 
-            })));
-
-        } else {
-            // Master Admin / Public View
-            console.log("LibraryProvider: No Tenant ID, loading Master context");
-            setCurrentLibrary({ name: "Master Library", _id: null, isMaster: true });
-            const allBranches = await libraryApi.listAllBranches(getToken);
-            setBranches(allBranches || []);
-            setBranchesList(allBranches || []);
+        } catch (err) {
+            console.error("LibraryProvider Error:", err);
+        } finally {
+            setLoading(false);
         }
-    } catch (err) {
-        console.error("LibraryProvider Error:", err);
-    } finally {
-        setLoading(false);
-    }
-}, [getToken, tenantId, branchId, authLoading]);
+    }, [getToken, tenantId, branchId, authLoading]);
     // Fetch country and regional data from API on component mount
     useEffect(() => {
         const fetchLocationData = async () => {
@@ -167,21 +150,21 @@ const loadLibraryData = useCallback(async () => {
     }, [originalData, pendingLibraryCover, pendingBranchCover, libraryData, branchData]);
 
 
-useEffect(() => {
-    // Only fetch if auth is finished and we have a user
-    if (!authLoading && user) {
-        loadLibraryData();
-    }
+    useEffect(() => {
+        // Only fetch if auth is finished and we have a user
+        if (!authLoading && user) {
+            loadLibraryData();
+        }
 
-    const handleHashChange = () => {
-        loadLibraryData();
-    };
+        const handleHashChange = () => {
+            loadLibraryData();
+        };
 
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
-    
-    // Remove 'user' from dependencies if it causes re-runs on every auth refresh
-}, [loadLibraryData, authLoading, user]);
+        window.addEventListener('hashchange', handleHashChange);
+        return () => window.removeEventListener('hashchange', handleHashChange);
+
+        // Remove 'user' from dependencies if it causes re-runs on every auth refresh
+    }, [loadLibraryData, authLoading, user]);
     const handleInputChange = (e, field, isAddress = false, target = 'branch') => {
         const { value, type, checked } = e.target;
         // Handle both checkboxes (mainBranch) and text inputs
@@ -269,13 +252,13 @@ useEffect(() => {
             let finalBranchCover = branchData.branchCover;
 
             if (pendingLibraryCover) {
-                const { payload, fullName } = prepareUpload(pendingLibraryCover, 'user', tenantId);
+                const { payload, fullName } = prepareUpload(pendingLibraryCover, 'library', tenantId);
                 await libraryApi.uploadPictures(payload, getToken);
                 finalLibraryCover = fullName;
             }
 
             if (pendingBranchCover) {
-                const { payload, fullName } = prepareUpload(pendingBranchCover, 'cover', branchId);
+                const { payload, fullName } = prepareUpload(pendingBranchCover, 'branch', branchId);
                 await libraryApi.uploadPictures(payload, getToken);
                 finalBranchCover = fullName;
             }

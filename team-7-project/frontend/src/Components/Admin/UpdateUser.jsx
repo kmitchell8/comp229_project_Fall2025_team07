@@ -178,9 +178,9 @@ const UpdateUser = ({ pathId }/*{parentSegment}*/) => { //pass the _id path to b
     const [editedUsers, setEditedUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setErr] = useState(null);
-
-    // New: Search Filter State
-    const [searchEmail, setSearchEmail] = useState('');
+    
+    // SEARCH FILTER STATE
+    const [searchTerm, setSearchTerm] = useState('');
 
     const currentUserId = userInfo ? userInfo._id : null;
 
@@ -304,13 +304,12 @@ const UpdateUser = ({ pathId }/*{parentSegment}*/) => { //pass the _id path to b
         window.location.hash = `admin/updateuser/${userId}`;
     };
 
-    // Filter Logic: Filters the edited list based on email input
+    // FILTER LOGIC: Filter the editedUsers based on the searchTerm
     const filteredUsers = useMemo(() => {
-        if (!searchEmail) return editedUsers;
-        return editedUsers.filter(u => 
-            u.email?.toLowerCase().includes(searchEmail.toLowerCase())
+        return editedUsers.filter(user => 
+            user.email.toLowerCase().includes(searchTerm.toLowerCase())
         );
-    }, [editedUsers, searchEmail]);
+    }, [editedUsers, searchTerm]);
 
     // RENDER STATES 
     if (loading && users.length === 0) {
@@ -356,18 +355,15 @@ const UpdateUser = ({ pathId }/*{parentSegment}*/) => { //pass the _id path to b
     return (
         <div className="user-table-container">
             <div className="table-header-controls">
-                {/* RETURN TO ADMIN BUTTON 
-                <button onClick={() => window.location.hash = 'admin'} className="admin-nav-btn">
-                    Return to Admin
-                </button>*/}
                 <h1>User Directory</h1>
-                <div className="admin-actions-bar">
+                <div className="header-actions">
+                    {/* SEARCH INPUT */}
                     <input 
-                        type="text" 
-                        placeholder="Search by email..." 
-                        className="user-search-input"
-                        value={searchEmail}
-                        onChange={(e) => setSearchEmail(e.target.value)}
+                        type="text"
+                        placeholder="Filter by email..."
+                        className="search-filter-input"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
                     />
                     <button
                         onClick={loadUsers}
@@ -390,31 +386,38 @@ const UpdateUser = ({ pathId }/*{parentSegment}*/) => { //pass the _id path to b
                         <th className="action-col">Actions</th>
                     </tr>
                 </thead>
-                {filteredUsers.map((user, index) => {
-                    const originalUser = users.find(u => u._id === user._id) || {};
-                    return (
-                        <UserRow
-                            key={user._id || index}
-                            user={user}
-                            columns={columns}
-                            feedback={feedbackMessage[user._id]}
-                            hasChanges={hasChanges(originalUser, user)}
-                            onCellChange={handleCellChange}
-                            onView={handleViewUser}
-                            onUpdate={handleUpdate}
-                            onRevert={handleRevertRow}
-                            canChangeRole={canChangeRole}
-                            currentUserId={currentUserId}
-                            loading={loading}
-                            availableRoles={rolesToUse}
-                            availableBranches={availableBranches}
-                        />
-                    );
-                })}
+                {filteredUsers.length > 0 ? (
+                    filteredUsers.map((user, index) => {
+                        const originalUser = users.find(u => u._id === user._id) || {};
+                        return (
+                            <UserRow
+                                key={user._id || index}
+                                user={user}
+                                columns={columns}
+                                feedback={feedbackMessage[user._id]}
+                                hasChanges={hasChanges(originalUser, user)}
+                                onCellChange={handleCellChange}
+                                onView={handleViewUser}
+                                onUpdate={handleUpdate}
+                                onRevert={handleRevertRow}
+                                canChangeRole={canChangeRole}
+                                currentUserId={currentUserId}
+                                loading={loading}
+                                availableRoles={rolesToUse}
+                                availableBranches={availableBranches}
+                            />
+                        );
+                    })
+                ) : (
+                    <tbody>
+                        <tr>
+                            <td colSpan={columns.length + 1} style={{ textAlign: 'center', padding: '20px' }}>
+                                No users found matching "{searchTerm}"
+                            </td>
+                        </tr>
+                    </tbody>
+                )}
             </table>
-            {filteredUsers.length === 0 && (
-                <div className="no-results-msg">No users found matching your search.</div>
-            )}
         </div>
     );
 };

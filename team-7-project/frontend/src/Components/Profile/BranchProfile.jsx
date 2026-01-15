@@ -38,7 +38,6 @@ const BranchProfile = ({ branchId = null }) => {
      * 2. Cleans up any blob previews or unsaved data on unmount.
      */
     useEffect(() => {
-        // FIX: Removed resetLocalStates() from here. 
         // The LibraryProvider handles the data reset when branchId changes.
         // Calling it here creates the infinite loop.
         

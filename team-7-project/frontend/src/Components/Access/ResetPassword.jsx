@@ -20,7 +20,7 @@ const ResetPassword = () => {
             const response = await handleForgotPassword(email);
             setMessage("If an account exists, a reset token has been generated.");
             // In a development environment, log the token or move to step 2 automatically
-            console.log("Dev Token:", response.token); 
+           // console.log("Dev Token:", response.token); 
             setToken(response.token); // Pre-filling for testing purposes
             setStep(2);
         } catch (err) {

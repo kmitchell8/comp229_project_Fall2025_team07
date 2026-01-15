@@ -40,65 +40,56 @@ export const MediaProvider = ({ children }) => {
 */
     // mediaProvider.jsx
 
-// 1. New dedicated function for global configs
-const loadGlobalConfigs = useCallback(async () => {
-    try {
-        const [typeConfigs, genreList, prefixSuffixData] = await Promise.all([
-            mediaApi.getConfigDoc('mediaTypes'),
-            mediaApi.getConfigDoc('genres'),
-            mediaApi.getConfigDoc('prefixSuffix')
-        ]);
+    // 1. New dedicated function for global configs
+    const loadGlobalConfigs = useCallback(async () => {
+        try {
+            const [typeConfigs, genreList, prefixSuffixData] = await Promise.all([
+                mediaApi.getConfigDoc('mediaTypes'),
+                mediaApi.getConfigDoc('genres'),
+                mediaApi.getConfigDoc('prefixSuffix')
+            ]);
 
-        const configs = typeConfigs || {};
-        setMediaTypeConfigs(configs);
-        setMediaTypes(Object.keys(configs));
-        setGenres(Array.isArray(genreList) ? genreList : []);
-        if (prefixSuffixData) setConfigStrings(prefixSuffixData);
-    } catch (error) {
-        console.error('Error fetching global configurations:', error);
-    }
-}, []);
-
-// 2. Updated loadData (Focuses only on Media Items)
-const loadData = useCallback(async () => {
-    // We always want to try and fetch the global config first/concurrently
-    // but if we don't have an ID, we only fetch the config, not the media.
-    
-    // NOTE: For Master Library, your backend might expect 'null' 
-    // or a specific keyword. If your backend supports fetching "Master" 
-    // media via null, remove this if-check.
-    if (currentLibrary?._id === undefined && !currentLibrary?.isMaster) {
-        setLoading(false);
-        return;
-    }
-
-    setLoading(true);
-    try {
-        // Fetch media items for the current context (Master or Tenant)
-        // We pass currentLibrary?._id which will be null for Master
-        const mediaData = await mediaApi.list(currentLibrary?._id || null, branchId);
-        
-        if (Array.isArray(mediaData)) {
-            setMedia(mediaData);
-        } else {
-            setMedia([]);
+            const configs = typeConfigs || {};
+            setMediaTypeConfigs(configs);
+            setMediaTypes(Object.keys(configs));
+            setGenres(Array.isArray(genreList) ? genreList : []);
+            if (prefixSuffixData) setConfigStrings(prefixSuffixData);
+        } catch (error) {
+            console.error('Error fetching global configurations:', error);
         }
-    } catch (error) {
-        console.error('Error fetching media list:', error);
-        setMedia([]);
-    } finally {
-        setLoading(false);
-    }
-}, [currentLibrary?._id, currentLibrary?.isMaster, branchId]);
+    }, []);
 
-// 3. Updated Effects
-useEffect(() => {
-    loadGlobalConfigs(); // Load tabs/genres once on mount
-}, [loadGlobalConfigs]);
+    // Updated loadData (Focuses only on Media Items)
+    const loadData = useCallback(async () => {
+    
+        const libraryId = currentLibrary?._id || null;
+        setLoading(true);
+        try {
+            // Fetch media items for the current context (Master or Tenant)
+            // We pass currentLibrary?._id which will be null for Master
+            const mediaData = await mediaApi.list(libraryId, branchId);
 
-useEffect(() => {
-    loadData(); // Load items whenever the library/branch changes
-}, [loadData]);
+            if (Array.isArray(mediaData)) {
+                setMedia(mediaData);
+            } else {
+                setMedia([]);
+            }
+        } catch (error) {
+            console.error('Error fetching media list:', error);
+            setMedia([]);
+        } finally {
+            setLoading(false);
+        }
+    }, [currentLibrary, branchId]);
+
+    // 3. Updated Effects
+    useEffect(() => {
+        loadGlobalConfigs(); // Load tabs/genres once on mount
+    }, [loadGlobalConfigs]);
+
+    useEffect(() => {
+        loadData(); // Load items whenever the library/branch changes
+    }, [loadData]);
 
     // Sorting Helper for Labels
     const getSortLabel = useCallback(() => {

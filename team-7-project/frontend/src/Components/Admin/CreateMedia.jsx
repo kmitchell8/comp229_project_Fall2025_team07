@@ -7,10 +7,10 @@ import './Admin.css'
 
 const CreateMedia = (/*{parentSegment}*/) => {
 
-    const { getToken } = useAuth();
+    const { getToken, user } = useAuth();
     // Consuming Library Context for the Gatekeeper logic
     const { 
-        branches, 
+        branches = [], 
         tenantId, 
         branchId: currentAuthBranchId,
         currentLibrary // Accessing current library directly to derive name
@@ -80,21 +80,25 @@ const CreateMedia = (/*{parentSegment}*/) => {
         if (contextGenres.length > 0 && !mediaData.genre) {
             setMediaData(prev => ({ ...prev, genre: contextGenres[0] }));
         }
-    }, [availableMediaTypes, contextGenres, mediaType, mediaData]);
+    }, [availableMediaTypes, contextGenres, mediaType, mediaData.genre]);
 
     /**
-     * EFFECT 2: Sync system IDs
-     * Updates Library and Branch IDs if they arrive after the initial mount.
+     * EFFECT 2: Sync system IDs (Gatekeeper Logic)
+     * Updates Library and Branch IDs and resolves parent Library for Branch Admins.
      */
     useEffect(() => {
-        if (tenantId || currentAuthBranchId) {
+        const activeBranchId = currentAuthBranchId || user?.managementAccess?.branchId;
+        const foundBranch = branches.find(b => b._id === activeBranchId);
+        const resolvedLibraryId = tenantId || foundBranch?.libraryId;
+
+        if (resolvedLibraryId || activeBranchId) {
             setMediaData(prev => ({
                 ...prev,
-                libraryId: tenantId || prev.libraryId,
-                branchId: prev.branchId || currentAuthBranchId || ''
+                libraryId: resolvedLibraryId || prev.libraryId,
+                branchId: activeBranchId || prev.branchId
             }));
         }
-    }, [tenantId, currentAuthBranchId]);
+    }, [tenantId, currentAuthBranchId, user, branches]);
 
     // Reset feedback and specific metadata when switching types to prevent "state pollution"
     useEffect(() => {
@@ -145,14 +149,17 @@ const CreateMedia = (/*{parentSegment}*/) => {
      * Clears files, dynamic metadata, and feedback messages.
      */
     const handleReset = useCallback(() => {
+        const activeBranchId = currentAuthBranchId || user?.managementAccess?.branchId;
+        const foundBranch = branches.find(b => b._id === activeBranchId);
+        const resolvedLibraryId = tenantId || foundBranch?.libraryId;
+
         // Reset standard and dynamic media fields
         setMediaData({
             title: '',
             genre: contextGenres[0] || '',
             cover: '',
-            libraryId: tenantId || '',
-            branchId: currentAuthBranchId || ''
-            // Dynamic fields are cleared because we are defining a fresh object
+            libraryId: resolvedLibraryId || '',
+            branchId: activeBranchId || ''
         });
 
         //  Clear text-based description
@@ -168,7 +175,7 @@ const CreateMedia = (/*{parentSegment}*/) => {
         setErr(null);
         setSuccessMessage(null);
         setFeedbackMessage({});
-    }, [contextGenres, tenantId, currentAuthBranchId]);
+    }, [contextGenres, tenantId, currentAuthBranchId, user, branches]);
 
 
     const handleSubmit = useCallback(async (e) => {
@@ -379,8 +386,17 @@ const CreateMedia = (/*{parentSegment}*/) => {
                     {mediaType && mediaTypeConfigs[mediaType]?.map(field => {
                         const dataKey = field.name.includes('.') ? field.name.split('.')[1] : field.name;
 
-                        // GATEKEEPER: INTERCEPT BRANCHID (Case-Insensitive check to catch branchId)
+                        // GATEKEEPER: INTERCEPT BRANCHID (Lock if specific branch is resolved)
                         if (dataKey.toLowerCase() === 'branchid') {
+                            const activeBranchId = currentAuthBranchId || user?.managementAccess?.branchId;
+                            const currentBranch = branches.find(b => b._id === activeBranchId);
+
+                            if (activeBranchId) {
+                                // BRANCH ADMIN VIEW: Render as locked/uneditable text input
+                                return renderInput(field.name, "Target Branch", 'text', false, true, currentBranch?.name || "My Branch");
+                            }
+
+                            // LIBRARY ADMIN VIEW: Show standard dropdown
                             return (
                                 <div className="form-group" key={field.name}>
                                     <label className="form-label">Target Branch {field.required && <span className="required">*</span>}</label>
@@ -402,7 +418,7 @@ const CreateMedia = (/*{parentSegment}*/) => {
                             );
                         }
 
-                        // GATEKEEPER: INTERCEPT LIBRARYID (Render Library NAME instead of ID)
+                        // GATEKEEPER: INTERCEPT LIBRARYID (Render Library NAME instead of ID - ALWAYS LOCKED)
                         if (dataKey.toLowerCase() === 'libraryid') {
                             // Derive name directly from the currentLibrary object in context
                             const libName = currentLibrary?.name || currentLibrary?.tenantName || "System Library";

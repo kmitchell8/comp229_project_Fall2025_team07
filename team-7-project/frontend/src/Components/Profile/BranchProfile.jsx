@@ -38,15 +38,17 @@ const BranchProfile = ({ branchId = null }) => {
      * 2. Cleans up any blob previews or unsaved data on unmount.
      */
     useEffect(() => {
-        // Reset state whenever we load a new branch ID
-        resetLocalStates();
+        // FIX: Removed resetLocalStates() from here. 
+        // The LibraryProvider handles the data reset when branchId changes.
+        // Calling it here creates the infinite loop.
+        
         setIsEditing(false); // Default to view-only mode when first opening
 
         return () => {
-            // Cleanup logic when leaving the profile
-            resetLocalStates();
+            // Only clean up the UI toggle on unmount
+            setIsEditing(false);
         };
-    }, [branchId, resetLocalStates, setIsEditing]);// Dependency on branchId is critical
+    }, [branchId, setIsEditing]); // Removed resetLocalStates from dependencies
 
     // Find the specific branch data from the library details
     const branchData = useMemo(() => {

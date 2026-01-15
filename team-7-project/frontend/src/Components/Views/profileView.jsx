@@ -8,8 +8,8 @@ import Admin from './adminView.jsx'
 import Navbar from '../Navbar/Navbar.jsx'
 
 export const ProfileView = () => {
-    const { role: userRole, isAuthenticated, loading, hasAdminPrivileges } = useAuth(); //use the Auth hook to access role of the user
-    const { loading: libraryLoading } = useLibrary();
+    const { role: userRole, /*branchId,*/ isAuthenticated, loading, hasAdminPrivileges } = useAuth(); //use the Auth hook to access role of the user
+    const { loading: libraryLoading/*, currentLibrary */} = useLibrary();
     const isAdminRole = [ROUTES.ADMIN, ROUTES.LIBRARY_ADMIN, ROUTES.BRANCH_ADMIN].includes(userRole);
     const [lastAdminPath, setLastAdminPath] = useState(null);
     const baseAdminRoute = ROLE_TO_ROUTE_MAP[userRole] || ROUTES.ADMIN;
@@ -90,7 +90,8 @@ export const ProfileView = () => {
                 // WORKFLOW PERSISTENCE: If in an Admin view, save the current hash
                 const hash = getHash();
                 const primarySegment = hash.split('/')[0];
-                if (PROFILE_VIEWS.includes(primarySegment) && primarySegment !== ROUTES.PROFILE) {
+                if (PROFILE_VIEWS.includes(primarySegment) && primarySegment !== ROUTES.PROFILE
+                    && primarySegment !== ROUTES.BRANCH_ADMIN) {
                     setLastAdminPath(hash);
                 }
             }
@@ -104,15 +105,19 @@ export const ProfileView = () => {
     }, [loading, isAuthenticated, getInitialView]);
 
 
-    const DashboardTabs = ({ currentView, userRole, 
-        
-        lastAdminPath }) => {
+    const DashboardTabs = ({ currentView, userRole, lastAdminPath }) => {
         const isProfileActive = currentView === ROUTES.PROFILE;
-        const isAdminActive = !isProfileActive;
+        //const isBranchActive = currentView === ROUTES.BRANCH_ADMIN;
+        const isAdminActive = !isProfileActive /*&& !isBranchActive*/;
         
         // Use lastAdminPath if it exists, otherwise fall back to the base role route
         const adminTarget = lastAdminPath ? `#${lastAdminPath}` : `#${baseAdminRoute}`;
         const isDeepPath = lastAdminPath && lastAdminPath.split('/').filter(Boolean).length > 1;
+        // Library Admins default to the Main Branch; Branch Admins use their assigned ID
+      /*  const targetBranchId = userRole === ROUTES.BRANCH_ADMIN
+            ? branchId
+            : currentLibrary?.mainBranchId;*/
+     //  const branchLink = `#${ROUTES.BRANCH_ADMIN}/${ROUTES.UPDATE_BRANCH}/${targetBranchId}`;
 
         const handleReset = (e) => {
             // Allow the user to clear the saved path by holding Shift or clicking the dot
@@ -131,6 +136,18 @@ export const ProfileView = () => {
                 >
                     My Profile
                 </a>
+                {/*Branch Details Tab - Visible if the user is an Admin */}
+              {  /*{targetBranchId && (
+                    <a
+                        href={branchLink || '#'}
+                        className={`tab-link ${isBranchActive ? 'active' : ''} ${!branchLink ? 'disabled' : ''}`}
+                        style={{ opacity: branchLink ? 1 : 0.5, cursor: branchLink ? 'pointer' : 'not-allowed' }}
+                    >
+                        {userRole === ROUTES.BRANCH_ADMIN ? 'My Branch' : 'Main Branch'}
+                    </a>
+                )}*/}
+
+                {/* Role-based Dashboard Tab */}
 
                 {hasAdminPrivileges && (
                     <a

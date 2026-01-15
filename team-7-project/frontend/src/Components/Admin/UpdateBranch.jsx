@@ -3,6 +3,7 @@ import libraryApi from '../Api/libraryApi'; // Assuming this contains branch lis
 import { useAuth } from '../StateProvider/authState/useAuth';
 import { useLibrary } from '../StateProvider/libraryState/useLibrary';
 import BranchProfile from '../Profile/BranchProfile'; // The detailed view component
+import { ROUTES, ROLE_TO_ROUTE_MAP } from '../Api/routingConfig';
 import './Admin.css';
 
 const formatDate = (dateString) => {
@@ -112,14 +113,17 @@ const BranchRow = React.memo(({
 });
 
 const UpdateBranch = ({ pathId }) => {
-    const { getToken } = useAuth();
-    const { currentLibrary, branches: contextBranches, loading: libraryLoading, refreshLibrary } = useLibrary(); 
+    const { getToken, role: userRole } = useAuth();
+    const { currentLibrary, branches: contextBranches, loading: libraryLoading, refreshLibrary, setSelectedBranchId } = useLibrary();
+
+    // Dynamic Route Logic
+    const adminBaseRoute = ROLE_TO_ROUTE_MAP[userRole] || ROUTES.ADMIN;
 
     const [feedbackMessage, setFeedbackMessage] = useState({});
     const [branches, setBranches] = useState([]); // Master flattened state
     const [editedBranches, setEditedBranches] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [error, setErr] = useState(null); 
+    const [error, setErr] = useState(null);
 
     const [showOnlyMain, setShowOnlyMain] = useState(false);
 
@@ -144,7 +148,6 @@ const UpdateBranch = ({ pathId }) => {
             province: branch.address?.province || '',
             postalCode: branch.address?.postalCode || '',
             Country: branch.address?.Country || ''
-            
         };
     }, []);
 
@@ -166,31 +169,72 @@ const UpdateBranch = ({ pathId }) => {
 
     // Synchronize local state and flatten on arrival
     useEffect(() => {
-        if (contextBranches) {
+
+        if (contextBranches && contextBranches.length > 0) {
             const flattened = contextBranches.map(flattenBranch);
             setBranches(flattened);
             setEditedBranches(JSON.parse(JSON.stringify(flattened)));
-            setErr(null); 
+            setErr(null);
+        } else {
+            console.warn("[POF 1-Alt] ContextBranches is empty or undefined.");
         }
     }, [contextBranches, flattenBranch]);
 
     const handleCellChange = useCallback((branchId, key, value) => {
         setEditedBranches(prev => prev.map(branch => {
+
+            // Check if toggling the 'mainBranch' property to 'true'
+            if (key === 'mainBranch' && value === true) {
+                // If this is the branch the user clicked, set it to true
+                if (branch._id === branchId) {
+                    return { ...branch, [key]: true };
+                }
+                // For ALL other branches, force mainBranch to false (Single Source of Truth)
+                return { ...branch, mainBranch: false };
+            }
             if (branch._id === branchId) {
                 return { ...branch, [key]: value };
             }
             return branch;
-            
         }));
         setErr(null);
     }, []);
 
+
     const handleRevertRow = useCallback((branchId) => {
-        const original = branches.find(b => b._id === branchId);
-        if (!original) return;
-        setEditedBranches(prev => 
-            prev.map(b => b._id === branchId ? JSON.parse(JSON.stringify(original)) : b)
-        );
+        // Get the original version of the branch reverting
+        const originalVersion = branches.find(b => b._id === branchId);
+        if (!originalVersion) return;
+
+        // Identify which branch was originally the 'Main' in the master data
+        const originalMainBranch = branches.find(b => b.mainBranch === true);
+
+        setEditedBranches(prev => {
+            return prev.map(currentEditedBranch => {
+                // CASE A: This is the row the user actually clicked 'Revert' on
+                if (currentEditedBranch._id === branchId) {
+                    return JSON.parse(JSON.stringify(originalVersion));
+                }
+                // CASE B: AUTOMATION
+                // If the user is reverting the row that they had TEMPORARILY set to 'Main',
+                // automatically restore the 'Main' status to the original owner.
+                if (originalVersion.mainBranch === false) {
+                    //  reverting a 'False -> True' change.
+                    // Therefore, we must restore the 'True' status to the original master main.
+                    if (originalMainBranch && currentEditedBranch._id === originalMainBranch._id) {
+                        return { ...currentEditedBranch, mainBranch: true };
+                    }
+                }
+                // CASE C: CLEANUP
+                // If the user is reverting the 'Original Main' (which they had unchecked),
+                // ensure no other row in the list is still acting as 'Main'.
+                if (originalVersion.mainBranch === true && currentEditedBranch._id !== branchId) {
+                    return { ...currentEditedBranch, mainBranch: false };
+                }
+
+                return currentEditedBranch;
+            });
+        });
         setFeedbackMessage(prev => {
             const newFeedback = { ...prev };
             delete newFeedback[branchId];
@@ -203,15 +247,19 @@ const UpdateBranch = ({ pathId }) => {
         // Simple top-level comparison because everything is flat
         return columns.some(col => {
             if (!col.editable) return false;
+            if (original.mainBranch === true && col.fieldKey === 'mainBranch') {
+                return false;
+            }
             return original[col.fieldKey] !== edited[col.fieldKey];
         });
     };
 
     const handleUpdate = async (branchId, branchName) => {
         const flatEdited = editedBranches.find(b => b._id === branchId);
-        // Pack the flat fields back into an 'address' object for the database
+
+        // DEBUG LOG 4: Check payload structure before API call
         const payload = unflattenBranch(flatEdited);
-        
+
         const isConfirmed = window.confirm(`Are you sure you want to update branch: ${branchName}?`);
         if (!isConfirmed) return;
 
@@ -219,24 +267,30 @@ const UpdateBranch = ({ pathId }) => {
         try {
             await libraryApi.updateBranch(branchId, payload, getToken);
             if (refreshLibrary) await refreshLibrary();
-            
-            setFeedbackMessage(prev => ({ 
-                ...prev, 
-                [branchId]: { message: `Branch ${branchName} updated successfully!`, isError: false } 
+
+            setFeedbackMessage(prev => ({
+                ...prev,
+                [branchId]: { message: `Branch ${branchName} updated successfully!`, isError: false }
             }));
         } catch (err) {
-            setFeedbackMessage(prev => ({ 
-                ...prev, 
-                [branchId]: { message: `Update Failed: ${err.message}`, isError: true } 
+            console.error("[POF 5] API Update failed:", err);
+            setFeedbackMessage(prev => ({
+                ...prev,
+                [branchId]: { message: `Update Failed: ${err.message}`, isError: true }
             }));
-            setErr(err.message); 
+            setErr(err.message);
         } finally {
             setLoading(false);
         }
     };
 
-    const filteredBranches = editedBranches.filter(b => showOnlyMain ? b.mainBranch === true : true);
+    // Dynamically builds hash using adminBaseRoute + updatebranch key
+    const handleViewBranch = (branchId) => {
+        if (setSelectedBranchId) setSelectedBranchId(branchId);
+        window.location.hash = `${adminBaseRoute}/${ROUTES.UPDATE_BRANCH}/${branchId}`;
+    };
 
+    const filteredBranches = editedBranches.filter(b => showOnlyMain ? b.mainBranch === true : true);
     if ((loading || libraryLoading) && branches.length === 0) {
         return <div className="loading-container"><p>Loading Branch Data...</p></div>;
     }
@@ -255,7 +309,13 @@ const UpdateBranch = ({ pathId }) => {
         return (
             <div className="admin-subview-container">
                 <div className="admin-subview-header">
-                    <button onClick={() => window.location.hash = 'admin/update-branch'} className="media-back-btn">
+                    <button
+                        onClick={() => {
+                            if (setSelectedBranchId) setSelectedBranchId(null);
+                            window.location.hash = `${adminBaseRoute}/${ROUTES.UPDATE_BRANCH}`;
+                        }}
+                        className="media-back-btn"
+                    >
                         ← Back to Branch Directory
                     </button>
                 </div>
@@ -307,7 +367,7 @@ const UpdateBranch = ({ pathId }) => {
                             feedback={feedbackMessage[branch._id]}
                             hasChanges={hasChanges(original, branch)}
                             onCellChange={handleCellChange}
-                            onView={(id) => window.location.hash = `admin/update-branch/${id}`}
+                            onView={handleViewBranch}
                             onUpdate={handleUpdate}
                             onRevert={handleRevertRow}
                             loading={loading || libraryLoading}

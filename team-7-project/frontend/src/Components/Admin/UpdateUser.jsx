@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback,useMemo} from 'react';
-import userApi from '../Api/userApi'; 
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import userApi from '../Api/userApi';
 import { useAuth } from '../StateProvider/authState/useAuth'; // Authentication context
 import { useUser } from '../StateProvider/userState/useUser'; // Import the Context
+import { useLibrary } from '../StateProvider/libraryState/useLibrary';
 import Profile from '../Profile/Profile'; // Ensure this is imported
 import './Admin.css';
 
@@ -34,7 +35,8 @@ const UserRow = React.memo(({
     canChangeRole,
     currentUserId,
     loading,
-    availableRoles // Passed down from main component
+    availableRoles, // Passed down from main component
+    availableBranches // New prop from LibraryProvider
 }) => {
     return (
         <tbody className="user-row-group">
@@ -59,22 +61,43 @@ const UserRow = React.memo(({
                             {isEditable ? (
                                 //Radio buttons for Role
                                 col.inputType === 'radio' && col.fieldKey === 'role' ? (
-                                    <div className="role-radio-group-table">
-                                        {availableRoles.map(roleOption => (
-                                            <label key={roleOption} className="role-radio-label-table">
-                                                <input
-                                                    type="radio"
-                                                    name={`role-${user._id}`}
-                                                    value={roleOption}
-                                                    checked={currentValue === roleOption}
-                                                    onChange={(e) => onCellChange(user._id, col.fieldKey, e.target.value)}
-                                                    // Logic: Admins can't change their own role to prevent lockout
-                                                    disabled={loading || !canChangeRole || user._id === currentUserId}
-                                                />
-                                                <span className="radio-custom-indicator-table"></span>
-                                                <span className="radio-text">{roleOption}</span>
-                                            </label>
-                                        ))}
+                                    <div className="role-management-container">
+                                        <div className="role-radio-group-table">
+                                            {availableRoles.map(roleOption => (
+                                                <label key={roleOption} className="role-radio-label-table">
+                                                    <input
+                                                        type="radio"
+                                                        name={`role-${user._id}`}
+                                                        value={roleOption}
+                                                        checked={currentValue === roleOption}
+                                                        onChange={(e) => onCellChange(user._id, col.fieldKey, e.target.value)}
+                                                        // Logic: Admins can't change their own role to prevent lockout
+                                                        disabled={loading || !canChangeRole || user._id === currentUserId}
+                                                    />
+                                                    <span className="radio-custom-indicator-table"></span>
+                                                    <span className="radio-text">{roleOption}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+
+                                        {/* BRANCH SELECTOR: Only visible if the selected role is branchAdmin */}
+                                        {user.role === 'branchAdmin' && availableBranches?.length > 0 && (
+                                            <div className="branch-selector-wrapper" style={{ marginTop: '8px' }}>
+                                                <select
+                                                    className="branch-dropdown"
+                                                    value={user.branchId || ''}
+                                                    onChange={(e) => onCellChange(user._id, 'branchId', e.target.value)}
+                                                    disabled={loading || !canChangeRole}
+                                                >
+                                                    <option value="">-- Assign Branch --</option>
+                                                    {availableBranches.map(branch => (
+                                                        <option key={branch._id} value={branch._id}>
+                                                            {branch.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        )}
                                     </div>
                                 ) : (
                                     // Editable text inputs for Name/Email
@@ -125,20 +148,30 @@ const UserRow = React.memo(({
 const UpdateUser = ({ pathId }/*{parentSegment}*/) => { //pass the _id path to be able to create an Id subview
 
     // Use Context to access UserProvider states and actions
-    const { 
-        setSelectedUserId, 
-        availableRoles: providerRoles, 
-        resetSelectedUser 
+    const {
+        setSelectedUserId,
+        availableRoles: providerRoles,
+        resetSelectedUser
     } = useUser();
 
-    const { role: userRole, getToken, userInfo} = useAuth(); 
-    
+    const { role: userRole, getToken, userInfo } = useAuth();
+    const { branches: availableBranches } = useLibrary();
+
     // Logic: Favor roles from Provider, fallback to Auth, fallback to empty array
     const rolesToUse = useMemo(() => {
-        if (!providerRoles) return [];
-        // Combines all arrays within the object into one: ['user', 'admin', 'libraryAdmin', 'branchAdmin']
-        return Object.values(providerRoles).flat();
-    }, [providerRoles]);
+        const flatRoles = Object.values(providerRoles || {}).flat();
+
+        if (userRole === 'admin') {
+            // Admin only sees high-level 'admin' and 'user'
+            return flatRoles.filter(r => r === 'admin' || r === 'user');
+        }
+        if (userRole === 'libraryAdmin') {
+            // Library Admin only sees 'branchAdmin' and 'user'
+            return flatRoles.filter(r => r === 'branchAdmin' || r === 'user');
+        }
+        return [];
+
+    }, [providerRoles, userRole]);
 
     const [feedbackMessage, setFeedbackMessage] = useState({});
     const [users, setUsers] = useState([]); // Original Source of Truth
@@ -146,8 +179,13 @@ const UpdateUser = ({ pathId }/*{parentSegment}*/) => { //pass the _id path to b
     const [loading, setLoading] = useState(true);
     const [error, setErr] = useState(null);
 
+    // New: Search Filter State
+    const [searchEmail, setSearchEmail] = useState('');
+
     const currentUserId = userInfo ? userInfo._id : null;
-    const canChangeRole = userRole === 'admin';
+
+    // Refined Guard: Admin or LibraryAdmin can edit roles (within the filtered constraints of rolesToUse)
+    const canChangeRole = userRole === 'admin' || userRole === 'libraryAdmin';
 
     const columns = [
         { header: 'Name', key: 'name', fieldKey: 'name', editable: true, inputType: 'text' },
@@ -179,7 +217,14 @@ const UpdateUser = ({ pathId }/*{parentSegment}*/) => { //pass the _id path to b
     const handleCellChange = useCallback((userId, key, value) => {
         setEditedUsers(prevUsers => prevUsers.map(user => {
             if (user._id === userId) {
-                return { ...user, [key]: value };
+                const updatedUser = { ...user, [key]: value };
+
+                // If role is changed away from branchAdmin, clear the branchId
+                if (key === 'role' && value !== 'branchAdmin') {
+                    updatedUser.branchId = null;
+                }
+
+                return updatedUser;
             }
             return user;
         }));
@@ -202,7 +247,7 @@ const UpdateUser = ({ pathId }/*{parentSegment}*/) => { //pass the _id path to b
     }, [users]);
 
     const hasChanges = (originalUser, editedUser) => {
-        const updatableKeys = ['name', 'email', 'role'];
+        const updatableKeys = ['name', 'email', 'role', 'branchId'];
         return updatableKeys.some(key => {
             return originalUser[key] !== editedUser[key];
         });
@@ -229,10 +274,12 @@ const UpdateUser = ({ pathId }/*{parentSegment}*/) => { //pass the _id path to b
             return;
         }
 
+        // Send the editedUser directly as it contains the updated keys (including branchId if set)
         const updateData = {
             name: editedUser.name,
             email: editedUser.email,
             role: editedUser.role,
+            branchId: editedUser.branchId
         };
 
         try {
@@ -257,6 +304,14 @@ const UpdateUser = ({ pathId }/*{parentSegment}*/) => { //pass the _id path to b
         window.location.hash = `admin/updateuser/${userId}`;
     };
 
+    // Filter Logic: Filters the edited list based on email input
+    const filteredUsers = useMemo(() => {
+        if (!searchEmail) return editedUsers;
+        return editedUsers.filter(u => 
+            u.email?.toLowerCase().includes(searchEmail.toLowerCase())
+        );
+    }, [editedUsers, searchEmail]);
+
     // RENDER STATES 
     if (loading && users.length === 0) {
         return (
@@ -280,11 +335,11 @@ const UpdateUser = ({ pathId }/*{parentSegment}*/) => { //pass the _id path to b
         return (
             <div className="admin-subview-container">
                 <div className="admin-subview-header">
-                    <button 
+                    <button
                         onClick={() => {
                             resetSelectedUser(); // Clear Provider state when returning to list
                             window.location.hash = 'admin/updateuser';
-                        }} 
+                        }}
                         className="media-back-btn"
                     >
                         ← Back to User Directory
@@ -301,18 +356,27 @@ const UpdateUser = ({ pathId }/*{parentSegment}*/) => { //pass the _id path to b
     return (
         <div className="user-table-container">
             <div className="table-header-controls">
-                {/*  RETURN TO ADMIN BUTTON 
+                {/* RETURN TO ADMIN BUTTON 
                 <button onClick={() => window.location.hash = 'admin'} className="admin-nav-btn">
                     Return to Admin
                 </button>*/}
                 <h1>User Directory</h1>
-                <button
-                    onClick={loadUsers}
-                    className="button-group reload-button"
-                    disabled={loading}
-                >
-                    {loading ? 'Loading...' : 'Reload List'}
-                </button>
+                <div className="admin-actions-bar">
+                    <input 
+                        type="text" 
+                        placeholder="Search by email..." 
+                        className="user-search-input"
+                        value={searchEmail}
+                        onChange={(e) => setSearchEmail(e.target.value)}
+                    />
+                    <button
+                        onClick={loadUsers}
+                        className="button-group reload-button"
+                        disabled={loading}
+                    >
+                        {loading ? 'Loading...' : 'Reload List'}
+                    </button>
+                </div>
             </div>
 
             <table className="user-table">
@@ -326,7 +390,7 @@ const UpdateUser = ({ pathId }/*{parentSegment}*/) => { //pass the _id path to b
                         <th className="action-col">Actions</th>
                     </tr>
                 </thead>
-                {editedUsers.map((user, index) => {
+                {filteredUsers.map((user, index) => {
                     const originalUser = users.find(u => u._id === user._id) || {};
                     return (
                         <UserRow
@@ -343,10 +407,14 @@ const UpdateUser = ({ pathId }/*{parentSegment}*/) => { //pass the _id path to b
                             currentUserId={currentUserId}
                             loading={loading}
                             availableRoles={rolesToUse}
+                            availableBranches={availableBranches}
                         />
                     );
                 })}
             </table>
+            {filteredUsers.length === 0 && (
+                <div className="no-results-msg">No users found matching your search.</div>
+            )}
         </div>
     );
 };

@@ -2,6 +2,8 @@ import React, { useRef, useEffect, useMemo } from 'react';
 import { useUser } from '../StateProvider/userState/useUser.jsx';
 //import { useAuth } from '../StateProvider/authState/useAuth.jsx';
 import { useMedia } from '../StateProvider/mediaState/useMedia.jsx';
+import { useAuth } from '../StateProvider/authState/useAuth'; // Added for role filtering logic
+import { useLibrary } from '../StateProvider/libraryState/useLibrary'; // Added for branch selection
 import { ROUTES } from '../Api/routingConfig.js';
 import userApi from '../Api/userApi.jsx';
 import './Profile.css';
@@ -44,11 +46,24 @@ export const Profile = ({ managedUserId = null }) => {
         handlePasswordResetRequest
     } = useUser();
 
+    // Use Auth and Library context for specialized management logic
+    const { role: currentUserRole } = useAuth();
+    const { branches: availableBranches } = useLibrary();
+
+    // Logic: Filter available roles based on the logged-in administrator's rank
     const rolesToUse = useMemo(() => {
         if (!providerRoles) return [];
-        // Combines all arrays within the object into one: ['user', 'admin', 'libraryAdmin', 'branchAdmin']
-        return Object.values(providerRoles).flat();
-    }, [providerRoles]);
+        const flatRoles = Object.values(providerRoles).flat();
+
+        if (currentUserRole === 'admin') {
+            return flatRoles.filter(r => r === 'admin' || r === 'user');
+        }
+        if (currentUserRole === 'libraryAdmin') {
+            return flatRoles.filter(r => r === 'branchAdmin' || r === 'user');
+        }
+        return flatRoles; // Fallback
+    }, [providerRoles, currentUserRole]);
+
     // Consume MediaContext
     const {
         media,
@@ -117,13 +132,24 @@ export const Profile = ({ managedUserId = null }) => {
     const resetForm = () => {
         resetLocalStates();
     };
-const onRevert = () => {
+    
+    const onRevert = () => {
+        resetLocalStates();
+        setIsEditing(true);
+    };
 
-    resetLocalStates();
-    setIsEditing(true);
-};
-    return (
+    // Interceptor for Role Changes to handle branchId cleanup
+    const onRoleChange = (e) => {
+        const newRole = e.target.value;
+        handleInputChange(e, 'role');
         
+        // If switching AWAY from branchAdmin, clear the branch association
+        if (newRole !== 'branchAdmin' && userData.branchId) {
+            handleInputChange({ target: { value: null } }, 'branchId');
+        }
+    };
+
+    return (
         <div className={`media ${isSaving ? 'processing-blur' : ''}`}>
             {/* Hidden Inputs for Picture Uploading */}
             <input type="file" ref={avatarInputRef} style={{ display: 'none' }} accept="image/*" onChange={onAvatarSelected} />
@@ -185,7 +211,7 @@ const onRevert = () => {
                                     </button>
                                     <button
                                         className="button-group revert-btn"
-                                        onClick={ onRevert}
+                                        onClick={onRevert}
                                         disabled={!hasChanges || loading}
                                         title="Discard unsaved changes"
                                     >
@@ -362,24 +388,45 @@ const onRevert = () => {
                             {/* Strictly hidden from the user themselves. Only Admin can change roles for others. */}
                             {hasAdminPrivileges && !isOwnProfile && isEditing && (
                                 <div className="detail-entry full-width">
-                                    <label>User Role (Administrative Access Only)</label>
-                                    <div className="role-radio-group-table">
-                                        {Array.isArray(rolesToUse) && rolesToUse.length > 0 ? (
-                                            rolesToUse.map(role => (
-                                                <label key={role} className="role-radio-label-table" style={{ display: 'flex', alignItems: 'center', marginBottom: '8px', cursor: 'pointer' }}>
-                                                    <input
-                                                        type="radio"
-                                                        name="user-role-profile"
-                                                        value={role}
-                                                        checked={userData.role === role}
-                                                        onChange={(e) => handleInputChange(e, 'role')}
-                                                        style={{ width: 'auto', marginRight: '10px', opacity: 1, visibility: 'visible', position: 'relative' }}
-                                                    />
-                                                    <span className="radio-text">{role}</span>
-                                                </label>
-                                            ))
-                                        ) : (
-                                            <p>Loading roles from system...</p>
+                                    <label>User Role & Branch Assignment</label>
+                                    <div className="role-management-container">
+                                        <div className="role-radio-group-table" style={{ marginBottom: '15px' }}>
+                                            {Array.isArray(rolesToUse) && rolesToUse.length > 0 ? (
+                                                rolesToUse.map(role => (
+                                                    <label key={role} className="role-radio-label-table" style={{ display: 'flex', alignItems: 'center', marginBottom: '8px', cursor: 'pointer' }}>
+                                                        <input
+                                                            type="radio"
+                                                            name="user-role-profile"
+                                                            value={role}
+                                                            checked={userData.role === role}
+                                                            onChange={onRoleChange}
+                                                            style={{ width: 'auto', marginRight: '10px', opacity: 1, visibility: 'visible', position: 'relative' }}
+                                                        />
+                                                        <span className="radio-text">{role}</span>
+                                                    </label>
+                                                ))
+                                            ) : (
+                                                <p>Loading roles from system...</p>
+                                            )}
+                                        </div>
+
+                                        {/* BRANCH SELECTOR: Consistent with UpdateUser.jsx logic */}
+                                        {userData.role === 'branchAdmin' && availableBranches?.length > 0 && (
+                                            <div className="branch-selector-wrapper detail-entry full-width">
+                                                <label>Assigned Branch</label>
+                                                <select
+                                                    className="editable-input"
+                                                    value={userData.branchId || ''}
+                                                    onChange={(e) => handleInputChange(e, 'branchId')}
+                                                >
+                                                    <option value="">-- Assign Branch --</option>
+                                                    {availableBranches.map(branch => (
+                                                        <option key={branch._id} value={branch._id}>
+                                                            {branch.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
                                         )}
                                     </div>
                                 </div>

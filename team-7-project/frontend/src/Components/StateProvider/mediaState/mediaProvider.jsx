@@ -5,7 +5,7 @@ import mediaApi from '../../Api/mediaApi';
 
 export const MediaProvider = ({ children }) => {
 
-    const { currentLibrary, selectedBranchId } = useLibrary();
+    const { currentLibrary, branchId } = useLibrary();
 
     const [media, setMedia] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -76,7 +76,7 @@ const loadData = useCallback(async () => {
     try {
         // Fetch media items for the current context (Master or Tenant)
         // We pass currentLibrary?._id which will be null for Master
-        const mediaData = await mediaApi.list(currentLibrary?._id || null, selectedBranchId);
+        const mediaData = await mediaApi.list(currentLibrary?._id || null, branchId);
         
         if (Array.isArray(mediaData)) {
             setMedia(mediaData);
@@ -89,7 +89,7 @@ const loadData = useCallback(async () => {
     } finally {
         setLoading(false);
     }
-}, [currentLibrary?._id, currentLibrary?.isMaster, selectedBranchId]);
+}, [currentLibrary?._id, currentLibrary?.isMaster, branchId]);
 
 // 3. Updated Effects
 useEffect(() => {

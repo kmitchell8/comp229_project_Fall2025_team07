@@ -100,7 +100,7 @@ const create = async (req, res) => {
 // GET: List all libraries
 const list = async (_req, res) => {
     try {
-        const libraries = await Library.find().select('name'); //selects fields I would like to display
+        const libraries = await Library.find()/*.select('name')*/; //selects fields I would like to display
         res.status(200).json(libraries);
     } catch (err) {
         res.status(500).json({ message: err.message });

@@ -44,7 +44,7 @@ const CreateBranch = () => {
 
         if (topLevelChanged) return true;
 
-        // 2. Check the Nested Address Object
+        // Check the Nested Address Object
         const addressChanged = Object.keys(branchData.address).some(key => {
             const val = branchData.address[key];
 

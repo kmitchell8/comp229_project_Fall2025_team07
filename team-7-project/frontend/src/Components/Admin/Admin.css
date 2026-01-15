@@ -816,6 +816,7 @@ select.editable-input option,
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
+
 /*============================================================
    CreateBranch.jsx 
 ============================================================*/
@@ -933,8 +934,95 @@ select.editable-input option,
     font-weight: bold;
 }
 
+/*============================
+Search & Action Bar Styling
+=============================*/
 
+.admin-actions-bar {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    /*flex-wrap: wrap; /* Ensures buttons don't clip on medium screens */
+}
 
+.user-search-input {
+    padding: 10px 15px;
+    background-color: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--primary-text);
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.95rem;
+    min-width: 250px;
+    transition: all 0.3s ease;
+}
+
+.user-search-input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    background-color: var(--bg-dark-primary);
+    box-shadow: 0 0 0 3px var(--shadow-accent-light);
+}
+
+.user-search-input::placeholder {
+    color: var(--secondary-text);
+    opacity: 0.6;
+}
+
+/* Logic for when no results are found */
+.no-results-msg {
+    text-align: center;
+    padding: 40px;
+    color: var(--secondary-text);
+    font-style: italic;
+    background: var(--input-bg);
+    border-radius: 8px;
+    margin-top: 20px;
+    border: 1px dashed var(--border-color);
+}
+
+/*============================
+Branch Selector Table Styling
+=============================*/
+
+/* Logic: Inherit the design of .filter-select and .editable-input */
+.branch-dropdown {
+    width: 100%;
+    padding: 8px 12px;
+    background-color: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--primary-text);
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    /* Custom arrow to match the theme */
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2379a6ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 14px;
+}
+
+.branch-dropdown:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px var(--shadow-accent-light);
+    outline: none;
+    background-color: var(--bg-dark-primary);
+}
+
+.branch-dropdown:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-image: none;
+}
+
+/* Ensure options match the dark background */
+.branch-dropdown option {
+    background-color: var(--bg-dark-secondary);
+    color: var(--primary-text);
+}
 
 /* ============================================================
    Mobile View (Max-width: 768px) 
@@ -1124,5 +1212,28 @@ select.editable-input option,
     .create-branch-container .form-row {
         flex-direction: column;
         gap: 15px;
+    }
+
+    .admin-actions-bar {
+        width: 100%;
+        flex-direction: column;
+        /*align-items: stretch;*/
+    }
+
+    .user-search-input {
+        width: 100%;
+        min-width: unset;
+        font-size: 16px;
+        /* Prevents iOS zoom */
+    }
+
+    .branch-dropdown {
+        padding: 12px;
+        font-size: 16px;
+        /* Matches mobile input logic */
+    }
+
+    .branch-selector-wrapper {
+        margin-bottom: 10px;
     }
 }

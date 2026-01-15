@@ -107,7 +107,7 @@ const list = async (req, res) => {
     try {
         // If a library is pre-loaded by libraryId param, filter by it
         const query = req.library ? { libraryId: req.library._id } : {};
-        const branches = await Branch.find(query).select('name'); //selects fields I would like to display
+        const branches = await Branch.find(query)/*.select('name')*/; //selects fields I would like to display
         res.status(200).json(branches);
     } catch (err) {
         res.status(500).json({ message: err.message });

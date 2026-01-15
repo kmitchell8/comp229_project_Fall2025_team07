@@ -90,7 +90,7 @@ const Navbar = () => {
                     <li>
                         <a
                             href={`./profile.html#${baseAdminRoute}`}
-                            className={`admin-btn ${isAdminActive ? 'is-active' : 'pulse-glow'}`}
+                            className={`admin-btn ${(isAdminActive)? 'is-active' : 'pulse-glow'}`}
                         >
                             {formatRoleLabel(role)} Dashboard
                         </a>

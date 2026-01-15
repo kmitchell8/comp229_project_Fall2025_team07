@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '../StateProvider/authState/useAuth'; // Assumes useAuth is correctly exported
+import { useLibrary } from '../StateProvider/libraryState/useLibrary'; // Integrated for Branch/Library IDs
 import { useMedia } from '../StateProvider/mediaState/useMedia'; // Context integration
 import mediaApi from '../Api/mediaApi'; // Assumes path to mediaApi
 import './Admin.css'
@@ -7,6 +8,14 @@ import './Admin.css'
 const CreateMedia = (/*{parentSegment}*/) => {
 
     const { getToken } = useAuth();
+    // Consuming Library Context for the Gatekeeper logic
+    const { 
+        branches, 
+        tenantId, 
+        branchId: currentAuthBranchId,
+        currentLibrary // Accessing current library directly to derive name
+    } = useLibrary();
+
     // Consuming Media Context
     const {
         mediaTypeConfigs,
@@ -14,14 +23,18 @@ const CreateMedia = (/*{parentSegment}*/) => {
         genres: contextGenres = [],
         loading: contextLoading
     } = useMedia();
+
     const coverInputRef = React.useRef(null);
     const [mediaType, setMediaType] = useState('');
     // mediaTypesConfig state removed as it is now provided by Context
     const [mediaData, setMediaData] = useState({ //can be reused in the UpdateMedia component
         title: '',
         genre: '',
-        cover: ''
+        cover: '',
         // managed dynamically via mediaTypesConfig
+        // Initializing with system IDs from providers using camelCase keys found in logs
+        libraryId: tenantId || '',
+        branchId: currentAuthBranchId || ''
     });
 
     const [descriptionText, setDescriptionText] = useState('');
@@ -46,7 +59,7 @@ const CreateMedia = (/*{parentSegment}*/) => {
         if (mediaData.genre !== (contextGenres[0] || '')) return true;
 
         // Check dynamic fields (anything that isn't title, genre, or cover)
-        const dynamicKeys = Object.keys(mediaData).filter(k => !['title', 'genre', 'cover'].includes(k));
+        const dynamicKeys = Object.keys(mediaData).filter(k => !['title', 'genre', 'cover', 'libraryId', 'branchId'].includes(k));
         return dynamicKeys.some(key => {
             const val = mediaData[key];
             if (val === undefined || val === null) return false;
@@ -55,7 +68,11 @@ const CreateMedia = (/*{parentSegment}*/) => {
         });
     }, [mediaData, descriptionText, coverFile, contextGenres]);
 
-    // Effect to handle initial selection once context data arrives
+    /**
+     * EFFECT 1: Initialization logic for MediaType and Genre
+     * This runs when context arrives but avoids the infinite loop by 
+     * checking against state without depending on the whole mediaData object.
+     */
     useEffect(() => {
         if (availableMediaTypes.length > 0 && !mediaType) {
             setMediaType(availableMediaTypes[0]);
@@ -63,7 +80,21 @@ const CreateMedia = (/*{parentSegment}*/) => {
         if (contextGenres.length > 0 && !mediaData.genre) {
             setMediaData(prev => ({ ...prev, genre: contextGenres[0] }));
         }
-    }, [mediaTypeConfigs, contextGenres, availableMediaTypes, mediaType, mediaData.genre]);
+    }, [availableMediaTypes, contextGenres, mediaType, mediaData]);
+
+    /**
+     * EFFECT 2: Sync system IDs
+     * Updates Library and Branch IDs if they arrive after the initial mount.
+     */
+    useEffect(() => {
+        if (tenantId || currentAuthBranchId) {
+            setMediaData(prev => ({
+                ...prev,
+                libraryId: tenantId || prev.libraryId,
+                branchId: prev.branchId || currentAuthBranchId || ''
+            }));
+        }
+    }, [tenantId, currentAuthBranchId]);
 
     // Reset feedback and specific metadata when switching types to prevent "state pollution"
     useEffect(() => {
@@ -74,7 +105,9 @@ const CreateMedia = (/*{parentSegment}*/) => {
         setMediaData(prev => ({
             title: prev.title,
             genre: prev.genre,
-            cover: prev.cover
+            cover: prev.cover,
+            libraryId: prev.libraryId,
+            branchId: prev.branchId
         }));
     }, [mediaType]);
 
@@ -106,6 +139,7 @@ const CreateMedia = (/*{parentSegment}*/) => {
             cover: file ? file.name : ''
         }));
     };
+
     /**
      * handleReset: Reverts all media data and UI states
      * Clears files, dynamic metadata, and feedback messages.
@@ -115,7 +149,9 @@ const CreateMedia = (/*{parentSegment}*/) => {
         setMediaData({
             title: '',
             genre: contextGenres[0] || '',
-            cover: ''
+            cover: '',
+            libraryId: tenantId || '',
+            branchId: currentAuthBranchId || ''
             // Dynamic fields are cleared because we are defining a fresh object
         });
 
@@ -124,7 +160,6 @@ const CreateMedia = (/*{parentSegment}*/) => {
 
         // Clear File states and the actual DOM input via Ref
         setCoverFile(null);
-        //if (document.getElementById('cover-upload')) document.getElementById('cover-upload').value = null;
         if (coverInputRef.current) {
             coverInputRef.current.value = "";
         }
@@ -133,7 +168,7 @@ const CreateMedia = (/*{parentSegment}*/) => {
         setErr(null);
         setSuccessMessage(null);
         setFeedbackMessage({});
-    }, [contextGenres]);
+    }, [contextGenres, tenantId, currentAuthBranchId]);
 
 
     const handleSubmit = useCallback(async (e) => {
@@ -181,12 +216,19 @@ const CreateMedia = (/*{parentSegment}*/) => {
                 title: mediaData.title.trim(),
                 genre: mediaData.genre,
                 cover: coverFileName,
+                // Using camelCase mapping consistent with logs
+                libraryId: mediaData.libraryId,
+                branchId: mediaData.branchId
             };
 
             // Inject only fields defined in the config for this specific type
             if (mediaTypeConfigs[mediaType]) {
                 mediaTypeConfigs[mediaType].forEach(field => {
                     const dataKey = field.name.includes('.') ? field.name.split('.')[1] : field.name;
+                    
+                    // Skip keys already explicitly handled above (using case-insensitive check)
+                    if (dataKey.toLowerCase() === 'libraryid' || dataKey.toLowerCase() === 'branchid') return;
+
                     let value = mediaData[dataKey];
 
                     // Transform string into array ONLY at submission time
@@ -219,6 +261,7 @@ const CreateMedia = (/*{parentSegment}*/) => {
                 setErr(message);
             }
 
+            // Logic to remove orphaned files if the final metadata creation fails
             let successfulCleanUp = '';
             if (descriptionFileName) {
                 try {
@@ -246,13 +289,14 @@ const CreateMedia = (/*{parentSegment}*/) => {
         }
     }, [mediaData, coverFile, descriptionText, mediaType, getToken, handleReset, mediaTypeConfigs, refreshMedia]);
 
-    const renderInput = (name, label, type = 'text', required = false) => {
+    const renderInput = (name, label, type = 'text', required = false, disabled = false, overrideValue = null) => {
         // Clean up "creator.xxx" labels for display
         const displayLabel = label.includes('.') ? label.split('.')[1] : label;
         const dataKey = name.includes('.') ? name.split('.')[1] : name;
 
         const isError = feedbackMessage[name];
-        const value = mediaData[dataKey];
+        // Use overrideValue if provided (like for Library Name), otherwise use state
+        const value = overrideValue !== null ? overrideValue : mediaData[dataKey];
 
         return (
             <div className="form-group" key={name}>
@@ -266,8 +310,8 @@ const CreateMedia = (/*{parentSegment}*/) => {
                     value={value || ''}
                     onChange={handleChange(name)}
                     required={required}
-                    disabled={loading}
-                    className={`form-input ${isError ? 'input-error' : ''}`}
+                    disabled={loading || disabled}
+                    className={`form-input ${isError ? 'input-error' : ''} ${disabled ? 'read-only-input' : ''}`}
                 />
                 {isError && <p className="field-feedback error-message">{isError}</p>}
             </div>
@@ -331,9 +375,39 @@ const CreateMedia = (/*{parentSegment}*/) => {
                     {renderSelect('genre', 'Genre', contextGenres, true)}
                     {renderInput('title', 'Title', 'text', true)}
 
-                    {/* DYNAMIC FIELD RENDERING ENGINE */}
+                    {/* DYNAMIC FIELD RENDERING ENGINE WITH CASE-INSENSITIVE GATEKEEPER */}
                     {mediaType && mediaTypeConfigs[mediaType]?.map(field => {
                         const dataKey = field.name.includes('.') ? field.name.split('.')[1] : field.name;
+
+                        // GATEKEEPER: INTERCEPT BRANCHID (Case-Insensitive check to catch branchId)
+                        if (dataKey.toLowerCase() === 'branchid') {
+                            return (
+                                <div className="form-group" key={field.name}>
+                                    <label className="form-label">Target Branch {field.required && <span className="required">*</span>}</label>
+                                    <select 
+                                        value={mediaData.branchId} 
+                                        onChange={handleChange('branchId')}
+                                        className="form-input"
+                                        disabled={loading}
+                                        required={field.required}
+                                    >
+                                        <option value="">-- Select Branch --</option>
+                                        {branches.map(b => (
+                                            <option key={b._id} value={b._id}>
+                                                {b.name} {b.mainBranch ? '(Main)' : ''}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            );
+                        }
+
+                        // GATEKEEPER: INTERCEPT LIBRARYID (Render Library NAME instead of ID)
+                        if (dataKey.toLowerCase() === 'libraryid') {
+                            // Derive name directly from the currentLibrary object in context
+                            const libName = currentLibrary?.name || currentLibrary?.tenantName || "System Library";
+                            return renderInput(field.name, "Library System", 'text', false, true, libName);
+                        }
 
                         // Handle Array/List types (e.g., platforms)
                         if (field.type === 'list' || field.type === 'array') {

@@ -16,7 +16,7 @@ const getAuthHeaders = async (getToken) => {
             if (jwt) {
                 headers['Authorization'] = `Bearer ${jwt}`;
             }
-        // eslint-disable-next-line no-unused-vars
+            // eslint-disable-next-line no-unused-vars
         } catch (e) {
             // If getToken fails (e.g., user not logged in), we just log it and proceed as guest
             console.warn("Optional authentication failed or user not logged in. Proceeding as guest.");
@@ -27,7 +27,7 @@ const getAuthHeaders = async (getToken) => {
 };
 
 // Keep your non-json version updated too
-const _getAuthHeadersNoJson = async (getToken) => {
+const getAuthHeadersNoJson = async (getToken) => {
     const headers = {};
 
     if (typeof getToken === 'function') {
@@ -36,7 +36,7 @@ const _getAuthHeadersNoJson = async (getToken) => {
             if (jwt) {
                 headers['Authorization'] = `Bearer ${jwt}`;
             }
-        // eslint-disable-next-line no-unused-vars
+            // eslint-disable-next-line no-unused-vars
         } catch (e) {
             console.warn("Optional authentication failed. Proceeding as guest.");
         }
@@ -217,6 +217,76 @@ const removeBranch = async (libraryId, branchId, getToken) => {
         headers: headers,
     });
 };
+const getCountries = async () => {
+    const domainName = BASE_URL.replace('/api/library', '');
+    const url = `${domainName}/documents/country.json`;
+
+    return fetchHelper(url, {
+        method: 'GET'
+    });
+
+
+};
+//get images
+const getImages = (image, branchId = null, tenantId = null) => {
+   
+    const domainName = BASE_URL.replace('/api/library', '');
+    // METHOD A: The "Placeholder" Path
+    const isPlaceholder = image === 'branchcover' || 'librarycover'
+    if (isPlaceholder) {
+        return `${domainName}/images/temp/${image}.png`;
+        // Result: http://localhost:5000/images/temp/profileimage.png
+    }
+ 
+    if (!tenantId) {
+        console.warn("getImages called without tenantId for non-placeholder image:", image);
+        return `${domainName}/images/temp/librarycover.png`; // Fallback
+    }
+    const libraryFolder = tenantId.toString();
+    const branchFolder = branchId ? branchId.toString() : null;
+    
+    const isBranchFolder = branchId != null && tenantId != null;
+    const isLibraryFolder = branchId == null && tenantId != null;
+
+    // METHOD B: The "Dedicated User" Path
+    if (isBranchFolder) {
+        return `${domainName}/${libraryFolder}/${branchFolder}/${image}`;
+    } else if (isLibraryFolder) {
+        return `${domainName}/${libraryFolder}/${image}`;
+    }
+    
+    return `${domainName}/images/temp/librarycover.png`; // Final safety fallback
+};
+
+
+//UPLOADS USER PICTURES
+//This mirrors the CreateMedia logic by using FormData to send the binary file
+//along with the necessary metadata (ID and filename).
+
+const uploadPictures = async (data, getToken) => {
+
+    const headers = await getAuthHeadersNoJson(getToken);
+    const libraryFolder = data.LibraryId.toString();
+    const branchFolder = data._id.toString();
+    const domainName = BASE_URL.replace('/api/library', '');
+
+    const branchUrl = `${domainName}/${libraryFolder}/${branchFolder}/`;
+    const formData = new FormData();
+
+    // The actual image file (from your file input)
+    formData.append('imageFile', data.file);
+    // Metadata required by the server
+    formData.append('branchId', data._id);
+    formData.append('fileName', data.fileName);      // e.g., "profile_shot"
+    formData.append('extension', data.extension);    // e.g., ".jpg"
+
+    // 5. Execute the request
+    return fetchHelper(branchUrl, {
+        method: 'POST',
+        headers: headers,
+        body: formData, // The body is now the Multi-part Form Data
+    });
+};
 
 export default {
     create,
@@ -230,5 +300,8 @@ export default {
     createBranch,
     readBranch,
     updateBranch,
-    removeBranch
+    removeBranch,
+    getCountries,
+    getImages,
+    uploadPictures
 };

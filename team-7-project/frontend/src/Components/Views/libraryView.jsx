@@ -70,28 +70,7 @@ export const LibraryView = () => {
 
     // conditional rendering
     const renderView = () => {
-        // itemId is the second segment: #library/itemId
-        // Preserving architecture: extracting ID from the stateful pathSegmentsa
-        /* const itemId = pathSegments[1];
- 
-         switch (currentView) {
-             case ROUTES.MEDIA:
-                 return (
-                     <Media
-                         mediaId={itemId}
-                         viewContext="library"
-                     /*onBack={() => window.location.hash = ROUTES.LIBRARY*} */
-        /*       />
-           );
-       case ROUTES.LIBRARY:
-       default:
-           return <Library mediaId={itemId} />;
-   }*/
-        // Extraction based on your Posited Logic:
-        // Index 0: 'library'
-        // Index 1: tenantId OR mediaId (if only 2 segments)
-        // Index 2: branchId OR mediaId (if 3 segments)
-        // Index 3: mediaId (if 4 segments)
+
 
         let tenantId = null;
         let branchId = null;

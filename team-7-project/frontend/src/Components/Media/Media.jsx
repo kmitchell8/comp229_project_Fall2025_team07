@@ -5,12 +5,14 @@ import { useMedia } from '../StateProvider/mediaState/useMedia';
 import { useLibrary } from '../StateProvider/libraryState/useLibrary';
 import { ROUTES } from '../Api/routingConfig';
 import './Media.css';
+import { getHash } from '../Api/getPage';
 
 const Media = ({ mediaId, viewContext, onUpdate }) => {
+
   const { getToken, isAdmin } = useAuth();
   const { mediaTypeConfigs, refreshMedia, genres: masterGenres } = useMedia();
   const { activeIds, refreshLibrary, currentLibrary } = useLibrary(); // Get the IDs resolved by the Provider
-  const { tenantId, branchId } = activeIds;
+  const { tenantId} = activeIds;
   // Determine the context for the drop library/drop down
   const isMasterView = !tenantId;
 
@@ -168,18 +170,33 @@ const Media = ({ mediaId, viewContext, onUpdate }) => {
     const label = field.label.split('.')[1] || field.label;
     return { label: label.charAt(0).toUpperCase() + label.slice(1), value: item[key] || "" };
   };
-  const handleBackToLibrary = () => {
+const handleBackToLibrary = () => {
+    const tenantId = currentLibrary?._id;
+    const path = getHash(); 
+
     if (!tenantId) {
-      // No tenant means  Master Library
-      window.location.hash = ROUTES.LIBRARY;
-    } else if (!branchId) {
-      // in a specific Library, but no specific branch
-      window.location.hash = `${ROUTES.LIBRARY}/${tenantId}`;
-    } else {
-      // within a specific Branch
-      window.location.hash = `${ROUTES.LIBRARY}/${tenantId}/${branchId}`;
+        window.location.hash = ROUTES.LIBRARY;
+        return;
     }
-  };
+
+    if (path.includes(tenantId)) {
+
+        const tenantIndex = path.indexOf(tenantId);
+        const endOfTenant = tenantIndex + tenantId.length;
+        const trailingPath = path.substring(endOfTenant);
+
+        if (trailingPath.length > 1) {
+            const lastSlashIndex = path.lastIndexOf('/');
+            window.location.hash = path.substring(0, lastSlashIndex);
+        } else {
+            window.location.hash = ROUTES.LIBRARY;
+        }
+    } else {
+        // Fallback for any other unexpected state
+        window.location.hash = ROUTES.LIBRARY;
+    }
+};
+
   if (loading) return <div className="media-status">Loading entry...</div>;
   if (error) return <div className="media-status error">{error}</div>;
   if (!media) return null;

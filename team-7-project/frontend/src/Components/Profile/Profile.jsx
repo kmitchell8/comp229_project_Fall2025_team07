@@ -32,6 +32,7 @@ export const Profile = ({ managedUserId = null }) => {
         coverPreview,
         countryData,
         isOwnProfile,
+        canEditPermissions,
         hasChanges,
         handleInputChange,
         submitUpdates,
@@ -190,9 +191,9 @@ export const Profile = ({ managedUserId = null }) => {
 
                         <div className="media-action-bar">
                             {!isEditing ? (
-                                <button className="media-back-btn" onClick={() => setIsEditing(true)}>
+                               canEditPermissions && ( <button className="media-back-btn" onClick={() => setIsEditing(true)}>
                                     Edit Profile
-                                </button>
+                                </button>)
                             ) : (
                                 <div className="edit-actions-group">
                                     <button
@@ -402,7 +403,7 @@ export const Profile = ({ managedUserId = null }) => {
                                                             onChange={onRoleChange}
                                                             style={{ width: 'auto', marginRight: '10px', opacity: 1, visibility: 'visible', position: 'relative' }}
                                                         />
-                                                        <span className="radio-text">{role}</span>
+                                                        <span className="radio-text">{role.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase()).trim()}</span>
                                                     </label>
                                                 ))
                                             ) : (

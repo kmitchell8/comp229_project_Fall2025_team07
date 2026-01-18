@@ -7,7 +7,10 @@ import userApi from '../../Api/userApi.jsx';
 
 export const UserProvider = ({ children }) => {
     // userInfo and getToken come from your Auth logic
-    const { userInfo, loading: authLoading, getToken, availableRoles, hasAdminPrivileges, login } = useAuth();
+    // Note: ensure userInfo in useAuth is the user object, and maybe you have a setUser setter?
+    const { userInfo, loading: authLoading, getToken, availableRoles,
+        hasAdminPrivileges, login, setUser,
+        isAdmin, isLibraryAdmin, isBranchAdmin } = useAuth();
 
     // Core States
     const [userData, setUserData] = useState({
@@ -28,11 +31,10 @@ export const UserProvider = ({ children }) => {
         role: 'user'
     });
 
-
     // Moving managedUserId to state so the Provider can react to changes 
     // when the Admin clicks different users in UpdateUser.
     const [selectedUserId, setSelectedUserId] = useState(null);
-
+    const [selectedUserRole, setSelectedUserRole] = useState(null);
     const [originalData, setOriginalData] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -54,67 +56,67 @@ export const UserProvider = ({ children }) => {
         regionalOptions: {}
     });
 
+    // Helper: Normalize Date for HTML inputs
+    const formatDateForInput = (dateString) => {
+        if (!dateString) return '';
+        return new Date(dateString).toISOString().split('T')[0];
+    };
+
     // Load User Data - Consolidated to handle both Fetching and Snapshotting
     useEffect(() => {
-
-        let isMounted = true; // Prevents state updates on unmounted components
+        let isMounted = true;
 
         const loadUserData = async () => {
+            // Determine who we are looking at: an explicitly selected user (Admin view) or ourselves
             const targetId = selectedUserId || userInfo?._id;
             if (!targetId) return;
 
-            // MediaProvider Pattern: We set loading to true which the UI uses to 
-            // unmount/hide the old data before the new data arrives.
             setLoading(true);
             try {
-                if (targetId) {
-                    // Use .read to match userApi.jsx
-                    const data = await userApi.read(targetId, getToken);
+                // Use .read to match userApi.jsx
+                const data = await userApi.read(targetId, getToken);
 
-                    if (data && isMounted) {
-                        // Normalize the data immediately for the form inputs
-                        const normalizedData = {
-                            ...data,
-                            name: data.name || '',
-                            username: data.username || 'N/A',
-                            email: data.email || '',
-                            altEmail: data.altEmail || '',
-                            phone: data.phone || '',
-                            // Ensure date is formatted for <input type="date">
-                            dob: data.dob && typeof data.dob === 'string'
-                                ? data.dob.split('T')[0]
-                                : '',
-                            address: {
-                                street: data.address?.street || '',
-                                addressLineTwo: data.address?.addressLineTwo || '',
-                                city: data.address?.city || '',
-                                province: data.address?.province || '',
-                                postalCode: data.address?.postalCode || '',
-                                Country: data.address?.Country || 'Canada',
-                            },
-                            preferredContact: data.preferredContact || 'email',
-                            role: data.role || 'user',
-                            _id: data._id,
-                            managementAccess: data.managementAccess || { libraryId: null, branchId: null }
-                        };
+                if (data && isMounted) {
+                    // Normalize the data immediately for the form inputs
+                    const normalizedData = {
+                        ...data,
+                        name: data.name || '',
+                        username: data.username || 'N/A',
+                        email: data.email || '',
+                        altEmail: data.altEmail || '',
+                        phone: data.phone || '',
+                        dob: formatDateForInput(data.dob),
+                        address: {
+                            street: data.address?.street || '',
+                            addressLineTwo: data.address?.addressLineTwo || '',
+                            city: data.address?.city || '',
+                            province: data.address?.province || '',
+                            postalCode: data.address?.postalCode || '',
+                            Country: data.address?.Country || 'Canada',
+                        },
+                        preferredContact: data.preferredContact || 'email',
+                        role: data.role || 'user',
+                        _id: data._id,
+                        managementAccess: data.managementAccess || { libraryId: null, branchId: null }
+                    };
 
-                        // Update both states at once to keep them in sync
-                        setUserData(normalizedData);
-                        setOriginalData(JSON.parse(JSON.stringify(normalizedData)));
-                        setIsEditing(false); // Reset editing mode automatically on data switch
-                    }
+                    setUserData(normalizedData);
+                    // Deep copy to ensure originalData stays pure for change detection
+                    setOriginalData(JSON.parse(JSON.stringify(normalizedData)));
+                    setIsEditing(false);
                 }
             } catch (err) {
                 console.error("Error loading user into Context:", err);
             } finally {
-                if (isMounted) setLoading(false); // End loading state
+                if (isMounted) setLoading(false);
             }
         };
 
-        // Only load if Auth has finished or if we have an explicit selectedUserId
-        if (!authLoading || selectedUserId) {
+        if (!authLoading) {
             loadUserData();
         }
+
+        return () => { isMounted = false; };
     }, [selectedUserId, userInfo?._id, getToken, authLoading]);
 
     // Fetch country and regional data from API on component mount
@@ -130,7 +132,7 @@ export const UserProvider = ({ children }) => {
         fetchLocationData();
     }, []);
 
-    // Cleanup function to revoke the data URLs
+    // Cleanup function to revoke the data URLs to prevent memory leaks
     useEffect(() => {
         return () => {
             if (avatarPreview) URL.revokeObjectURL(avatarPreview);
@@ -140,8 +142,56 @@ export const UserProvider = ({ children }) => {
 
     // Derived Logic: Determine if the person logged in is looking at their own profile
     const isOwnProfile = useMemo(() => {
-        return !selectedUserId || selectedUserId === userInfo?._id;
+        return !!userInfo?._id && (selectedUserId === userInfo._id || !selectedUserId);
     }, [selectedUserId, userInfo?._id]);
+
+
+
+    const isSameTenant = useMemo(() => {
+        if (!userInfo || !userData) return false;
+
+        // Global Admins (isAdmin) have jurisdiction over everyone
+        if (isAdmin) return true;
+
+        const myLibraryId = userInfo.managementAccess?.libraryId;
+        const targetLibraryId = userData.managementAccess?.libraryId;
+
+        // Unaffiliated Check: If target has no library, any admin can manage them
+        if (!targetLibraryId) return true;
+
+        // Tenant Match: Otherwise, library IDs must match
+        return myLibraryId === targetLibraryId;
+    }, [userInfo, userData, isAdmin]);
+
+    // Can this admin change this user's role?
+    const canEditPermissions = useMemo(() => {
+        // Helper to turn auth flags into a numeric rank for comparison
+        const getRank = (user, flags = null) => {
+            // If checking the Logged-in Admin (using flags from AuthProvider)
+            if (flags) {
+                if (flags.isAdmin) return 3;
+                if (flags.isLibraryAdmin) return 2;
+                if (flags.isBranchAdmin) return 1;
+            }
+            // If checking the Target User (using the userData.role string)
+            if (user?.role === 'admin') return 3;
+            if (user?.role === 'libraryAdmin') return 2;
+            if (user?.role === 'branchAdmin') return 1;
+            return 0; // Standard User
+        };
+
+        if (isOwnProfile) return false;
+        if (!userInfo || !userData) return false;
+
+        const myLevel = getRank(userInfo, { isAdmin, isLibraryAdmin, isBranchAdmin });
+        const targetLevel = getRank(userData);
+
+        // Requirement: Admin must be same level or higher AND have jurisdiction
+        const hasHierarchyAuthority = myLevel >= targetLevel;
+
+        return hasHierarchyAuthority && isSameTenant;
+    }, [userInfo, userData, isOwnProfile, isSameTenant, isAdmin, isLibraryAdmin, isBranchAdmin]);
+
 
     // Check for actual changes to enable/style the save button
     const hasChanges = useMemo(() => {
@@ -150,19 +200,18 @@ export const UserProvider = ({ children }) => {
         return textChanged || !!pendingAvatar || !!pendingCover;
     }, [userData, originalData, pendingAvatar, pendingCover]);
 
-    // Local state for the "Activity" data - placeholder for library stats
     const userActivity = useMemo(() => ({
         libraryCard: userData.role || 'Standard',
         mediaInventory: userData.mediaInventory || [],
         ratings: userData.ratings || []
     }), [userData.role, userData.mediaInventory, userData.ratings]);
 
-    // Reusable handler to support the flatter structure used in the Contact form
     const handleInputChange = (e, field, isAddress = false) => {
         const { value } = e.target;
         setUserData(prev => {
             if (isAddress) {
                 const updatedAddress = { ...prev.address, [field]: value };
+                // Reset province if country changes to avoid invalid combinations
                 if (field === 'Country') updatedAddress.province = '';
                 return { ...prev, address: updatedAddress };
             }
@@ -170,14 +219,13 @@ export const UserProvider = ({ children }) => {
         });
     };
 
-    // Handles the file selection from the hidden inputs
     const onAvatarSelected = (e) => {
         const file = e.target.files[0];
         if (file) {
             if (avatarPreview) URL.revokeObjectURL(avatarPreview);
             setPendingAvatar(file);
             setAvatarPreview(URL.createObjectURL(file));
-            e.target.value = '';
+            e.target.value = ''; // Reset input so same file can be re-selected
         }
     };
 
@@ -191,7 +239,6 @@ export const UserProvider = ({ children }) => {
         }
     };
 
-    // Standard Error Handler for images
     const handleImgError = (e, type) => {
         const targetId = userData._id;
         const placeholder = type === 'cover' ? 'coverimage' : 'profileimage';
@@ -202,7 +249,6 @@ export const UserProvider = ({ children }) => {
         }
     };
 
-    // Logic to prepare the binary data for the API
     const prepareUpload = (file, prefix, targetId) => {
         const lastDot = file.name.lastIndexOf('.');
         const extension = file.name.substring(lastDot);
@@ -219,9 +265,6 @@ export const UserProvider = ({ children }) => {
         };
     };
 
-    // Save Logic: Logic to handle the API update when 'Submit Changes' is clicked // 
-
-    //logic is questionable ==future troubleshooting
     const submitUpdates = async () => {
         if (!hasChanges) { setIsEditing(false); return; }
 
@@ -231,10 +274,10 @@ export const UserProvider = ({ children }) => {
         setIsSaving(true);
         try {
             const targetId = userData._id;
-
             let finalAvatar = userData.profileImage;
             let finalCover = userData.coverImage;
 
+            // Handle Image Uploads first if they exist
             if (pendingAvatar) {
                 const { payload, fullName } = prepareUpload(pendingAvatar, 'user', targetId);
                 await userApi.uploadPictures(payload, getToken);
@@ -247,30 +290,35 @@ export const UserProvider = ({ children }) => {
                 finalCover = fullName;
             }
 
-            const finalUserData = {
+            const payload = {
                 ...userData,
                 profileImage: finalAvatar,
                 coverImage: finalCover
             };
 
-            const updatedUser = await userApi.update(finalUserData, targetId, getToken);
+            const updatedUser = await userApi.update(payload, targetId, getToken);
 
-            if (isOwnProfile && userInfo) {
-                userInfo(updatedUser);
+            // CRITICAL: Only update Auth context if the user is editing THEMSELVES
+            // Otherwise, an Admin updating a user would log themselves in as that user.
+            if (isOwnProfile && setUser) {
+                setUser(updatedUser);
             }
 
-            setOriginalData(JSON.parse(JSON.stringify(finalUserData)));
-            setUserData(finalUserData);
-            // resetLocalStates();
+            // Sync states
+            const syncData = { ...payload, dob: formatDateForInput(payload.dob) };
+            setUserData(syncData);
+            setOriginalData(JSON.parse(JSON.stringify(syncData)));
 
-            // Clear the file previews/pending objects
+            // Clear pending states
             if (avatarPreview) URL.revokeObjectURL(avatarPreview);
             if (coverPreview) URL.revokeObjectURL(coverPreview);
             setPendingAvatar(null);
             setPendingCover(null);
             setAvatarPreview(null);
             setCoverPreview(null);
+
             setIsEditing(false);
+            alert("Profile updated successfully!");
         } catch (error) {
             console.error("Failed to update profile:", error);
             alert("Update failed. Please try again.");
@@ -310,6 +358,7 @@ export const UserProvider = ({ children }) => {
         coverPreview, setCoverPreview,
         countryData,
         isOwnProfile,
+        canEditPermissions,
         hasChanges,
         handleInputChange,
         submitUpdates,
@@ -320,7 +369,8 @@ export const UserProvider = ({ children }) => {
         userActivity,
         availableRoles,
         hasAdminPrivileges,
-        selectedUserId, setSelectedUserId, // Explicitly exposed for UpdateUser list
+        selectedUserId, setSelectedUserId,
+        selectedUserRole, setSelectedUserRole,
         handlePasswordResetRequest
     };
 

@@ -31,6 +31,13 @@ router.route('/:libraryId')
   .delete(authCtrl.requireSignin, authCtrl.isAdmin, libraryCtrl.remove);
 
 
+
+  // FLAT BRANCH ROUTES (Allows fetching/updating without knowing libraryId)
+router.route('/branch/:branchId')
+  .get(branchCtrl.read)
+  .put(authCtrl.requireSignin, authCtrl.hasAuthorization, branchCtrl.update)
+  .delete(authCtrl.requireSignin, authCtrl.hasAuthorization, branchCtrl.remove);
+  
 // BRANCH ROUTES (NESTED UNDER LIBRARY)
 
 // List branches for a specific library or create a new branch within a library

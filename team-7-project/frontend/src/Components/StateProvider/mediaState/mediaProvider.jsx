@@ -1,26 +1,23 @@
-import React, { /*createContext,*/ useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { MediaContext } from './mediaContext.jsx';
 import { useLibrary } from '../libraryState/useLibrary.jsx';
 import mediaApi from '../../Api/mediaApi';
 
 export const MediaProvider = ({ children }) => {
-
     const { currentLibrary, branchId } = useLibrary();
 
     const [media, setMedia] = useState([]);
     const [loading, setLoading] = useState(true);
     const [mediaTypeConfigs, setMediaTypeConfigs] = useState({});
-    const [genres, setGenres] = useState([]); // Master list of genres from API
+    const [genres, setGenres] = useState([]); 
+    const [configStrings, setConfigStrings] = useState({ ignoredSuffixes: [], ignoredPrefixes: [] });
+    const [mediaTypes, setMediaTypes] = useState([]);
 
-    // UI State for Filters (Moved from Library.jsx)
+    // UI Filter State
     const [viewMode, setViewMode] = useState('genre');
     const [sortBy, setSortBy] = useState('title');
     const [searchTerm, setSearchTerm] = useState("");
     const [filterType, setFilterType] = useState('all');
-    const [configStrings, setConfigStrings] = useState({ ignoredSuffixes: [], ignoredPrefixes: [] });
-
-    const [mediaTypes, setMediaTypes] = useState([]);
-
 
     const loadGlobalConfigs = useCallback(async () => {
         try {
@@ -30,9 +27,8 @@ export const MediaProvider = ({ children }) => {
                 mediaApi.getConfigDoc('prefixSuffix')
             ]);
 
-            const configs = typeConfigs || {};
-            setMediaTypeConfigs(configs);
-            setMediaTypes(Object.keys(configs));
+            setMediaTypeConfigs(typeConfigs || {});
+            setMediaTypes(Object.keys(typeConfigs || {}));
             setGenres(Array.isArray(genreList) ? genreList : []);
             if (prefixSuffixData) setConfigStrings(prefixSuffixData);
         } catch (error) {
@@ -40,21 +36,12 @@ export const MediaProvider = ({ children }) => {
         }
     }, []);
 
-    // Updated loadData (Focuses only on Media Items)
     const loadData = useCallback(async () => {
-    
         const libraryId = currentLibrary?._id || null;
         setLoading(true);
         try {
-            // Fetch media items for the current context (Master or Tenant)
-            // pass currentLibrary?._id which will be null for Master
             const mediaData = await mediaApi.list(libraryId, branchId);
-
-            if (Array.isArray(mediaData)) {
-                setMedia(mediaData);
-            } else {
-                setMedia([]);
-            }
+            setMedia(Array.isArray(mediaData) ? mediaData : []);
         } catch (error) {
             console.error('Error fetching media list:', error);
             setMedia([]);
@@ -63,23 +50,113 @@ export const MediaProvider = ({ children }) => {
         }
     }, [currentLibrary, branchId]);
 
-    // Updated Effects
-    useEffect(() => {
-        loadGlobalConfigs(); // Load tabs/genres once on mount
-    }, [loadGlobalConfigs]);
+    // MOVED FROM MEDIA.JSX: Fetches full single-item details and the associated .txt description
+    const fetchFullDetails = useCallback(async (mediaId) => {
+        if (!mediaId) return null;
+        const data = await mediaApi.read(mediaId);
+        let text = data.description ? await mediaApi.getDescriptionText(data.description) : "";
+        
+        // Return structured data for the local component state
+        return {
+            media: { ...data, _originalDescriptionText: text },
+            description: text
+        };
+    }, []);
 
-    useEffect(() => {
-        loadData(); // Load items whenever the library/branch changes
-    }, [loadData]);
-
-    // Sorting Helper for Labels
-    const getSortLabel = useCallback(() => {
-        if (filterType === 'all' || !mediaTypeConfigs[filterType]) {
-            return "Creator";
+    // PRESERVED LOGIC: Centralized formatting/mapping for Dynamic Changes
+    const formatValueForField = useCallback((value, inputType) => {
+        if (inputType === 'list' || inputType === 'array') {
+            return (typeof value === 'string' && value.trim() === '')
+                ? []
+                : (typeof value === 'string' ? value.split(',').map(v => v.trim()) : value);
         }
+        if (inputType === 'number' || inputType === 'integer') {
+            return value === '' ? 0 : Number(value);
+        }
+        if (inputType === 'checkbox' || inputType === 'boolean') {
+            return Boolean(value);
+        }
+        return value;
+    }, []);
+
+    // MOVED FROM MEDIA.JSX: Extracts creator info based on dynamic config
+    const getCreatorInfo = useCallback((item) => {
+        if (!item) return { label: "", value: "" };
+        const config = mediaTypeConfigs[item.mediaType];
+        const field = config?.find(f => f.name.startsWith('creator'));
+        if (!field) return { label: "", value: "" };
+        const key = field.name.split('.')[1] || field.name;
+        const label = field.label.split('.')[1] || field.label;
+        return { label: label.charAt(0).toUpperCase() + label.slice(1), value: item[key] || "" };
+    }, [mediaTypeConfigs]);
+  // State Comparison Logic 
+  /*const hasChanges = () => {
+    if (!media || !editData) return false;
+
+    // Check if the description text has changed
+    // compare current 'description' state vs what we initially loaded
+    // Note: 'media.description' is just the filename, so check against the 
+    // text stored during fetchFullDetails (might want a 'originalDescription' state for 100% accuracy)
+    // For now, compare against the text content.
+    const descChanged = description !== (media._originalDescriptionText || "");
+    if (descChanged) return true;
+
+    // Check dynamic fields
+    const currentConfig = mediaTypeConfigs[media.mediaType] || [];
+    const keysToCheck = [
+      'title',
+      'genre',
+      ...currentConfig.map(f => f.name.includes('.') ? f.name.split('.')[1] : f.name)
+    ];
+
+    return keysToCheck.some(key => {
+      const orig = media[key];
+      const edit = editData[key];
+      if (Array.isArray(orig) || Array.isArray(edit)) {
+        return JSON.stringify(orig || []) !== JSON.stringify(edit || []);
+      }
+      return String(orig ?? '') !== String(edit ?? '');
+    });
+  };
+*/
+const handleRevert = useCallback((media) => {
+    if (!media) return null;
+    return {
+        // Returns a fresh deep copy of the original data
+        editData: JSON.parse(JSON.stringify(media)),
+        // Returns the original description text we stored earlier
+        description: media._originalDescriptionText || ""
+    };
+}, []);
+
+  const handleCancel = () => { handleRevert();  };
+    // MOVED FROM MEDIA.JSX: Centralized dirty-checking
+    const checkHasChanges = useCallback((media, editData, description) => {
+        if (!media || !editData) return false;
+        if (description !== (media._originalDescriptionText || "")) return true;
+        const currentConfig = mediaTypeConfigs[media.mediaType] || [];
+        const keys = ['title', 'genre', ...currentConfig.map(f => f.name.includes('.') ? f.name.split('.')[1] : f.name)];
+        return keys.some(key => JSON.stringify(media[key] || "") !== JSON.stringify(editData[key] || ""));
+    }, [mediaTypeConfigs]);
+
+    // MOVED FROM MEDIA.JSX: Centralized update logic
+    const handleSave = useCallback(async (media, editData, description, getToken) => {
+        const config = mediaTypeConfigs[media.mediaType] || [];
+        const allowed = ['title', 'genre', ...config.map(f => f.name.includes('.') ? f.name.split('.')[1] : f.name)];
+        const payload = allowed.reduce((acc, k) => { if (editData[k] !== undefined) acc[k] = editData[k]; return acc; }, {});
+        payload.descriptionText = description;
+
+        await mediaApi.update(payload, media._id, getToken);
+        await loadData(); // Refresh the provider's list state
+    }, [mediaTypeConfigs, loadData]);
+
+    useEffect(() => { loadGlobalConfigs(); }, [loadGlobalConfigs]);
+    useEffect(() => { loadData(); }, [loadData]);
+
+    const getSortLabel = useCallback(() => {
+        if (filterType === 'all' || !mediaTypeConfigs[filterType]) return "Creator";
         const config = mediaTypeConfigs[filterType];
         const creatorField = config.find(f => f.name.startsWith('creator'));
-
         if (creatorField?.label) {
             const labelParts = creatorField.label.split('.');
             const cleanLabel = labelParts.length > 1 ? labelParts[1] : labelParts[0];
@@ -88,7 +165,6 @@ export const MediaProvider = ({ children }) => {
         return "Creator";
     }, [filterType, mediaTypeConfigs]);
 
-    // Main Shelf Engine (Internal logic preserved)
     const shelfData = useMemo(() => {
         const currentMedia = Array.isArray(media) ? media : [];
 
@@ -106,9 +182,7 @@ export const MediaProvider = ({ children }) => {
             const parts = fullName.trim().split(/\s+/);
             if (parts.length <= 1) return parts[0].toLowerCase();
             let lastIndex = parts.length - 1;
-            if (suffixes.includes(parts[lastIndex].toLowerCase()) && parts.length > 1) {
-                lastIndex--;
-            }
+            if (suffixes.includes(parts[lastIndex].toLowerCase()) && parts.length > 1) lastIndex--;
             return parts[lastIndex].toLowerCase();
         };
 
@@ -124,15 +198,12 @@ export const MediaProvider = ({ children }) => {
         const grouped = filteredMedia.reduce((acc, item) => {
             let key;
             if (viewMode === 'genre') {
-                const rawGenre = item.genre || "Other";
-                key = rawGenre;//.charAt(0).toUpperCase() + rawGenre.slice(1).toLowerCase();
+                key = item.genre || "Other";
             } else {
                 let sortValue = (item[sortBy] || item.title || "#").toString().trim();
                 if (sortBy === 'author') {
                     const creatorKey = getCreatorKey(item);
-                    if (creatorKey && item[creatorKey]) {
-                        sortValue = getLastName(item[creatorKey]);
-                    }
+                    if (creatorKey && item[creatorKey]) sortValue = getLastName(item[creatorKey]);
                 }
                 key = sortValue.charAt(0).toUpperCase();
                 if (!/[A-Z]/.test(key)) key = "#";
@@ -143,13 +214,10 @@ export const MediaProvider = ({ children }) => {
         }, {});
 
         const ignorePrefixes = (configStrings.ignoredPrefixes || []).map(p => p.toLowerCase());
-
         const stripPrefix = (str) => {
             if (!str) return "";
             const parts = str.trim().split(/\s+/);
-            if (parts.length > 1 && ignorePrefixes.includes(parts[0].toLowerCase())) {
-                return parts.slice(1).join(' ');
-            }
+            if (parts.length > 1 && ignorePrefixes.includes(parts[0].toLowerCase())) return parts.slice(1).join(' ');
             return str;
         };
 
@@ -162,9 +230,7 @@ export const MediaProvider = ({ children }) => {
                     const valB = keyB ? b[keyB] : "";
                     const lastA = getLastName(valA);
                     const lastB = getLastName(valB);
-                    if (lastA === lastB) {
-                        return (valA || "").localeCompare(valB || "");
-                    }
+                    if (lastA === lastB) return (valA || "").localeCompare(valB || "");
                     return lastA.localeCompare(lastB);
                 }
                 const titleA = stripPrefix(a.title || '').toLowerCase();
@@ -184,24 +250,30 @@ export const MediaProvider = ({ children }) => {
 
     const value = {
         media,
-        mediaTenantId: media?.libraryId,
-        mediaBranchId: media?.branchId,
         loading,
         shelfData,
         mediaTypeConfigs,
         configStrings,
-        genres, // Now strictly managed from the Master List
+        genres,
         mediaTypes,
         viewMode, setViewMode,
         sortBy, setSortBy,
         searchTerm, setSearchTerm,
         filterType, setFilterType,
         getSortLabel,
+        getCreatorInfo,
+        fetchFullDetails,
+        checkHasChanges,
+        handleSave,
+        formatValueForField, 
+        handleCancel,
+        handleRevert,
         refreshMedia: loadData
     };
 
     return (
         <MediaContext.Provider value={value}>
             {children}
-        </MediaContext.Provider>);
+        </MediaContext.Provider>
+    );
 };

@@ -1,12 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { LibraryContext } from './libraryContext';
 import libraryApi from '../../Api/libraryApi';
-//import mediaApi from '../../Api/mediaApi';
 import { useAuth } from '../authState/useAuth';
-//import { useMedia } from '../mediaState/useMedia';
-//import { getHash } from '../../Api/getPage';
-import { ROUTES, ADMIN_SUB_VIEWS, LIBRARY_VIEWS } from '../../Api/routingConfig';
-
+import { ROUTES } from '../../Api/routingConfig';
 
 const ADDRESS_FIELDS = [
     { name: 'street', label: 'Street', type: 'text' },
@@ -19,30 +15,24 @@ const ADDRESS_FIELDS = [
 
 export const LibraryProvider = ({ children }) => {
     const { getToken, user, loading: authLoading, tenantId, branchId } = useAuth();
-    //const {mediaBranchId, mediaTenantId} = useMedia();
     const [currentLibrary, setCurrentLibrary] = useState(null);
     const [branches, setBranches] = useState([]);
     const [libraryData, setLibraryData] = useState({});
-    const [currentBranch, setCurrentBranch] = useState([]);
+    const [currentBranch, setCurrentBranch] = useState(null); // Changed to null as default
     const [branchData, setBranchData] = useState({});
-    const [branchesList, setBranchesList] = useState({});
+    const [branchesList, setBranchesList] = useState([]);
     const [originalData, setOriginalData] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
-    //const [selectedBranchId, setSelectedBranchId] = useState('all');
     const [loading, setLoading] = useState(false);
-    /*const [activeIds, setActiveIds] = useState({
-        tenantId: null,
-        branchId: null
-    });*/
-    // State for dynamically loaded country and regional data from API
+
     const [countryData, setCountryData] = useState({
         countries: [],
         regionalOptions: {}
     });
-    // Cover Image Upload States
-    const [pendingLibraryCover, setPendingLibraryCover] = useState(null); // Holds the actual File object
-    const [libraryCoverPreview, setLibraryCoverPreview] = useState(null); // Holds local blob URL for instant UI feedback
+
+    const [pendingLibraryCover, setPendingLibraryCover] = useState(null);
+    const [libraryCoverPreview, setLibraryCoverPreview] = useState(null);
     const [pendingBranchCover, setPendingBranchCover] = useState(null);
     const [branchCoverPreview, setBranchCoverPreview] = useState(null);
 
@@ -63,65 +53,51 @@ export const LibraryProvider = ({ children }) => {
         }
     };
 
-    const loadLibraryData = useCallback(async () => {
-        if (authLoading) return;
-        setLoading(true);
+   const loadLibraryData = useCallback(async () => {
+    if (authLoading) return;
+    setLoading(true);
 
-        try {
-            if (tenantId) {
-                // Check if we are looking at a specific branch
-                const hasValidBranchId = branchId &&
-                    branchId !== 'undefined' &&
-                    branchId !== 'null' &&
-                    branchId !== 'all' &&
-                    branchId.length > 5;
+    try {
+        const validBranchId = (branchId && !['all', 'null', 'undefined'].includes(String(branchId))) ? branchId : null;
+        
+        let branchInfo = null;
 
-                const [libData, branchesListResult, branchInfo] = await Promise.all([
-                    libraryApi.read(tenantId, getToken),
-                    libraryApi.listBranchesByLibrary(tenantId, getToken),
-                    hasValidBranchId
-                        ? libraryApi.readBranch(tenantId, branchId, getToken)
-                        : Promise.resolve(null)
-                ]);
-
-               /*  const [mediaLibData] = await Promise.all([
-                    libraryApi.read(mediaTenantId, getToken),
-                    libraryApi.listBranchesByLibrary(mediaTenantId, getToken),
-                    hasValidBranchId
-                        ? libraryApi.readBranch(mediaTenantId, mediaBranchId, getToken)
-                        : Promise.resolve(null)
-                ]);*/
-
-
-                // Set the library as it exists in the DB
-                setCurrentLibrary(libData);
-                setBranches(branchesListResult || []);
-                setCurrentBranch(branchInfo);
-                setLibraryData(libData);
-                setBranchesList(branchesListResult || []);
-                setBranchData(branchInfo || {});
-
-                setOriginalData(JSON.parse(JSON.stringify({
-                    library: libData,
-                    branch: branchInfo || {}
-                })));
-
-            } else {
-                // AUTOMATIC GLOBAL VIEW: No artificial "Master" object created.
-                // just clear the specific IDs so the MediaProvider knows to show everything.
-                setCurrentLibrary(null);
-                const allBranches = await libraryApi.listAllBranches(getToken);
-                setBranches(allBranches || []);
-                setBranchesList(allBranches || []);
-                setCurrentBranch(null);
-            }
-        } catch (err) {
-            console.error("LibraryProvider Error:", err);
-        } finally {
-            setLoading(false);
+        // 1. Fetch Branch first (can now handle tenantId being null)
+        if (validBranchId) {
+            // This call will now hit /api/library/branch/:id if tenantId is null
+            branchInfo = await libraryApi.readBranch(tenantId, validBranchId, getToken);
+            setCurrentBranch(branchInfo);
+            setBranchData(branchInfo || {});
         }
-    }, [getToken, tenantId, branchId, authLoading]);
-    // Fetch country and regional data from API on component mount
+
+        // 2. Identify the Library ID from the branch we just fetched
+        const effectiveTenantId = (tenantId && tenantId !== 'null') ? tenantId : branchInfo?.libraryId;
+
+        // 3. Fetch Library details only if we now have a valid ID
+        if (effectiveTenantId && effectiveTenantId !== 'undefined') {
+            const [libData, branchesListResult] = await Promise.all([
+                libraryApi.read(effectiveTenantId, getToken),
+                libraryApi.listBranchesByLibrary(effectiveTenantId, getToken),
+            ]);
+
+            setCurrentLibrary(libData);
+            setLibraryData(libData);
+            setBranches(branchesListResult || []);
+            setBranchesList(branchesListResult || []);
+            
+            // Keep comments: Change tracking sync
+            setOriginalData(JSON.parse(JSON.stringify({
+                library: libData,
+                branch: branchInfo || {}
+            })));
+        }
+    } catch (err) {
+        console.error("LibraryProvider Error:", err);
+    } finally {
+        setLoading(false);
+    }
+}, [getToken, tenantId, branchId, authLoading]);
+
     useEffect(() => {
         const fetchLocationData = async () => {
             try {
@@ -134,7 +110,6 @@ export const LibraryProvider = ({ children }) => {
         fetchLocationData();
     }, []);
 
-    // Cleanup function to revoke the data URLs
     useEffect(() => {
         return () => {
             if (libraryCoverPreview) URL.revokeObjectURL(libraryCoverPreview);
@@ -142,43 +117,27 @@ export const LibraryProvider = ({ children }) => {
         };
     }, [libraryCoverPreview, branchCoverPreview]);
 
-    // Derived Logic: Determine if the person logged in is looking at their own profile
-    const isLibraryProfile = useMemo(() => {
-        return !tenantId || tenantId
-    }, [tenantId]);
+    const isLibraryProfile = useMemo(() => !tenantId || !!tenantId, [tenantId]);
+    const isBranchProfile = useMemo(() => !branchId || !!branchId, [branchId]);
 
-    const isBranchProfile = useMemo(() => {
-        return !branchId || branchId
-    }, [branchId]);
-
-    // Check for actual changes to enable/style the save button
     const hasChanges = useMemo(() => {
         if (!originalData) return false;
         const libraryChanged = JSON.stringify(libraryData) !== JSON.stringify(originalData.library);
         const branchChanged = JSON.stringify(branchData) !== JSON.stringify(originalData.branch);
-
         return libraryChanged || branchChanged || !!pendingLibraryCover || !!pendingBranchCover;
     }, [originalData, pendingLibraryCover, pendingBranchCover, libraryData, branchData]);
 
-
     useEffect(() => {
-        // Only fetch if auth is finished and we have a user
         if (!authLoading && user) {
             loadLibraryData();
         }
-
-        const handleHashChange = () => {
-            loadLibraryData();
-        };
-
+        const handleHashChange = () => loadLibraryData();
         window.addEventListener('hashchange', handleHashChange);
         return () => window.removeEventListener('hashchange', handleHashChange);
-
-        // Remove 'user' from dependencies if it causes re-runs on every auth refresh
     }, [loadLibraryData, authLoading, user]);
+
     const handleInputChange = (e, field, isAddress = false, target = 'branch') => {
         const { value, type, checked } = e.target;
-        // Handle both checkboxes (mainBranch) and text inputs
         const actualValue = type === 'checkbox' ? checked : value;
 
         const getUpdatedObject = (prevState) => {
@@ -190,7 +149,6 @@ export const LibraryProvider = ({ children }) => {
             return { ...prevState, [field]: actualValue };
         };
 
-
         if (target === 'library') {
             setLibraryData(prev => getUpdatedObject(prev));
         } else {
@@ -198,7 +156,6 @@ export const LibraryProvider = ({ children }) => {
         }
     };
 
-    // Handles the file selection from the hidden inputs
     const onLibraryCoverSelected = (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -208,7 +165,6 @@ export const LibraryProvider = ({ children }) => {
             e.target.value = '';
         }
     };
-
 
     const onBranchCoverSelected = (e) => {
         const file = e.target.files[0];
@@ -220,9 +176,7 @@ export const LibraryProvider = ({ children }) => {
         }
     };
 
-    // Standard Error Handler for images
     const handleImgError = (e, type) => {
-
         const placeholder = type === 'cover' ? 'branchcover' : 'librarycover';
         const fallbackUrl = libraryApi.getImages(placeholder, branchId, tenantId);
         if (e.target.src !== fallbackUrl) {
@@ -231,29 +185,18 @@ export const LibraryProvider = ({ children }) => {
         }
     };
 
-    // Logic to prepare the binary data for the API
     const prepareUpload = (file, prefix, targetId) => {
         const lastDot = file.name.lastIndexOf('.');
         const extension = file.name.substring(lastDot);
         const fileName = `${prefix}_${Date.now()}`;
-
         return {
-            payload: {
-                _id: targetId,
-                file: file,
-                fileName: fileName,
-                extension: extension
-            },
+            payload: { _id: targetId, file, fileName, extension },
             fullName: `${fileName}${extension}`
         };
     };
 
-    // Save Logic: Logic to handle the API update when 'Submit Changes' is clicked // 
-
-    //logic is questionable ==future troubleshooting
     const submitUpdates = async () => {
         if (!hasChanges) { setIsEditing(false); return; }
-
         const isConfirmed = window.confirm("Are you sure you want to update this profile?");
         if (!isConfirmed) return;
 
@@ -274,37 +217,16 @@ export const LibraryProvider = ({ children }) => {
                 finalBranchCover = fullName;
             }
 
-            const finalLibraryData = {
-                ...libraryData,
-                libraryImage: finalLibraryCover
-            };
-
-            const finalBranchData = {
-                ...branchData,
-                branchImage: finalBranchCover
-            };
-
-            // Execute Library Update only if isLibraryProfile is true
             if (isLibraryProfile && tenantId) {
-                await libraryApi.update(finalLibraryData, tenantId, getToken);
+                await libraryApi.update({ ...libraryData, libraryImage: finalLibraryCover }, tenantId, getToken);
             }
 
-            // Execute Branch Update only if isBranchProfile is true
             if (isBranchProfile && tenantId && branchId && branchId !== 'all') {
-                await libraryApi.updateBranch(tenantId, branchId, finalBranchData, getToken);
+                await libraryApi.updateBranch(tenantId, branchId, { ...branchData, branchImage: finalBranchCover }, getToken);
             }
 
-            // Refresh data to sync any changes made by the Mongoose middleware
             await loadLibraryData();
-
-            // Clear the file previews/pending objects
-            if (libraryCoverPreview) URL.revokeObjectURL(libraryCoverPreview);
-            if (branchCoverPreview) URL.revokeObjectURL(branchCoverPreview);
-            setPendingLibraryCover(null);
-            setPendingBranchCover(null);
-            setLibraryCoverPreview(null);
-            setBranchCoverPreview(null);
-            setIsEditing(false);
+            resetLocalStates();
         } catch (error) {
             console.error("Failed to update profile:", error);
             alert("Update failed. Please try again.");
@@ -326,6 +248,7 @@ export const LibraryProvider = ({ children }) => {
             setBranchData(JSON.parse(JSON.stringify(originalData.branch)));
         }
     };
+
     const value = {
         libraryData, setLibraryData,
         branchData, setBranchData,
@@ -347,7 +270,7 @@ export const LibraryProvider = ({ children }) => {
         loading,
         activeIds: {
             tenantId: tenantId || currentLibrary?._id || null,
-            branchId: 'all' // expand this logic later if needed
+            branchId: branchId || currentBranch?._id || 'all'
         },
         libraryDetails: DETAILS,
         getBranchName: (id) => {

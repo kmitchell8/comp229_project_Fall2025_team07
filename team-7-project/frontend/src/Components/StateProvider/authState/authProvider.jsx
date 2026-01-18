@@ -118,7 +118,7 @@ export const AuthProvider = ({ children }) => {
 
         // Tenant context
         tenantId: userInfo?.managementAccess?.libraryId || null,
-        BranchId: userInfo?.managementAccess?.branchId || null,
+        branchId: userInfo?.managementAccess?.branchId || null,
 
         // Actions
         login,

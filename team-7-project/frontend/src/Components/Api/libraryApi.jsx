@@ -190,13 +190,19 @@ const createBranch = async (libraryId, branchData, getToken) => {
 // Read specific branch details
 const readBranch = async (libraryId, branchId, getToken = null) => {
     const headers = await getAuthHeaders(getToken);
-    const url = `${BASE_URL}/${libraryId}/branches/${branchId}`;
+    
+    // Logic: Use flat route if libraryId is missing/null, otherwise use nested
+    const isLibraryIdValid = libraryId && libraryId !== 'null' && libraryId !== 'undefined';
+    
+    const url = isLibraryIdValid 
+        ? `${BASE_URL}/${libraryId}/branches/${branchId}` 
+        : `${API_URL}/library/branch/${branchId}`; // Hits the new flat route
+    
     return fetchHelper(url, {
         method: 'GET',
         headers: headers,
     });
 };
-
 // Update specific branch
 const updateBranch = async (libraryId, branchId, branchData, getToken) => {
     const headers = await getAuthHeaders(getToken);

@@ -76,7 +76,7 @@ const UserRow = React.memo(({
                                                         disabled={loading || !canChangeRole || user._id === currentUserId}
                                                     />
                                                     <span className="radio-custom-indicator-table"></span>
-                                                    <span className="radio-text">{roleOption}</span>
+                                                    <span className="radio-text">{roleOption.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase()).trim()}</span>
                                                 </label>
                                             ))}
                                         </div>
@@ -152,7 +152,7 @@ const UpdateUser = ({ pathId }/*{parentSegment}*/) => { //pass the _id path to b
     const {
         setSelectedUserId,
         availableRoles: providerRoles,
-        resetSelectedUser
+        resetSelectedUser,
     } = useUser();
 
     const { role: userRole, getToken, userInfo } = useAuth();
@@ -281,10 +281,16 @@ const UpdateUser = ({ pathId }/*{parentSegment}*/) => { //pass the _id path to b
             name: editedUser.name,
             email: editedUser.email,
             role: editedUser.role,
-            branchId: editedUser.branchId
+           managementAccess: {
+                // Keep the existing libraryId if it exists, or pull from your active context
+                libraryId: editedUser.managementAccess?.libraryId || originalUser.managementAccess?.libraryId || null,
+                // Assign the new branchId from your state
+                branchId: editedUser.branchId || null 
+            }
         };
 
         try {
+            console.log("SUBMITTING DATA:", updateData);
             await userApi.update(updateData, userId, getToken);
             setUsers(prevUsers => prevUsers.map(u => u._id === userId ? { ...editedUser } : u));
             setFeedbackMessage(prev => ({

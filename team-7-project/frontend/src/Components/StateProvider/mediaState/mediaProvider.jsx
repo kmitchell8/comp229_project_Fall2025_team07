@@ -47,7 +47,7 @@ export const MediaProvider = ({ children }) => {
         setLoading(true);
         try {
             // Fetch media items for the current context (Master or Tenant)
-            // We pass currentLibrary?._id which will be null for Master
+            // pass currentLibrary?._id which will be null for Master
             const mediaData = await mediaApi.list(libraryId, branchId);
 
             if (Array.isArray(mediaData)) {
@@ -63,7 +63,7 @@ export const MediaProvider = ({ children }) => {
         }
     }, [currentLibrary, branchId]);
 
-    // 3. Updated Effects
+    // Updated Effects
     useEffect(() => {
         loadGlobalConfigs(); // Load tabs/genres once on mount
     }, [loadGlobalConfigs]);
@@ -184,6 +184,8 @@ export const MediaProvider = ({ children }) => {
 
     const value = {
         media,
+        mediaTenantId: media?.libraryId,
+        mediaBranchId: media?.branchId,
         loading,
         shelfData,
         mediaTypeConfigs,

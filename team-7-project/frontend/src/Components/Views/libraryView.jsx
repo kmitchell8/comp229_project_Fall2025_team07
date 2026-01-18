@@ -21,29 +21,11 @@ export const LibraryView = () => {
     const getInitialView = useCallback(() => {
         const segments = getPathSegments();
         const primarySegment = segments[0];
-
         // initial view is the library page
         if (primarySegment === ROUTES.LIBRARY || !primarySegment) {
-            // Check if an itemId exists in the second segment
-            // This mirrors the itemId = parentSegments[2] logic in AdminView
-            /* if (segments[1]) {
-                 return ROUTES.MEDIA;
-             }
-             
-             // Defaulting hash to library if empty
-             if (!primarySegment) {
-                 window.location.hash = ROUTES.LIBRARY;
-             }
-             return ROUTES.LIBRARY;*/
-
-            // If the last segment is likely a media ID (e.g., the 2nd, 3rd, or 4th segment)
-            // check for length: 
-            // #library/medId (len 2)
-            // #library/tenId/medId (len 3)
-            // #library/tenId/brId/medId (len 4)
 
             // if more than a prefix, user is either in a specific list or a detail view.
-            // For now, let's treat the existence of any segment after the 'path' as a valid filter.
+            // treat the existence of any segment after the 'path' as a valid filter.
             return segments.length > 1 ? ROUTES.MEDIA : ROUTES.LIBRARY;
 
         }

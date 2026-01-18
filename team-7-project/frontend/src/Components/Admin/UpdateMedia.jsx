@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import mediaApi from '../Api/mediaApi';
 import { useAuth } from '../StateProvider/authState/useAuth';
 import { useMedia } from '../StateProvider/mediaState/useMedia'; // Provider Integration
+import { ROLE_TO_ROUTE_MAP } from '../Api/routingConfig';
 import Media from '../Media/Media';
 import './Admin.css';
 
@@ -16,7 +17,7 @@ const formatDate = (dateString) => {
             hour: '2-digit',
             minute: '2-digit'
         });
-    // eslint-disable-next-line no-unused-vars
+        // eslint-disable-next-line no-unused-vars
     } catch (e) {
         return dateString;
     }
@@ -28,7 +29,7 @@ const MediaRow = React.memo(({
     genres,
     feedback,
     hasChanges,
-    onCellChange, 
+    onCellChange,
     onView,
     onUpdate,
     onRevert,
@@ -108,7 +109,7 @@ const MediaRow = React.memo(({
                         disabled={!hasChanges || loading}
                         onClick={() => onUpdate(item._id, item.title)}
                     >Update</button>
-                    
+
                     <button
                         className="button-group revert-button"
                         onClick={() => onRevert(item._id)}
@@ -126,19 +127,24 @@ const MediaRow = React.memo(({
     );
 });
 
-const UpdateMedia = ({ pathId }) => { 
+const UpdateMedia = ({ pathId }) => {
 
-    const { role: userRole, getToken } = useAuth();
-    const canUpdateMedia = userRole === 'admin';
-    const canDeleteMedia = userRole === 'admin';
+    const { role: userRole, 
+        getToken, 
+        hasAdminPrivileges,
+        isAdmin,
+        isLibraryAdmin,
+        isBranchAdmin } = useAuth();
+    const canUpdateMedia = hasAdminPrivileges;
+    const canDeleteMedia = hasAdminPrivileges;
 
     // Deliberately using contextLoading to ensure data synchronization.
     // We alias mediaTypeConfigs to your original variable name and provide empty fallbacks.
-    const { 
-        genres = [], 
-        mediaTypeConfigs: mediaTypesConfig = {}, 
+    const {
+        genres = [],
+        mediaTypeConfigs: mediaTypesConfig = {},
         loading: contextLoading,
-        refreshMedia 
+        refreshMedia
     } = useMedia();
 
     const [feedbackMessage, setFeedbackMessage] = useState({});
@@ -148,6 +154,7 @@ const UpdateMedia = ({ pathId }) => {
     const [error, setErr] = useState(null);
 
     const [typeFilter, setTypeFilter] = useState('all');
+    const adminRoute =  ROLE_TO_ROUTE_MAP[userRole]
 
     // ORIGINAL LOGIC: getColumns now relies on the Provider's mediaTypesConfig
     const getColumns = () => {
@@ -255,7 +262,7 @@ const UpdateMedia = ({ pathId }) => {
 
         const mediaType = editedItem.mediaType || originalMedia.mediaType;
         const baseFields = ['title', 'genre'];
-        
+
         // Flatten the config field names to match state
         const typeFields = mediaTypesConfig[mediaType]?.map(f => f.name.includes('.') ? f.name.split('.')[1] : f.name) || [];
         const keysToCheck = [...new Set([...baseFields, ...typeFields])];
@@ -301,7 +308,7 @@ const UpdateMedia = ({ pathId }) => {
             await mediaApi.update(updateData, mediaId, getToken);
             setMedia(prev => prev.map(m => m._id === mediaId ? { ...editedItem } : m));
             setFeedbackMessage(prev => ({ ...prev, [mediaId]: { message: `Updated successfully!`, isError: false } }));
-            
+
             // Sync global context if necessary
             refreshMedia();
         } catch (error) {
@@ -326,7 +333,7 @@ const UpdateMedia = ({ pathId }) => {
             setMedia(prev => prev.filter(m => m._id !== mediaId));
             setEditedMedia(prev => prev.filter(m => m._id !== mediaId));
             setFeedbackMessage(prev => ({ ...prev, [mediaId]: { message: `Deleted.`, isError: false } }));
-            
+
             // Sync global context
             refreshMedia();
         } catch (error) {
@@ -335,7 +342,8 @@ const UpdateMedia = ({ pathId }) => {
     };
 
     const handleViewMedia = (mediaId) => {
-        window.location.hash = `admin/updatemedia/${mediaId}`;
+        
+        window.location.hash = `${adminRoute}/updatemedia/${mediaId}`;
     };
 
     // Deliberate use of contextLoading: Ensures we don't render a broken UI if config is missing.

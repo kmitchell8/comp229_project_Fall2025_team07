@@ -3,7 +3,7 @@ import './Navbar.css'
 //import logo from '/images/team_7_logo.png'
 import { useAuth } from '../StateProvider/authState/useAuth';
 import { getPage, getHash } from '../Api/getPage.jsx'
-import {ROUTES, ROLE_TO_ROUTE_MAP } from '../Api/routingConfig'
+import { ROUTES, ROLE_TO_ROUTE_MAP } from '../Api/routingConfig'
 
 
 
@@ -75,7 +75,7 @@ const Navbar = () => {
         return (
 
             <div className="user-actions-group">
-                <li>
+                {!hasAdminPrivileges && (<li>
                     {/* Example of link only available when authenticated */}
                     <a
                         href="./profile.html"
@@ -83,14 +83,14 @@ const Navbar = () => {
                         className={`profile-btn ${isProfileActive ? 'is-active' : ''}`}
                     >Profile</a>
                 </li>
-
+                )}
                 {/* Admin-Specific Link */}
-                {/* Check if the user's role is exactly ROUTES.ADMIN (case-sensitive) */}
+                {/* Check if the user's role is admin (case-sensitive) */}
                 {hasAdminPrivileges && (
                     <li>
                         <a
                             href={`./profile.html#${baseAdminRoute}`}
-                            className={`admin-btn ${(isAdminActive)? 'is-active' : 'pulse-glow'}`}
+                            className={`admin-btn ${(isAdminActive) ? 'is-active' : 'pulse-glow'}`}
                         >
                             {formatRoleLabel(role)} Dashboard
                         </a>

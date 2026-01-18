@@ -61,14 +61,14 @@ const RegisterLibrary = () => {
                 await refreshLibrary();
             }
             // Route based on the toggle selection
-            setTimeout(() => {
+       
                 const adminPath = ROUTES.LIBRARY_ADMIN.replace(/^\//, '');
                 const actionPath = ROUTES.CREATE_BRANCH.replace(/^\//, '');
                 const targetUrl = `./profile.html#/${adminPath}/${actionPath}`;
                 console.log(`./profile.html#/${ROUTES.LIBRARY_ADMIN}/${ROUTES.CREATE_BRANCH}`);
 
                 window.location.href = targetUrl;
-            }, 250);
+       
 
         } catch (err) {
             setStatus({ loading: false, error: err.message || 'Registration failed.' });

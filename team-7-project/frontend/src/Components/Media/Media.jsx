@@ -3,19 +3,23 @@ import mediaApi from '../Api/mediaApi';
 import { useAuth } from '../StateProvider/authState/useAuth';
 import { useMedia } from '../StateProvider/mediaState/useMedia';
 import { useLibrary } from '../StateProvider/libraryState/useLibrary';
-import { ROUTES } from '../Api/routingConfig';
+import { ROUTES, ROLE_TO_ROUTE_MAP } from '../Api/routingConfig';
 import './Media.css';
 import { getHash } from '../Api/getPage';
 
 const Media = ({ mediaId, viewContext, onUpdate }) => {
 
-  const { getToken, isAdmin } = useAuth();
-  const { mediaTypeConfigs, refreshMedia, genres: masterGenres } = useMedia();
-  const { activeIds, refreshLibrary, currentLibrary } = useLibrary(); // Get the IDs resolved by the Provider
-  const { tenantId} = activeIds;
-  // Determine the context for the drop library/drop down
-  const isMasterView = !tenantId;
+  const { getToken, userRole } = useAuth();
+  const { mediaTypeConfigs, refreshMedia, genres: masterGenres, mediaTenantId, mediaBranchId } = useMedia();
+  const { refreshLibrary, currentLibrary, currentBranch } = useLibrary(); // Get the IDs resolved by the Provider
+  const tenantId = currentLibrary?._id;
+  const branchId = currentBranch?._id;
 
+  // Determine the context for the drop library/drop down
+  const isMasterView = !tenantId || !mediaTenantId;
+  const adminAccess = (tenantId === mediaTenantId)
+    || (branchId === mediaBranchId);
+  console.log(mediaTenantId, branchId, mediaId);
   const [media, setMedia] = useState(null);
   const [editData, setEditData] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -25,7 +29,7 @@ const Media = ({ mediaId, viewContext, onUpdate }) => {
   const [error, setError] = useState(null);
 
   const isLibraryView = viewContext === ROUTES.LIBRARY;
-  const isAdminView = viewContext === ROUTES.ADMIN;
+  const isAdminView = viewContext === ROLE_TO_ROUTE_MAP[userRole] || ROUTES.ADMIN;;
 
   // Optimized Fetcher
   const fetchFullDetails = useCallback(async () => {
@@ -91,7 +95,7 @@ const Media = ({ mediaId, viewContext, onUpdate }) => {
     if (!media || !editData) return false;
 
     // Check if the description text has changed
-    // compare current 'description' state vs what we initially loaded
+    // compare current 'description' state vs what initially loaded
     // Note: 'media.description' is just the filename, so check against the 
     // text stored during fetchFullDetails (might want a 'originalDescription' state for 100% accuracy)
     // For now, compare against the text content.
@@ -170,32 +174,32 @@ const Media = ({ mediaId, viewContext, onUpdate }) => {
     const label = field.label.split('.')[1] || field.label;
     return { label: label.charAt(0).toUpperCase() + label.slice(1), value: item[key] || "" };
   };
-const handleBackToLibrary = () => {
-    const tenantId = currentLibrary?._id;
-    const path = getHash(); 
+  const handleBackToLibrary = () => {
+    //const tenantId = currentLibrary?._id;
+    const path = getHash();
 
-    if (!tenantId) {
-        window.location.hash = ROUTES.LIBRARY;
-        return;
+    if (!mediaTenantId) {
+      window.location.hash = ROUTES.LIBRARY;
+      return;
     }
 
-    if (path.includes(tenantId)) {
+    if (path.includes(mediaTenantId)) {
 
-        const tenantIndex = path.indexOf(tenantId);
-        const endOfTenant = tenantIndex + tenantId.length;
-        const trailingPath = path.substring(endOfTenant);
+      const tenantIndex = path.indexOf(mediaTenantId);
+      const endOfTenant = tenantIndex + mediaTenantId.length;
+      const trailingPath = path.substring(endOfTenant);
 
-        if (trailingPath.length > 1) {
-            const lastSlashIndex = path.lastIndexOf('/');
-            window.location.hash = path.substring(0, lastSlashIndex);
-        } else {
-            window.location.hash = ROUTES.LIBRARY;
-        }
+      if (trailingPath.length > 1) {
+        const lastSlashIndex = path.lastIndexOf('/');
+        window.location.hash = path.substring(0, lastSlashIndex);
+      } else {
+        window.location.hash = ROUTES.LIBRARY;
+      }
     } else {
-        // Fallback for any other unexpected state
-        window.location.hash = ROUTES.LIBRARY;
+      // Fallback for any other unexpected state
+      window.location.hash = ROUTES.LIBRARY;
     }
-};
+  };
 
   if (loading) return <div className="media-status">Loading entry...</div>;
   if (error) return <div className="media-status error">{error}</div>;
@@ -211,7 +215,7 @@ const handleBackToLibrary = () => {
               <img src={mediaApi.getCoverUrl(media.cover)} alt={media.title} />
             </div>
             <div className="media-action-bar">
-              {isAdminView && isAdmin && (
+              {isAdminView && adminAccess && !isLibraryView && (
                 <button
                   className={`admin-edit-toggle ${isEditing ? 'editing' : ''}`}
                   onClick={() => isEditing ? handleCancel() : setIsEditing(true)}

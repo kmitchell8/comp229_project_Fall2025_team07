@@ -9,6 +9,7 @@ import UpdateUser from '../Admin/UpdateUser';
 import CreateBranch from '../Admin/CreateBranch';
 import UpdateBranch from '../Admin/UpdateBranch';
 import Profile from '../Profile/Profile';
+import { getHash } from '../Api/getPage';
 //import './Admin.css'
 
 const AdminView = ({ pathSegments: parentSegments = [] }) => {
@@ -48,19 +49,25 @@ const AdminView = ({ pathSegments: parentSegments = [] }) => {
     return null;
   }
   const handleStepBack = () => {
-    const currentHash = window.location.hash; // e.g., "#admin/update-user/123"
+    const currentHash = getHash(); // e.g., "#admin/update-user/123"
     // Find the position of the last slash and slice the string up to that point
     const parentPath = currentHash.substring(0, currentHash.lastIndexOf('/'));
 
     // Fallback: if parentPath is empty, go to the assigned dashboard route
-    window.location.hash = parentPath.length > 1 ? parentPath : `#${isAdminRoleRoute}`;
+    window.location.hash = parentPath.length > 1 ? parentPath : `${isAdminRoleRoute}`;
   };
+
+  const handleHomeView = () => {
+    const primarySegment = ROLE_TO_ROUTE_MAP[userRole]
+    window.location.hash = `${primarySegment}`;
+  };
+
 
   const NavigationLinks = ({ currentView }) => { //need to be outside the render or it will continually lose it's state
     const isDetailView = !!itemId; // Now isDetailView is strictly true or false
     return (
       <div className="admin-nav-footer">
-        {currentView !== isAdminPath && (
+        {currentView !== isAdminPath && parentSegments.length > 1 && (
 
           <button
             onClick={handleStepBack}
@@ -71,7 +78,7 @@ const AdminView = ({ pathSegments: parentSegments = [] }) => {
         )}       {isDetailView && (
 
           <button
-            onClick={() => (window.location.hash = ROUTES.ADMIN)}
+            onClick={handleHomeView}
             className="admin-go-back admin-go-home"
           >
             Home

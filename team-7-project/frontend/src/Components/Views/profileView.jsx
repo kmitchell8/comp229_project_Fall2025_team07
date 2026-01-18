@@ -90,8 +90,7 @@ export const ProfileView = () => {
                 // WORKFLOW PERSISTENCE: If in an Admin view, save the current hash
                 const hash = getHash();
                 const primarySegment = hash.split('/')[0];
-                if (PROFILE_VIEWS.includes(primarySegment) && primarySegment !== ROUTES.PROFILE
-                    && primarySegment !== ROUTES.BRANCH_ADMIN) {
+                if (PROFILE_VIEWS.includes(primarySegment) && primarySegment !== ROUTES.PROFILE) {
                     setLastAdminPath(hash);
                 }
             }
@@ -155,7 +154,7 @@ export const ProfileView = () => {
                         onClick={handleReset}
                         className={`tab-link ${isAdminActive ? 'active' : ''}`}
                     >
-                        {userRole.replace(/([A-Z])/g, ' $1').toUpperCase()} Dashboard
+                        {userRole.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase()).trim()} 
                         {/* SAVED INDICATOR: Shows a small indicator if a session is paused */}
                         {isProfileActive && isDeepPath && (
                             <span className="saved-indicator" title="Shift-Click to reset to main dashboard"></span>

@@ -10,7 +10,7 @@ export const UserProvider = ({ children }) => {
     const { userInfo, loading: authLoading, getToken, availableRoles, hasAdminPrivileges, login } = useAuth();
 
     // Core States
-    const [userData, setUserData] = useState({ 
+    const [userData, setUserData] = useState({
         username: 'N/A',
         email: '',
         altEmail: '',
@@ -95,7 +95,7 @@ export const UserProvider = ({ children }) => {
                             preferredContact: data.preferredContact || 'email',
                             role: data.role || 'user',
                             _id: data._id,
-                            managementAccess: data.managementAccess|| { libraryId: null, branchId: null }
+                            managementAccess: data.managementAccess || { libraryId: null, branchId: null }
                         };
 
                         // Update both states at once to keep them in sync
@@ -318,7 +318,7 @@ export const UserProvider = ({ children }) => {
         onCoverSelected,
         handleImgError,
         userActivity,
-        availableRoles, 
+        availableRoles,
         hasAdminPrivileges,
         selectedUserId, setSelectedUserId, // Explicitly exposed for UpdateUser list
         handlePasswordResetRequest

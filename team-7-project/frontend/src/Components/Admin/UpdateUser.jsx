@@ -3,6 +3,7 @@ import userApi from '../Api/userApi';
 import { useAuth } from '../StateProvider/authState/useAuth'; // Authentication context
 import { useUser } from '../StateProvider/userState/useUser'; // Import the Context
 import { useLibrary } from '../StateProvider/libraryState/useLibrary';
+import { ROLE_TO_ROUTE_MAP } from '../Api/routingConfig';
 import Profile from '../Profile/Profile'; // Ensure this is imported
 import './Admin.css';
 
@@ -178,6 +179,7 @@ const UpdateUser = ({ pathId }/*{parentSegment}*/) => { //pass the _id path to b
     const [editedUsers, setEditedUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setErr] = useState(null);
+    const adminRoute = ROLE_TO_ROUTE_MAP[userRole]
     
     // SEARCH FILTER STATE
     const [searchTerm, setSearchTerm] = useState('');
@@ -301,7 +303,7 @@ const UpdateUser = ({ pathId }/*{parentSegment}*/) => { //pass the _id path to b
     const handleViewUser = (userId) => {
         // Prime the UserProvider with the ID before navigating
         setSelectedUserId(userId);
-        window.location.hash = `admin/updateuser/${userId}`;
+        window.location.hash = `${adminRoute}/updateuser/${userId}`;
     };
 
     // FILTER LOGIC: Filter the editedUsers based on the searchTerm

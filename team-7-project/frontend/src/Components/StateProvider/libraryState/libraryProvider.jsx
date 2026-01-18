@@ -3,6 +3,7 @@ import { LibraryContext } from './libraryContext';
 import libraryApi from '../../Api/libraryApi';
 //import mediaApi from '../../Api/mediaApi';
 import { useAuth } from '../authState/useAuth';
+//import { useMedia } from '../mediaState/useMedia';
 //import { getHash } from '../../Api/getPage';
 import { ROUTES, ADMIN_SUB_VIEWS, LIBRARY_VIEWS } from '../../Api/routingConfig';
 
@@ -18,6 +19,7 @@ const ADDRESS_FIELDS = [
 
 export const LibraryProvider = ({ children }) => {
     const { getToken, user, loading: authLoading, tenantId, branchId } = useAuth();
+    //const {mediaBranchId, mediaTenantId} = useMedia();
     const [currentLibrary, setCurrentLibrary] = useState(null);
     const [branches, setBranches] = useState([]);
     const [libraryData, setLibraryData] = useState({});
@@ -81,6 +83,15 @@ export const LibraryProvider = ({ children }) => {
                         ? libraryApi.readBranch(tenantId, branchId, getToken)
                         : Promise.resolve(null)
                 ]);
+
+               /*  const [mediaLibData] = await Promise.all([
+                    libraryApi.read(mediaTenantId, getToken),
+                    libraryApi.listBranchesByLibrary(mediaTenantId, getToken),
+                    hasValidBranchId
+                        ? libraryApi.readBranch(mediaTenantId, mediaBranchId, getToken)
+                        : Promise.resolve(null)
+                ]);*/
+
 
                 // Set the library as it exists in the DB
                 setCurrentLibrary(libData);
@@ -336,7 +347,7 @@ export const LibraryProvider = ({ children }) => {
         loading,
         activeIds: {
             tenantId: tenantId || currentLibrary?._id || null,
-            branchId: 'all' // You can expand this logic later if needed
+            branchId: 'all' // expand this logic later if needed
         },
         libraryDetails: DETAILS,
         getBranchName: (id) => {

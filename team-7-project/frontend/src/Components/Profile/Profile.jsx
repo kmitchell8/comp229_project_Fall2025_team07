@@ -191,9 +191,9 @@ export const Profile = ({ managedUserId = null }) => {
 
                         <div className="media-action-bar">
                             {!isEditing ? (
-                               canEditPermissions && ( <button className="media-back-btn" onClick={() => setIsEditing(true)}>
+                               <button className="media-back-btn" onClick={() => setIsEditing(true)}>
                                     Edit Profile
-                                </button>)
+                                </button>
                             ) : (
                                 <div className="edit-actions-group">
                                     <button
@@ -393,7 +393,7 @@ export const Profile = ({ managedUserId = null }) => {
                                     <div className="role-management-container">
                                         <div className="role-radio-group-table" style={{ marginBottom: '15px' }}>
                                             {Array.isArray(rolesToUse) && rolesToUse.length > 0 ? (
-                                                rolesToUse.map(role => (
+                                              canEditPermissions && rolesToUse.map(role => (
                                                     <label key={role} className="role-radio-label-table" style={{ display: 'flex', alignItems: 'center', marginBottom: '8px', cursor: 'pointer' }}>
                                                         <input
                                                             type="radio"

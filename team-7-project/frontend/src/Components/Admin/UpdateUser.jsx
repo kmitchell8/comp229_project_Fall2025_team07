@@ -86,11 +86,23 @@ const UserRow = React.memo(({
                                             <div className="branch-selector-wrapper" style={{ marginTop: '8px' }}>
                                                 <select
                                                     className="branch-dropdown"
-                                                    value={user.branchId || ''}
+                                                    /* Try to find the ID in both possible locations */
+                                                    value={user.managementAccess?.branchId || user.branchId || ''}
                                                     onChange={(e) => onCellChange(user._id, 'branchId', e.target.value)}
                                                     disabled={loading || !canChangeRole}
                                                 >
-                                                    <option value="">-- Assign Branch --</option>
+                                                    <option value="">
+                                                        {(() => {
+                                                            // Extract the ID from the nested object (typical for MongoDB) or top level
+                                                            const currentId = user.managementAccess?.branchId || user.branchId;
+                                                            const match = availableBranches.find(b => String(b._id) === String(currentId));
+
+                                                            // Keep the log to confirm it's now finding the nested ID
+                                                            console.log(`User: ${user.name}, Role: ${user.role}, Resolved ID: ${currentId}, Match: ${match?.name}`);
+
+                                                            return match ? match.name : '-- Assign Branch --';
+                                                        })()}
+                                                    </option>
                                                     {availableBranches.map(branch => (
                                                         <option key={branch._id} value={branch._id}>
                                                             {branch.name}
@@ -107,12 +119,26 @@ const UserRow = React.memo(({
                                         value={currentValue}
                                         onChange={(e) => onCellChange(user._id, col.fieldKey, e.target.value)}
                                         className="editable-input"
-                                        disabled={loading}
+                                        disabled={loading || !canChangeRole}
                                     />
                                 )
                             ) : (
                                 //Read-Only fields (like Date)
-                                col.format ? col.format(currentValue) : currentValue
+                                // Read-Only view: Intercept the 'role' field to show branch info
+                                col.fieldKey === 'role' ? (
+                                    <div>
+                                        <div>{currentValue.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase()).trim()}</div>
+                                        {user.role === 'branchAdmin' && (
+                                            <div className="branch-dropdown">
+                                                {/* Look inside managementAccess for the read-only view too */}
+                                                {availableBranches?.find(b => String(b._id) === String(user.managementAccess?.branchId || user.branchId))?.name || '-- No Branch --'}
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    // Standard fallback for Name, Email, and Date
+                                    col.format ? col.format(currentValue) : currentValue
+                                )
                             )}
                         </td>
                     );
@@ -128,7 +154,7 @@ const UserRow = React.memo(({
                     <button
                         className={`button-group update-button ${hasChanges ? 'has-changes' : ''}`}
                         onClick={() => onUpdate(user._id, user.name)}
-                        disabled={loading || !hasChanges}
+                        disabled={loading || !hasChanges || !canChangeRole}
                     >
                         Update
                     </button>
@@ -155,8 +181,23 @@ const UpdateUser = ({ pathId }/*{parentSegment}*/) => { //pass the _id path to b
         resetSelectedUser,
     } = useUser();
 
-    const { role: userRole, getToken, userInfo } = useAuth();
+    const { role: userRole, getToken, userInfo, isAdmin, isLibraryAdmin, isBranchAdmin } = useAuth();
     const { branches: availableBranches } = useLibrary();
+
+    // Helper to turn auth flags into a numeric rank for comparison
+    const getRank = useCallback((user, flags = null) => {
+        // If checking the Logged-in Admin (using flags from AuthProvider)
+        if (flags) {
+            if (flags.isAdmin) return 3;
+            if (flags.isLibraryAdmin) return 2;
+            if (flags.isBranchAdmin) return 1;
+        }
+        // If checking the Target User (using the userData.role string)
+        if (user?.role === 'admin') return 3;
+        if (user?.role === 'libraryAdmin') return 2;
+        if (user?.role === 'branchAdmin') return 1;
+        return 0; // Standard User
+    }, []);
 
     // Logic: Favor roles from Provider, fallback to Auth, fallback to empty array
     const rolesToUse = useMemo(() => {
@@ -180,14 +221,11 @@ const UpdateUser = ({ pathId }/*{parentSegment}*/) => { //pass the _id path to b
     const [loading, setLoading] = useState(true);
     const [error, setErr] = useState(null);
     const adminRoute = ROLE_TO_ROUTE_MAP[userRole]
-    
+
     // SEARCH FILTER STATE
     const [searchTerm, setSearchTerm] = useState('');
 
     const currentUserId = userInfo ? userInfo._id : null;
-
-    // Refined Guard: Admin or LibraryAdmin can edit roles (within the filtered constraints of rolesToUse)
-    const canChangeRole = userRole === 'admin' || userRole === 'libraryAdmin';
 
     const columns = [
         { header: 'Name', key: 'name', fieldKey: 'name', editable: true, inputType: 'text' },
@@ -219,11 +257,26 @@ const UpdateUser = ({ pathId }/*{parentSegment}*/) => { //pass the _id path to b
     const handleCellChange = useCallback((userId, key, value) => {
         setEditedUsers(prevUsers => prevUsers.map(user => {
             if (user._id === userId) {
+
+                // Robust Branch Update
+                if (key === 'branchId') {
+                    return {
+                        ...user,
+                        branchId: value,
+                        managementAccess: { ...user.managementAccess, branchId: value }
+                    };
+                }
+
                 const updatedUser = { ...user, [key]: value };
 
-                // If role is changed away from branchAdmin, clear the branchId
+                // Robust Role Cleanup
+                // If role is changed away from branchAdmin, clear all branch associations
                 if (key === 'role' && value !== 'branchAdmin') {
                     updatedUser.branchId = null;
+                    if (updatedUser.managementAccess) {
+                        const { branchId: _unused, ...rest } = updatedUser.managementAccess;
+                        updatedUser.managementAccess = rest;
+                    }
                 }
 
                 return updatedUser;
@@ -281,11 +334,11 @@ const UpdateUser = ({ pathId }/*{parentSegment}*/) => { //pass the _id path to b
             name: editedUser.name,
             email: editedUser.email,
             role: editedUser.role,
-           managementAccess: {
+            managementAccess: {
                 // Keep the existing libraryId if it exists, or pull from your active context
                 libraryId: editedUser.managementAccess?.libraryId || originalUser.managementAccess?.libraryId || null,
                 // Assign the new branchId from your state
-                branchId: editedUser.branchId || null 
+                branchId: editedUser.branchId || null
             }
         };
 
@@ -314,7 +367,7 @@ const UpdateUser = ({ pathId }/*{parentSegment}*/) => { //pass the _id path to b
 
     // FILTER LOGIC: Filter the editedUsers based on the searchTerm
     const filteredUsers = useMemo(() => {
-        return editedUsers.filter(user => 
+        return editedUsers.filter(user =>
             user.email.toLowerCase().includes(searchTerm.toLowerCase())
         );
     }, [editedUsers, searchTerm]);
@@ -353,7 +406,7 @@ const UpdateUser = ({ pathId }/*{parentSegment}*/) => { //pass the _id path to b
                     </button>
                 </div>
                 {/* Profile.jsx consumes context, so it will automatically 
-                    react to the selectedUserId we set in handleViewUser 
+                    react to the selectedUserId set in handleViewUser 
                 */}
                 <Profile managedUserId={pathId} />
             </div>
@@ -366,7 +419,7 @@ const UpdateUser = ({ pathId }/*{parentSegment}*/) => { //pass the _id path to b
                 <h1>User Directory</h1>
                 <div className="header-actions">
                     {/* SEARCH INPUT */}
-                    <input 
+                    <input
                         type="text"
                         placeholder="Filter by email..."
                         className="search-filter-input"
@@ -397,6 +450,31 @@ const UpdateUser = ({ pathId }/*{parentSegment}*/) => { //pass the _id path to b
                 {filteredUsers.length > 0 ? (
                     filteredUsers.map((user, index) => {
                         const originalUser = users.find(u => u._id === user._id) || {};
+
+                        const myLevel = getRank(userInfo, { isAdmin, isLibraryAdmin, isBranchAdmin });
+                        const targetLevel = getRank(originalUser);
+
+                        const targetLibraryId = originalUser?.managementAccess?.libraryId;
+                        const myLibraryId = userInfo?.managementAccess?.libraryId;
+
+                        // 1. SYSTEM ADMIN RESTRICTION: 
+                        // Even though rank is 3, they cannot edit Library (2) or Branch (1) admins.
+                        // This leaves staff management to the Library Admins.
+                        const isSystemAdminBlocking = isAdmin && (targetLevel === 2 || targetLevel === 1);
+
+                        // 2. JURISDICTION: 
+                        // Library admins must match the libraryId of the target.
+                        const hasJurisdiction = isAdmin || (myLibraryId && (targetLibraryId === myLibraryId || !targetLibraryId));
+
+                        // 3. HIERARCHY: 
+                        // Changed from >= to > to prevent peer-editing (e.g., Branch Admin editing another Branch Admin)
+                        const hasHierarchyAuthority = !isSystemAdminBlocking && hasJurisdiction && (myLevel > targetLevel);
+
+                        const isOwnProfile = user._id === currentUserId;
+
+                        // Final Permission Check
+                        const canChangeRole = hasHierarchyAuthority && !isOwnProfile;
+
                         return (
                             <UserRow
                                 key={user._id || index}

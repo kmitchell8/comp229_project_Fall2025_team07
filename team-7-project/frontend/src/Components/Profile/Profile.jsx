@@ -10,7 +10,7 @@ import './Profile.css';
 
 /**
  * CONFIGURATION: Single Source of Truth for Address Fields
- * To handle schema changes, simply update the 'id' to match your Mongoose model.
+ * To handle schema changes, simply update the 'id' to match Mongoose model.
  */
 const ADDRESS_FIELD_CONFIG = [
     { id: 'street', label: 'Street Address', fullWidth: true },
@@ -133,23 +133,39 @@ export const Profile = ({ managedUserId = null }) => {
     const resetForm = () => {
         resetLocalStates();
     };
-    
+
     const onRevert = () => {
         resetLocalStates();
         setIsEditing(true);
     };
-
-    // Interceptor for Role Changes to handle branchId cleanup
-    const onRoleChange = (e) => {
-        const newRole = e.target.value;
-        handleInputChange(e, 'role');
+    // Interceptor for Role Changes to handle branchId and managementAccess cleanup
+// Interceptor for Role Changes: Robust version for multi-role support
+const onRoleChange = (e) => {
+    const newRole = e.target.value;
+    const oldRole = userData.role;
+    
+    // Update the role immediately
+    handleInputChange(e, 'role');
+    
+    // Role-Specific Cleanup Logic
+    // If moving AWAY from branchAdmin, clear branch-specific data
+    if (oldRole === 'branchAdmin' && newRole !== 'branchAdmin') {
+        handleInputChange({ target: { value: null } }, 'branchId');
         
-        // If switching AWAY from branchAdmin, clear the branch association
-        if (newRole !== 'branchAdmin' && userData.branchId) {
-            handleInputChange({ target: { value: null } }, 'branchId');
-        }
-    };
+        // update the nested object WITHOUT wiping other potential management keys
+        const updatedAccess = { ...userData.managementAccess };
+        delete updatedAccess.branchId; 
+        
+        handleInputChange({ target: { value: updatedAccess } }, 'managementAccess');
+        console.log("Cleaned up branch-specific access.");
+    }
 
+    // Preparation for other roles (Example: libraryAdmin)
+    // If  library-specific selectors later, handle them here
+    if (newRole === 'libraryAdmin') {
+        // Logic to ensure libraryId is present or prompted
+    }
+};
     return (
         <div className={`media ${isSaving ? 'processing-blur' : ''}`}>
             {/* Hidden Inputs for Picture Uploading */}
@@ -191,7 +207,7 @@ export const Profile = ({ managedUserId = null }) => {
 
                         <div className="media-action-bar">
                             {!isEditing ? (
-                               <button className="media-back-btn" onClick={() => setIsEditing(true)}>
+                                <button className="media-back-btn" onClick={() => setIsEditing(true)}>
                                     Edit Profile
                                 </button>
                             ) : (
@@ -393,7 +409,7 @@ export const Profile = ({ managedUserId = null }) => {
                                     <div className="role-management-container">
                                         <div className="role-radio-group-table" style={{ marginBottom: '15px' }}>
                                             {Array.isArray(rolesToUse) && rolesToUse.length > 0 ? (
-                                              canEditPermissions && rolesToUse.map(role => (
+                                                canEditPermissions && rolesToUse.map(role => (
                                                     <label key={role} className="role-radio-label-table" style={{ display: 'flex', alignItems: 'center', marginBottom: '8px', cursor: 'pointer' }}>
                                                         <input
                                                             type="radio"
@@ -403,7 +419,9 @@ export const Profile = ({ managedUserId = null }) => {
                                                             onChange={onRoleChange}
                                                             style={{ width: 'auto', marginRight: '10px', opacity: 1, visibility: 'visible', position: 'relative' }}
                                                         />
-                                                        <span className="radio-text">{role.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase()).trim()}</span>
+                                                        <span className="radio-text">
+                                                            {role.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase()).trim()}
+                                                        </span>
                                                     </label>
                                                 ))
                                             ) : (
@@ -411,16 +429,29 @@ export const Profile = ({ managedUserId = null }) => {
                                             )}
                                         </div>
 
-                                        {/* BRANCH SELECTOR: Consistent with UpdateUser.jsx logic */}
+                                        {/* BRANCH SELECTOR: Aligned with UpdateUser.jsx logic */}
                                         {userData.role === 'branchAdmin' && availableBranches?.length > 0 && (
-                                            <div className="branch-selector-wrapper detail-entry full-width">
+                                            <div className="branch-selector-wrapper detail-entry full-width" style={{ marginTop: '10px' }}>
                                                 <label>Assigned Branch</label>
                                                 <select
                                                     className="editable-input"
-                                                    value={userData.branchId || ''}
+                                                    /* Look for ID in both potential locations */
+                                                    value={userData.managementAccess?.branchId || userData.branchId || ''}
                                                     onChange={(e) => handleInputChange(e, 'branchId')}
                                                 >
-                                                    <option value="">-- Assign Branch --</option>
+                                                    <option value="">
+                                                        {(() => {
+                                                            // Extract the current ID
+                                                            const currentId = userData.managementAccess?.branchId || userData.branchId;
+                                                            // Find the match in our library branches
+                                                            const match = availableBranches.find(b => String(b._id) === String(currentId));
+
+                                                            // Debug for Profile page
+                                                            console.log("Profile Branch ID:", currentId, "Match:", match?.name);
+
+                                                            return match ? match.name : '-- Assign Branch --';
+                                                        })()}
+                                                    </option>
                                                     {availableBranches.map(branch => (
                                                         <option key={branch._id} value={branch._id}>
                                                             {branch.name}

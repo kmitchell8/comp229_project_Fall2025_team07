@@ -186,10 +186,24 @@ export const UserProvider = ({ children }) => {
         const myLevel = getRank(userInfo, { isAdmin, isLibraryAdmin, isBranchAdmin });
         const targetLevel = getRank(userData);
 
-        // Requirement: Admin must be same level or higher AND have jurisdiction
-        const hasHierarchyAuthority = myLevel >= targetLevel;
+        // RULE: JURISDICTION BLOCK
+        // System Admins (level 3) should not manage roles that are assigned to a specific Library hierarchy (level 2 or 1).
+        // This forces Library Admins to be the ones managing their own staff.
+        if (isAdmin && targetLevel >= 1 && targetLevel < 3) {
+            return false;
+        }
 
-        return hasHierarchyAuthority && isSameTenant;
+        // RULE: HIERARCHY PROTECTION
+        // cannot edit someone of the same rank (prevents peer-conflicts) 
+        // or a higher rank than yourself.
+        const hasHierarchyAuthority = myLevel > targetLevel;
+
+        // RULE: TENANT LOCK
+        // Even if higher rank, you must belong to the same library 
+        // (unless you are a global admin editing a standard user).
+        const canAccessTenant = isAdmin ? true : isSameTenant;
+
+        return hasHierarchyAuthority && canAccessTenant;
     }, [userInfo, userData, isOwnProfile, isSameTenant, isAdmin, isLibraryAdmin, isBranchAdmin]);
 
 

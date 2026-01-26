@@ -169,12 +169,19 @@ const getDescriptionUrl = (filename, libraryId, branchId) => {
     if (!filename) return null;
 
     const domainName = BASE_URL.replace('/api/media', '');
-    // Tier 1: Global
-    if (!libraryId || libraryId === 'null') {
-        return `${domainName}/documents/description/${filename}`;
+    
+    // FIX: If filename already contains "/documents/description", don't prepend it.
+    // Also remove leading slashes from filename to avoid the "//" 
+    const cleanFilename = filename.startsWith('/') ? filename.substring(1) : filename;
+    
+    if (cleanFilename.includes('documents/description')) {
+        return `${domainName}/${cleanFilename}`;
     }
-    // Tier 2 & 3: Tenant/Branch
-    return `${domainName}/documents/description/${libraryId}/${branchId}/${filename}`;
+
+    if (!libraryId || libraryId === 'null') {
+        return `${domainName}/documents/description/${cleanFilename}`;
+    }
+    return `${domainName}/documents/description/${libraryId}/${branchId}/${cleanFilename}`;
 };
 
 const getDescriptionText = async (filename, libraryId, branchId) => {

@@ -4,12 +4,13 @@ import { useLibrary } from '../libraryState/useLibrary.jsx';
 import { useAuth } from '../authState/useAuth.jsx';
 import mediaApi from '../../Api/mediaApi';
 import { ROLE_TO_ROUTE_MAP } from '../../Api/routingConfig.js';
+import { getHash } from '../../Api/getPage.jsx';
 
 export const MediaProvider = ({ children }) => {
 
-    const { currentLibrary, currentBranch, branchId, branches=[]} = useLibrary();
-    const {userInfo, isAdmin, isLibraryAdmin, isBranchAdmin } = useAuth();
-    //const isAdminRoleRoute = ROLE_TO_ROUTE_MAP[userRole]
+    const { currentLibrary, currentBranch, branchId, branches = [] } = useLibrary();
+    const { userRole, userInfo, isAdmin, isLibraryAdmin, isBranchAdmin } = useAuth();
+    const isAdminRoleRoute = ROLE_TO_ROUTE_MAP[userRole];
 
     const [media, setMedia] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -46,9 +47,20 @@ export const MediaProvider = ({ children }) => {
 
     const loadData = useCallback(async () => {
         const libraryId = currentLibrary?._id || null;
+        const path = getHash();
+        const isAdminPath = path.includes(isAdminRoleRoute);
         setLoading(true);
         try {
-            const mediaData = await mediaApi.list(libraryId, branchId);
+            let mediaData;
+
+            if (isAdminPath) {
+                // ADMIN PATH: Use specific branch jurisdiction filtering
+                mediaData = await mediaApi.list(libraryId, branchId);
+            } else {
+                // REGULAR LIBRARY PATH: Per instructions, all users see all media.
+                // We pass 'all' as the branchId to the backend list API.
+                mediaData = await mediaApi.list('', '');
+            }
             setMedia(Array.isArray(mediaData) ? mediaData : []);
         } catch (error) {
             console.error('Error fetching media list:', error);
@@ -56,16 +68,23 @@ export const MediaProvider = ({ children }) => {
         } finally {
             setLoading(false);
         }
-    }, [currentLibrary, branchId]);
+    }, [currentLibrary, branchId, isAdminRoleRoute]);
+    useEffect(() => {
+        window.addEventListener('hashchange', loadData);
+        return () => window.removeEventListener('hashchange', loadData);
+    }, [loadData]);
 
     // MOVED FROM MEDIA.JSX: Fetches full single-item details and the associated .txt description
     const fetchFullDetails = useCallback(async (mediaId) => {
         if (!mediaId) return null;
-        const data = await mediaApi.read(mediaId);
-        const text = data.descriptionContent || "";
-       // let text = data.description ? await mediaApi.getDescriptionText(data.description) : "";
 
-        // Return structured data for the local component state
+        // 1. This calls mediaApi.read(mediaId), which hits your backend 'read' controller
+        const data = await mediaApi.read(mediaId);
+
+        // 2. LOGIC: The backend controller ALREADY attached 'descriptionContent'
+        // There is NO NEED to call getDescriptionText here.
+        const text = data.descriptionContent || "No description provided.";
+
         return {
             media: { ...data, _originalDescriptionText: text },
             description: text
@@ -73,21 +92,21 @@ export const MediaProvider = ({ children }) => {
     }, []);
 
     // PRESERVED LOGIC: Centralized formatting/mapping for Dynamic Changes
-  const formatValueForField = useCallback((value, inputType) => {
-    if (inputType === 'list' || inputType === 'array') {
-        if (typeof value === 'string') {
-            return value.split(',').map(v => v.trim()).filter(v => v !== '');
+    const formatValueForField = useCallback((value, inputType) => {
+        if (inputType === 'list' || inputType === 'array') {
+            if (typeof value === 'string') {
+                return value.split(',').map(v => v.trim()).filter(v => v !== '');
+            }
+            return Array.isArray(value) ? value : [];
         }
-        return Array.isArray(value) ? value : [];
-    }
-    if (inputType === 'number' || inputType === 'integer') {
-        return value === '' ? 0 : Number(value);
-    }
-    if (inputType === 'checkbox' || inputType === 'boolean') {
-        return Boolean(value);
-    }
-    return value;
-}, []);
+        if (inputType === 'number' || inputType === 'integer') {
+            return value === '' ? 0 : Number(value);
+        }
+        if (inputType === 'checkbox' || inputType === 'boolean') {
+            return Boolean(value);
+        }
+        return value;
+    }, []);
 
     // MOVED FROM MEDIA.JSX: Extracts creator info based on dynamic config
     const getCreatorInfo = useCallback((item) => {
@@ -165,98 +184,98 @@ export const MediaProvider = ({ children }) => {
         await loadData(); // Refresh the provider's list state
     }, [mediaTypeConfigs, loadData, currentLibrary, branchId, mainBranchId, isMainBranch]);
 
-/**
-     * handleCreate: Refactored to handle the full orchestration
-     * Moves file upload and payload formatting logic into the provider
-     */
-   const handleCreate = useCallback(async (formData, getToken) => {
-    const { mediaData, coverFile, descriptionText, mediaType } = formData;
-    
-    // Use currentLibrary and branchId from context
-    const libId = currentLibrary?._id;
-    const bId = mediaData.branchId || branchId; 
-    
-    let uploadedCover = null;
-    let uploadedDesc = null;
+    /**
+         * handleCreate: Refactored to handle the full orchestration
+         * Moves file upload and payload formatting logic into the provider
+         */
+    const handleCreate = useCallback(async (formData, getToken) => {
+        const { mediaData, coverFile, descriptionText, mediaType } = formData;
 
-    try {
-        if (!coverFile) throw new Error("Cover image is required.");
+        // Use currentLibrary and branchId from context
+        const libId = currentLibrary?._id;
+        const bId = mediaData.branchId || branchId;
 
-        // GET HIERARCHY DATA
-        const mBranchId = currentLibrary?.mainBranchId || branches.find(b => b.isMain)?._id;
+        let uploadedCover = null;
+        let uploadedDesc = null;
 
-        // UPLOAD COVER
-        const coverRes = await mediaApi.uploadCover(
-            coverFile,
-            libId,
-            bId,
-            mBranchId,
-            getToken
-        );
-        uploadedCover = coverRes.coverFileName;
+        try {
+            if (!coverFile) throw new Error("Cover image is required.");
 
-        // UPLOAD DESCRIPTION
-        // Use the cover's UUID so the .jpg and .txt files share the same name
-        const coverBase = uploadedCover.split('.')[0];
-        const descRes = await mediaApi.uploadDescription({
-            descriptionContent: descriptionText.trim() || "No Description",
-            coverBaseName: coverBase,
-            libraryId: libId,
-            branchId: bId
-        }, getToken);
+            // GET HIERARCHY DATA
+            const mBranchId = currentLibrary?.mainBranchId || branches.find(b => b.isMain)?._id;
 
-        uploadedDesc = descRes.descriptionFileName; 
-
-        // PREPARE DATABASE PAYLOAD
-        const payload = {
-            mediaType,
-            title: mediaData.title.trim(),
-            genre: mediaData.genre,
-            cover: uploadedCover,
-            description: uploadedDesc, 
-            libraryId: libId,
-            branchId: bId,
-            mainBranchId: mBranchId
-        };
-
-        // DYNAMIC FIELD MAPPING
-        const config = mediaTypeConfigs[mediaType] || [];
-        config.forEach(field => {
-            const dataKey = field.name.includes('.') ? field.name.split('.')[1] : field.name;
-
-            // Skip fields already handled in the base payload
-            if (['libraryid', 'branchid', 'title', 'genre', 'cover', 'description'].includes(dataKey.toLowerCase())) return;
-
-            let val = mediaData[dataKey];
-
-            // Use the centralized formatting logic (updated below)
-            val = formatValueForField(val, field.type);
-
-            // Add to payload if value exists
-            if (val !== undefined && val !== '') payload[dataKey] = val;
-        });
-
-        // 6. CREATE DATABASE RECORD
-        await mediaApi.create(payload, getToken);
-        
-        // 7. REFRESH LIST
-        await loadData(); 
-        
-        return { success: true, title: payload.title };
-
-    } catch (err) {
-        // 8. CLEANUP ON FAILURE
-        if (uploadedCover) {
-            await mediaApi.removeCover(
-                uploadedCover,
+            // UPLOAD COVER
+            const coverRes = await mediaApi.uploadCover(
+                coverFile,
                 libId,
                 bId,
+                mBranchId,
                 getToken
-            ).catch(console.error);
+            );
+            uploadedCover = coverRes.coverFileName;
+
+            // UPLOAD DESCRIPTION
+            // Use the cover's UUID so the .jpg and .txt files share the same name
+            const coverBase = uploadedCover.split('.')[0];
+            const descRes = await mediaApi.uploadDescription({
+                descriptionContent: descriptionText.trim() || "No Description",
+                coverBaseName: coverBase,
+                libraryId: libId,
+                branchId: bId
+            }, getToken);
+
+            uploadedDesc = descRes.descriptionFileName;
+
+            // PREPARE DATABASE PAYLOAD
+            const payload = {
+                mediaType,
+                title: mediaData.title.trim(),
+                genre: mediaData.genre,
+                cover: uploadedCover,
+                description: uploadedDesc,
+                libraryId: libId,
+                branchId: bId,
+                mainBranchId: mBranchId
+            };
+
+            // DYNAMIC FIELD MAPPING
+            const config = mediaTypeConfigs[mediaType] || [];
+            config.forEach(field => {
+                const dataKey = field.name.includes('.') ? field.name.split('.')[1] : field.name;
+
+                // Skip fields already handled in the base payload
+                if (['libraryid', 'branchid', 'title', 'genre', 'cover', 'description'].includes(dataKey.toLowerCase())) return;
+
+                let val = mediaData[dataKey];
+
+                // Use the centralized formatting logic (updated below)
+                val = formatValueForField(val, field.type);
+
+                // Add to payload if value exists
+                if (val !== undefined && val !== '') payload[dataKey] = val;
+            });
+
+            // 6. CREATE DATABASE RECORD
+            await mediaApi.create(payload, getToken);
+
+            // 7. REFRESH LIST
+            await loadData();
+
+            return { success: true, title: payload.title };
+
+        } catch (err) {
+            // 8. CLEANUP ON FAILURE
+            if (uploadedCover) {
+                await mediaApi.removeCover(
+                    uploadedCover,
+                    libId,
+                    bId,
+                    getToken
+                ).catch(console.error);
+            }
+            throw err;
         }
-        throw err; 
-    }
-}, [currentLibrary, branchId, branches, mediaTypeConfigs, formatValueForField, loadData]);
+    }, [currentLibrary, branchId, branches, mediaTypeConfigs, formatValueForField, loadData]);
 
     useEffect(() => { loadGlobalConfigs(); }, [loadGlobalConfigs]);
     useEffect(() => { loadData(); }, [loadData]);
@@ -355,12 +374,12 @@ export const MediaProvider = ({ children }) => {
 
         return { grouped, sortedNames };
     }, [media, viewMode, sortBy, searchTerm, filterType, mediaTypeConfigs, configStrings]);
-/**
-     * CENTRALIZED HIERARCHY LOGIC (adminAccess)
-     * - Global Admin (isAdmin): Only manages media where libraryId/branchId is NULL.
-     * - Library Admin: Manages media belonging to their libraryId.
-     * - Branch Admin: Manages media belonging to their specific branchId.
-     */
+    /**
+         * CENTRALIZED HIERARCHY LOGIC (adminAccess)
+         * - Global Admin (isAdmin): Only manages media where libraryId/branchId is NULL.
+         * - Library Admin: Manages media belonging to their libraryId.
+         * - Branch Admin: Manages media belonging to their specific branchId.
+         */
     const canManageMedia = useCallback((item) => {
         if (!item || !userInfo) return false;
 
@@ -395,42 +414,42 @@ export const MediaProvider = ({ children }) => {
  * Ensures that the database record, the cover image, and 
  * the description text file are all removed.
  */
-const handleDelete = useCallback(async (item, getToken) => {
-    if (!item) return;
+    const handleDelete = useCallback(async (item, getToken) => {
+        if (!item) return;
 
-    // 1. FINAL HIERARCHY CHECK (Gatekeeper)
-    if (!canManageMedia(item)) {
-        throw new Error("Unauthorized: You do not have permission to delete this record.");
-    }
-
-    const libId = item.libraryId || item.mediaTenantId;
-    const bId = item.branchId || item.mediaBranchId;
-
-    try {
-        // DELETE DATABASE RECORD
-        // do this first so if it fails, the files remain for manual recovery
-        await mediaApi.remove(item._id, getToken);
-
-        // DELETE ASSOCIATED FILES
-        // Since the cover and description names are linked (UUID)
-        if (item.cover) {
-            await mediaApi.removeCover(item.cover, libId, bId, getToken);
+        // 1. FINAL HIERARCHY CHECK (Gatekeeper)
+        if (!canManageMedia(item)) {
+            throw new Error("Unauthorized: You do not have permission to delete this record.");
         }
 
-        if (item.description) {
-            // Updated to use the orchestrated removeDescription call
-            await mediaApi.removeDescription(item.description, libId, bId, getToken);
+        const libId = item.libraryId || item.mediaTenantId;
+        const bId = item.branchId || item.mediaBranchId;
+
+        try {
+            // DELETE DATABASE RECORD
+            // do this first so if it fails, the files remain for manual recovery
+            await mediaApi.remove(item._id, getToken);
+
+            // DELETE ASSOCIATED FILES
+            // Since the cover and description names are linked (UUID)
+            if (item.cover) {
+                await mediaApi.removeCover(item.cover, libId, bId, getToken);
+            }
+
+            if (item.description) {
+                // Updated to use the orchestrated removeDescription call
+                await mediaApi.removeDescription(item.description, libId, bId, getToken);
+            }
+
+            // REFRESH STATE
+            await loadData();
+            return { success: true };
+
+        } catch (err) {
+            console.error("Delete orchestration failed:", err);
+            throw err;
         }
-
-        // REFRESH STATE
-        await loadData();
-        return { success: true };
-
-    } catch (err) {
-        console.error("Delete orchestration failed:", err);
-        throw err;
-    }
-}, [canManageMedia, loadData]);
+    }, [canManageMedia, loadData]);
 
     const value = {
         media,

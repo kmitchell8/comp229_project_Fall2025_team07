@@ -274,7 +274,7 @@ const UpdateMedia = ({ pathId }) => {
             })}
             
             {!loading && Object.keys(groupedMedia).length === 0 && !error && (
-                <div className="info-box">No media records found for your access level.</div>
+                <div className="info-box">No media records found for your library.</div>
             )}
         </div>
     );

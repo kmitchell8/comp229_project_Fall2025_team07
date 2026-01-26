@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { useAuth } from '../StateProvider/authState/useAuth';
 import { useLibrary } from '../StateProvider/libraryState/useLibrary';
 import { useMedia } from '../StateProvider/mediaState/useMedia';
-import mediaApi from '../Api/mediaApi';
+//import mediaApi from '../Api/mediaApi';
 import './Admin.css';
 
 const CreateMedia = () => {
@@ -19,7 +19,7 @@ const CreateMedia = () => {
     // 2. Pulling Configs and Refresh logic from Media Context
     const {
         mediaTypeConfigs,
-        refreshMedia,
+        handleCreate,
         genres: contextGenres = [],
         loading: contextLoading
     } = useMedia();
@@ -42,10 +42,10 @@ const CreateMedia = () => {
     const [successMessage, setSuccessMessage] = useState(null);
 
     const availableMediaTypes = useMemo(() => Object.keys(mediaTypeConfigs || {}), [mediaTypeConfigs]);
-    const hasBranchContext = activeIds.branchId && 
-                             activeIds.branchId !== 'all' && 
-                             activeIds.branchId !== 'null';
-    
+    const hasBranchContext = activeIds.branchId &&
+        activeIds.branchId !== 'all' &&
+        activeIds.branchId !== 'null';
+
     const isBranchSpecific = !!(hasBranchContext && currentBranch?._id);
     const isLibraryWide = !!(activeIds?.tenantId && !hasBranchContext);
 
@@ -128,171 +128,139 @@ const CreateMedia = () => {
         setLoading(true);
         setErr('');
 
-        let uploadedCover = null;
-        let uploadedDesc = null;
-
         try {
-            if (!coverFile) throw new Error("Cover image is required.");
-
-            const coverRes = await mediaApi.uploadCover(coverFile, getToken);
-            uploadedCover = coverRes.coverFileName;
-
-            const coverBase = uploadedCover.split('.')[0];
-            const descRes = await mediaApi.uploadDescription({
-                descriptionContent: descriptionText.trim() || "No Description",
-                coverBaseName: coverBase
+            // Call the centralized provider logic
+            const result = await handleCreate({
+                mediaData,
+                coverFile,
+                descriptionText,
+                mediaType
             }, getToken);
-            uploadedDesc = descRes.descriptionFileName;
 
-            const payload = {
-                mediaType,
-                title: mediaData.title.trim(),
-                genre: mediaData.genre,
-                cover: uploadedCover,
-                libraryId: activeIds.libraryId,
-                branchId: mediaData.branchId || activeIds.branchId
-            };
-
-            const config = mediaTypeConfigs[mediaType] || [];
-            config.forEach(field => {
-                const dataKey = field.name.includes('.') ? field.name.split('.')[1] : field.name;
-                if (['libraryid', 'branchid', 'title', 'genre'].includes(dataKey.toLowerCase())) return;
-
-                let val = mediaData[dataKey];
-                if ((field.type === 'list' || field.type === 'array') && typeof val === 'string') {
-                    val = val.split(',').map(v => v.trim()).filter(v => v !== '');
-                }
-                if (field.type === 'number' && val) val = Number(val);
-                if (val !== undefined && val !== '') payload[dataKey] = val;
-            });
-
-            await mediaApi.create(payload, getToken);
-            setSuccessMessage(`Success! ${payload.title} has been added.`);
-            refreshMedia();
-            handleReset();
-
+            if (result.success) {
+                setSuccessMessage(`Success! ${result.title} has been added.`);
+                handleReset();
+            }
         } catch (err) {
             setErr(err.message);
-            if (uploadedCover) await mediaApi.removeCover(uploadedCover, getToken).catch(console.error);
-            if (uploadedDesc) await mediaApi.removeCover(uploadedDesc, getToken).catch(console.error);
         } finally {
             setLoading(false);
         }
-    }, [mediaData, coverFile, descriptionText, mediaType, activeIds, mediaTypeConfigs, getToken, refreshMedia, handleReset]);
+    }, [mediaData, coverFile, descriptionText, mediaType, getToken, handleCreate, handleReset]);
     // Keep comments: Sync mediaData with the active context
-useEffect(() => {
-    if (isBranchSpecific && currentBranch) {
-        // For Branch Admins: Auto-fill both from the current context
-        setMediaData(prev => ({
-            ...prev,
-            branchId: currentBranch._id,
-            libraryId: currentBranch.libraryId || currentLibrary?._id
-        }));
-    } else if (isLibraryWide && currentLibrary) {
-        // For Library Admins: Ensure the libraryId is set even if branch is still null
-        setMediaData(prev => ({
-            ...prev,
-            libraryId: currentLibrary._id
-        }));
-    }
-}, [isBranchSpecific, isLibraryWide, currentBranch, currentLibrary]);
+    useEffect(() => {
+        if (isBranchSpecific && currentBranch) {
+            // For Branch Admins: Auto-fill both from the current context
+            setMediaData(prev => ({
+                ...prev,
+                branchId: currentBranch._id,
+                libraryId: currentBranch.libraryId || currentLibrary?._id
+            }));
+        } else if (isLibraryWide && currentLibrary) {
+            // For Library Admins: Ensure the libraryId is set even if branch is still null
+            setMediaData(prev => ({
+                ...prev,
+                libraryId: currentLibrary._id
+            }));
+        }
+    }, [isBranchSpecific, isLibraryWide, currentBranch, currentLibrary]);
 
     const renderField = (field) => {
-    // Keep your original mapping exactly as it was
-    const dataKey = field.name.includes('.') ? field.name.split('.')[1] : field.name;
-    const label = field.label.includes('.') ? field.label.split('.')[1] : field.label;
+        // Keep your original mapping exactly as it was
+        const dataKey = field.name.includes('.') ? field.name.split('.')[1] : field.name;
+        const label = field.label.includes('.') ? field.label.split('.')[1] : field.label;
 
-    /**
-     * Dynamic Context Checks
-     * We normalize the IDs to handle cases where they might be strings like "null" or "all"
-     */
-    
+        /**
+         * Dynamic Context Checks
+         * We normalize the IDs to handle cases where they might be strings like "null" or "all"
+         */
 
-    // 1. ADMINISTRATIVE ID FIELDS
-    if (dataKey.toLowerCase() === 'branchid' || dataKey.toLowerCase() === 'libraryid') {
 
-        // CASE A: Specific Branch View (Branch Admin or Library Admin looking at 1 branch)
-        if (isBranchSpecific) {
-            if (dataKey.toLowerCase() === 'branchid') {
-                return (
-                    <div className="form-group" key={field.name}>
-                        <label className="form-label">Branch</label>
-                        <input
-                            className="form-input read-only-input"
-                            value={currentBranch.name || "Assigned Branch"}
-                            disabled
-                        />
-                    </div>
-                );
+        // 1. ADMINISTRATIVE ID FIELDS
+        if (dataKey.toLowerCase() === 'branchid' || dataKey.toLowerCase() === 'libraryid') {
+
+            // CASE A: Specific Branch View (Branch Admin or Library Admin looking at 1 branch)
+            if (isBranchSpecific) {
+                if (dataKey.toLowerCase() === 'branchid') {
+                    return (
+                        <div className="form-group" key={field.name}>
+                            <label className="form-label">Branch</label>
+                            <input
+                                className="form-input read-only-input"
+                                value={currentBranch.name || "Assigned Branch"}
+                                disabled
+                            />
+                        </div>
+                    );
+                }
+                if (dataKey.toLowerCase() === 'libraryid') {
+                    return (
+                        <div className="form-group" key={field.name}>
+                            <label className="form-label">Library System</label>
+                            <input
+                                className="form-input read-only-input"
+                                value={currentLibrary?.name || "System"}
+                                disabled
+                            />
+                        </div>
+                    );
+                }
             }
-            if (dataKey.toLowerCase() === 'libraryid') {
-                return (
-                    <div className="form-group" key={field.name}>
-                        <label className="form-label">Library System</label>
-                        <input
-                            className="form-input read-only-input"
-                            value={currentLibrary?.name || "System"}
-                            disabled
-                        />
-                    </div>
-                );
+            // CASE B: Library Admin View (Broad context - must select a branch)
+            else if (isLibraryWide) {
+                if (dataKey.toLowerCase() === 'branchid') {
+                    return (
+                        <div className="form-group" key={field.name}>
+                            <label className="form-label">Target Branch *</label>
+                            <select
+                                className="form-input"
+                                value={mediaData.branchId || ''}
+                                onChange={handleChange('branchId')}
+                                required={field.required}
+                            >
+                                <option value="">-- Select Target Branch --</option>
+                                {branches && branches.map(b => (
+                                    <option key={b._id} value={b._id}>{b.name}</option>
+                                ))}
+                            </select>
+                            {feedbackMessage['branchId'] && <span className="feedback-error">{feedbackMessage['branchId']}</span>}
+                        </div>
+                    );
+                }
+                if (dataKey.toLowerCase() === 'libraryid') {
+                    return (
+                        <div className="form-group" key={field.name}>
+                            <label className="form-label">Library System</label>
+                            <input
+                                className="form-input read-only-input"
+                                value={currentLibrary?.name || "System"}
+                                disabled
+                            />
+                        </div>
+                    );
+                }
             }
+
+            // Fallback: If no context, don't render these ID fields
+            return null;
         }
-        // CASE B: Library Admin View (Broad context - must select a branch)
-        else if (isLibraryWide) {
-            if (dataKey.toLowerCase() === 'branchid') {
-                return (
-                    <div className="form-group" key={field.name}>
-                        <label className="form-label">Target Branch *</label>
-                        <select
-                            className="form-input"
-                            value={mediaData.branchId || ''}
-                            onChange={handleChange('branchId')}
-                            required={field.required}
-                        >
-                            <option value="">-- Select Target Branch --</option>
-                            {branches && branches.map(b => (
-                                <option key={b._id} value={b._id}>{b.name}</option>
-                            ))}
-                        </select>
-                        {feedbackMessage['branchId'] && <span className="feedback-error">{feedbackMessage['branchId']}</span>}
-                    </div>
-                );
-            }
-            if (dataKey.toLowerCase() === 'libraryid') {
-                return (
-                    <div className="form-group" key={field.name}>
-                        <label className="form-label">Library System</label>
-                        <input
-                            className="form-input read-only-input"
-                            value={currentLibrary?.name || "System"}
-                            disabled
-                        />
-                    </div>
-                );
-            }
-        }
 
-        // Fallback: If no context, don't render these ID fields
-        return null;
-    }
-
-    // 2. STANDARD METADATA FIELDS (Title, Author, etc.)
-    return (
-        <div className="form-group" key={field.name}>
-            <label className="form-label">{label} {field.required && '*'}</label>
-            <input
-                type={field.type === 'number' ? 'number' : 'text'}
-                className="form-input"
-                placeholder={field.type === 'list' ? 'Comma separated list' : ''}
-                value={mediaData[dataKey] || ''}
-                onChange={handleChange(field.name)}
-                required={field.required}
-            />
-            {feedbackMessage[field.name] && <span className="feedback-error">{feedbackMessage[field.name]}</span>}
-        </div>
-    );
-};
+        // 2. STANDARD METADATA FIELDS (Title, Author, etc.)
+        return (
+            <div className="form-group" key={field.name}>
+                <label className="form-label">{label} {field.required && '*'}</label>
+                <input
+                    type={field.type === 'number' ? 'number' : 'text'}
+                    className="form-input"
+                    placeholder={field.type === 'list' ? 'Comma separated list' : ''}
+                    value={mediaData[dataKey] || ''}
+                    onChange={handleChange(field.name)}
+                    required={field.required}
+                />
+                {feedbackMessage[field.name] && <span className="feedback-error">{feedbackMessage[field.name]}</span>}
+            </div>
+        );
+    };
 
 
     if (contextLoading && !availableMediaTypes.length) return <div>Loading Configuration...</div>;

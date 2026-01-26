@@ -277,6 +277,15 @@ const UpdateUser = ({ pathId }/*{parentSegment}*/) => { //pass the _id path to b
                         const { branchId: _unused, ...rest } = updatedUser.managementAccess;
                         updatedUser.managementAccess = rest;
                     }
+
+                    /*//SAME code as above. accomplishesd the same thing. keep both snippets for future reference
+                    if (updatedUser.managementAccess) {
+                    // Create a shallow copy to avoid mutating the original state directly
+                    updatedUser.managementAccess = { ...updatedUser.managementAccess };
+                    // Explicitly remove the key
+                    delete updatedUser.managementAccess.branchId;
+                    }
+                    */
                 }
 
                 return updatedUser;

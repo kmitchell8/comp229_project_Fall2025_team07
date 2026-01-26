@@ -15,7 +15,7 @@ const { v4: uuidv4 } = require('uuid');
 
 
 //permanent storage path 
-const COVERS_DIR = path.join(__dirname, '..', 'public', 'images', 'cover'); //media cover storage
+/*const COVERS_DIR = path.join(__dirname, '..', 'public', 'images', 'cover'); //media cover storage
 const DESCRIPTIONS_DIR = path.join(__dirname, '..', 'public', 'documents', 'description'); //media documents storage
 
 if (!fs.existsSync(COVERS_DIR)) {
@@ -25,7 +25,39 @@ if (!fs.existsSync(COVERS_DIR)) {
 if (!fs.existsSync(DESCRIPTIONS_DIR)) {
     fs.mkdirSync(DESCRIPTIONS_DIR, { recursive: true });
 
-}
+}*/
+
+// Replacement for static COVERS_DIR/DESCRIPTIONS_DIR
+/**
+ * Helper: Generates paths.
+ * Global: public/images/cover/file.jpg
+ * Tenant: public/images/cover/libId/brId/file.jpg
+ */
+/**
+ * Helper: Generates paths.
+ * Global: public/images/cover/file.jpg
+ * Tenant: public/images/cover/libId/brId/file.jpg
+ */
+const getStoragePath = (libId, brId, subFolder) => {
+    const typeFolder = subFolder === 'cover'
+        ? path.join('images', 'cover')
+        : path.join('documents', 'description');
+
+    let baseDir;
+    // FIX: Added 'null' string check to handle frontend edge cases
+    if (!libId || libId === 'null') {
+        // Master Level
+        baseDir = path.resolve(process.cwd(), 'public', typeFolder);
+    } else {
+        // Tenant/Branch Level
+        baseDir = path.resolve(process.cwd(), 'public', typeFolder, libId, brId);
+    }
+
+    if (!fs.existsSync(baseDir)) {
+        fs.mkdirSync(baseDir, { recursive: true });
+    }
+    return baseDir;
+};
 // Middleware to pre-load a media profile based on the 'mediaId' parameter in the route
 const mediaByID = async (req, res, next, id) => {
     try {
@@ -48,9 +80,25 @@ const mediaByID = async (req, res, next, id) => {
 //SINGLE MEDIA 
 
 // GET: Reads all the media info
-const read = (req, res) => {
-    // req.media contains the media data loaded by router.param
-    return res.json(req.media.toObject());
+const read = async (req, res) => {
+    try {
+        const mediaObj = req.media.toObject();
+
+        // If the media has a description path, read the actual text file
+        if (mediaObj.description) {
+            // Convert the URL path back to a physical file system path
+            const fullPath = path.resolve(process.cwd(), 'public', mediaObj.description.startsWith('/') ? mediaObj.description.substring(1) : mediaObj.description);
+
+            if (fs.existsSync(fullPath)) {
+                const content = fs.readFileSync(fullPath, 'utf8');
+                mediaObj.descriptionContent = content; // Send the actual text to the frontend
+            }
+        }
+
+        return res.json(mediaObj);
+    } catch (err) {
+        return res.status(500).json({ error: "Error reading media description file." });
+    }
 };
 
 // PUT: Update media data
@@ -98,20 +146,40 @@ const remove = async (req, res, _next) => {
 
 //GENERAL 
 //POST: create media
+//NEED: switch (mediaType) needs to be dynamic and not a hardcoded case
+//NEED: more accurate way to determine duplicates if not hanled by schema already
 const create = async (req, res) => {
     try {
 
-        const { mediaType } = req.body;
+        const { mediaType, libraryId, branchId, mainBranchId, title } = req.body;
         let Model;
 
         // Ensure mediaType is set if the frontend hasn't updated yet
         // Determine which discriminator to use
         switch (mediaType) {
             case 'movie': Model = Movie; break;
-            case 'game': Model= Game; break;
+            case 'game': Model = Game; break;
             default: Model = Book; break;
         }
+        // SEQUENCE A: GLOBAL MASTER (Universal Level - libraryId: null, branchId: null)
+        let globalMaster = await Media.findOne({ title, mediaType, libraryId: null });
+        if (!globalMaster) {
+            const globalData = { ...req.body, libraryId: null, branchId: null };
+            globalMaster = new Model(globalData);
+            await globalMaster.save();
+        }
 
+        // SEQUENCE B: LIBRARY MASTER (Tenant Level - uses Main BranchId per requirement)
+        if (libraryId && mainBranchId && branchId !== mainBranchId) {
+            let libraryMaster = await Media.findOne({ title, mediaType, libraryId, branchId: mainBranchId });
+            if (!libraryMaster) {
+                const libMasterData = { ...req.body, libraryId, branchId: mainBranchId };
+                libraryMaster = new Model(libMasterData);
+                await libraryMaster.save();
+            }
+        }
+
+        // SEQUENCE C: CURRENT BRANCH RECORD
         const newMedia = new Model(req.body);
         const savedMedia = await newMedia.save();
         //restricted in mediaRoutes  
@@ -126,8 +194,12 @@ const create = async (req, res) => {
 // GET: List all medias
 const list = async (req, res) => {
     try {
-        const { type } = req.query; // e.g., /api/media?type=movie
-        const query = type ? { mediaType: type } : {};
+        const { type, libraryId, branchId } = req.query; // e.g., /api/media?type=movie
+       // const query = type ? { mediaType: type } : {};
+        let query = {};
+        if (type) query.mediaType = type;
+        if (libraryId) query.libraryId = libraryId;
+        if (branchId && branchId !== 'all') query.branchId = branchId;
         const medias = await Media.find(query)
             .sort({ created: -1 });
         //selects fields I would like to display (older code - left as reminder)
@@ -153,7 +225,7 @@ const removeAll = async (req, res) => {
 
 const uploadCover = async (req, res) => {
     try {
-        
+        const { libraryId, branchId, mainBranchId } = req.body;
         const mediaCover = req.file;
         if (!mediaCover) {
             return res.status(400).json({ error: "No file provided." });
@@ -161,8 +233,16 @@ const uploadCover = async (req, res) => {
 
         const fileExtension = mediaCover.originalname.split('.').pop();
         const fileName = `${uuidv4()}.${fileExtension}`;
-        const savePath = path.join(COVERS_DIR, fileName);
-        fs.writeFileSync(savePath, mediaCover.buffer);//save to disk
+        const paths = [
+            // 1. Global Master (Root)
+            path.join(getStoragePath(null, null, 'cover'), fileName),
+            // 2. Library Master (Subfolder)
+            libraryId ? path.join(getStoragePath(libraryId, mainBranchId, 'cover'), fileName) : null,
+            // 3. Branch Instance (Subfolder)
+            (libraryId && branchId !== mainBranchId) ? path.join(getStoragePath(libraryId, branchId, 'cover'), fileName) : null
+        ];
+
+        paths.forEach(p => p && fs.writeFileSync(p, mediaCover.buffer));//save to disk
         return res.status(200).json({ coverFileName: fileName });//sends filename back to front end
 
     } catch (error) {
@@ -173,7 +253,7 @@ const uploadCover = async (req, res) => {
 
 const uploadDescription = async (req, res) => {
     try {
-        const { descriptionContent, coverBaseName } = req.body;
+        const { descriptionContent, coverBaseName, libraryId, branchId } = req.body; // Added hierarchy IDs
 
         if (!coverBaseName) {
             return res.status(400).json({ error: "Missing UUID." });
@@ -184,7 +264,7 @@ const uploadDescription = async (req, res) => {
         }
 
         const descriptionFileName = `${coverBaseName}.txt`;
-        const savePath = path.join(DESCRIPTIONS_DIR, descriptionFileName);
+        const savePath = path.join(getStoragePath(libraryId, branchId, 'description'), descriptionFileName);
         fs.writeFileSync(savePath, descriptionContent, 'utf8');
         return res.status(200).json({ descriptionFileName: descriptionFileName });//sends filename back to front end
 
@@ -195,19 +275,22 @@ const uploadDescription = async (req, res) => {
 };
 
 const deleteCover = async (req, res) => {
-    const filename = req.body.cover;//UUID.ext
+    const { cover, libraryId, branchId } = req.body; // Adjusted to match expected payload
+    // const filename = req.body.cover;//UUID.ext
     //const { filename } = req.body; //Assuming { filename: 'uuid.ext' }
 
-    if (!filename) {
+    if (!cover) {
         return res.status(400).json({ error: "Filename is required for deletion." });
     }
+    if (cover.includes('/') || cover.includes('\\')) {
+        return res.status(400).json({ error: "Invalid filename provided." });
+    }
+    const lastDotIndex = cover.lastIndexOf('.');
+    const baseName = lastDotIndex === -1 ? cover : cover.substring(0, lastDotIndex);
 
-    const lastDotIndex = filename.lastIndexOf('.');
-    const baseName = lastDotIndex === -1 ? filename : filename.substring(0, lastDotIndex);
-
-    const coverPath = path.join(COVERS_DIR, filename);
+    const coverPath = path.join(getStoragePath(libraryId, branchId, 'cover'), cover);
     const descriptionFileName = `${baseName}.txt`; // The associated description file
-    const descriptionPath = path.join(DESCRIPTIONS_DIR, descriptionFileName);
+    const descriptionPath = path.join(getStoragePath(libraryId, branchId, 'description'), descriptionFileName);
     let deletedCover = false;
     let deletedDescription = false;
     try {
@@ -232,7 +315,7 @@ const deleteCover = async (req, res) => {
         }
 
     } catch (err) {
-        console.error(`Error deleting files with filename: ${filename}:`, err);
+        console.error(`Error deleting files with filename: ${cover}:`, err);
         return res.status(500).json({ error: "Failed to delete files." });
     }
 };

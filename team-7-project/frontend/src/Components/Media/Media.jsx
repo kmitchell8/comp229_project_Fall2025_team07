@@ -11,12 +11,12 @@ const Media = ({ mediaId, viewContext, onUpdate }) => {
   const { getToken, userRole } = useAuth();
   const {
     mediaTypeConfigs, genres: masterGenres,
-    formatValueForField, fetchFullDetails,
+    formatValueForField, fetchFullDetails, canManageMedia,
     getCreatorInfo, checkHasChanges, handleSave: saveMedia,
-    mediaTenantId, mediaBranchId, refreshMedia, handleRevert: getRevertedData,
+    mediaTenantId, /*mediaBranchId,*/ refreshMedia, handleRevert: getRevertedData,
   } = useMedia();
 
-  const { refreshLibrary, currentLibrary, currentBranch } = useLibrary();
+  const { refreshLibrary, currentLibrary/*, currentBranch */} = useLibrary();
 
   const [media, setMedia] = useState(null);
   const [editData, setEditData] = useState(null);
@@ -27,11 +27,11 @@ const Media = ({ mediaId, viewContext, onUpdate }) => {
 
   // Context resolution logic restored from original file
   const tenantId = currentLibrary?._id;
-  const branchId = currentBranch?._id;
+  //const branchId = currentBranch?._id;
   const isMasterView = !tenantId || !mediaTenantId;
 
   // RESTORED: Admin access check now properly references the media's owner IDs
-  const adminAccess = (tenantId === mediaTenantId) || (branchId === mediaBranchId);
+  const adminAccess = canManageMedia(media);
 
   const isLibraryView = viewContext === ROUTES.LIBRARY;
   const isAdminView = viewContext === ROLE_TO_ROUTE_MAP[userRole] || viewContext === ROUTES.ADMIN;

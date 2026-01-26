@@ -1024,6 +1024,68 @@ Branch Selector Table Styling
     color: var(--primary-text);
 }
 
+/*============================================================
+   Collapsible Branch & Master Catalog Sections
+============================================================*/
+
+/* The container for each branch group */
+.branch-section {
+    margin-bottom: 30px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+/* Base style for the headers */
+.branch-group-header {
+    margin: 0;
+    padding: 15px 20px;
+    background-color: var(--table-header-bg);
+    color: var(--accent-color);
+    font-size: 1.25rem;
+    /* Clean, not overbearing */
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    user-select: none;
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* Hover state for the interactive header */
+.collapsible-header:hover {
+    background-color: var(--table-row-hover);
+    color: var(--primary-text);
+}
+
+/* Specific styling for the Master Catalog to give it visual priority */
+.branch-section:first-of-type .branch-group-header {
+    border-left: 4px solid var(--accent-color);
+    background: linear-gradient(90deg, var(--table-header-bg) 0%, var(--bg-dark-secondary) 100%);
+}
+
+/* The Icon indicating collapse/expand state */
+.collapse-icon {
+    font-family: monospace;
+    /* Keeps icons aligned */
+    color: var(--secondary-text);
+    background-color: var(--input-bg);
+    padding: 4px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    font-weight: 400;
+}
+
+.collapsible-header:hover .collapse-icon {
+    color: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+/* Smooth spacing for the table inside a branch */
+.branch-section table {
+    margin-top: 0;
+    /* Remove top margin when inside a branch section */
+}
+
 /* ============================================================
    Mobile View (Max-width: 768px) 
    ============================================================ */
@@ -1246,5 +1308,16 @@ Branch Selector Table Styling
 
     .branch-selector-wrapper {
         margin-bottom: 10px;
+    }
+
+    .branch-group-header {
+        font-size: 1.1rem;
+        padding: 12px 15px;
+    }
+
+    .branch-section {
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
     }
 }

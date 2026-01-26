@@ -12,7 +12,7 @@ const getAuthHeaders = async (getToken) => {
         try {
             const jwt = await getToken();
             if (jwt) headers['Authorization'] = `Bearer ${jwt}`;
-        // eslint-disable-next-line no-unused-vars
+            // eslint-disable-next-line no-unused-vars
         } catch (e) {
             console.warn("Guest access: No token retrieved.");
         }
@@ -27,7 +27,7 @@ const getAuthHeadersNoJson = async (getToken) => {
         try {
             const jwt = await getToken();
             if (jwt) headers['Authorization'] = `Bearer ${jwt}`;
-        // eslint-disable-next-line no-unused-vars
+            // eslint-disable-next-line no-unused-vars
         } catch (e) {
             console.warn("Guest access: No token retrieved.");
         }
@@ -99,11 +99,15 @@ const create = async (mediaData, getToken) => {//
 
 //MEDIA COVER
 
-const uploadCover = async (coverFile, getToken) => {
+const uploadCover = async (coverFile, libraryId, branchId, mainBranchId, getToken) => {
     const headers = await getAuthHeadersNoJson(getToken);
 
     const formData = new FormData();
     formData.append('coverImage', coverFile);
+    // Append the hierarchy IDs so the controller knows where to save
+    formData.append('libraryId', libraryId || "");
+    formData.append('branchId', branchId || "");
+    formData.append('mainBranchId', mainBranchId || "");
 
     return fetchHelper(`${BASE_URL}/cover`, {
         method: 'POST',
@@ -112,21 +116,33 @@ const uploadCover = async (coverFile, getToken) => {
     });
 };
 
-const removeCover = async (filename, getToken) => {
+const removeCover = async (filename, libraryId, branchId, getToken) => {
     const headers = await getAuthHeaders(getToken);
 
     return fetchHelper(`${BASE_URL}/cover`, {
         method: 'DELETE',
         headers: headers,
-        body: JSON.stringify({ cover: filename }),
+        // Backend deleteCover controller expects these for getStoragePath
+        body: JSON.stringify({
+            cover: filename,
+            libraryId: libraryId,
+            branchId: branchId
+        }),
     });
 };
 
-const getCoverUrl = (filename) => {
+const getCoverUrl = (filename, libraryId, branchId) => {
     if (!filename) return '../../assets/default_cover.png';
     const domainName = BASE_URL.replace('/api/media', '');
 
-    return `${domainName}/images/cover/${filename}`;
+    // Tier 1: Global Master (IDs are null/null) -> /images/cover/filename
+    if (!libraryId || libraryId === 'null') {
+        return `${domainName}/images/cover/${filename}`;
+    }
+
+    // Tier 2 & 3: Library/Branch -> /images/cover/libId/branchId/filename
+    // If it's a Library Master, branchId will be the mainBranchId
+    return `${domainName}/images/cover/${libraryId}/${branchId}/${filename}`;
 };
 
 
@@ -140,30 +156,36 @@ const uploadDescription = async (data, getToken) => {
         headers: headers,
         body: JSON.stringify({
             descriptionContent: data.descriptionContent,
-            coverBaseName: data.coverBaseName
+            coverBaseName: data.coverBaseName,
+            libraryId: data.libraryId, // ADD THESE
+            branchId: data.branchId
+
         })
     });
 
 };
 
-const getDescriptionUrl = (descriptionPath) => {
-    if (!descriptionPath) return null;
+const getDescriptionUrl = (filename, libraryId, branchId) => {
+    if (!filename) return null;
 
     const domainName = BASE_URL.replace('/api/media', '');
-    return `${domainName}${descriptionPath}`;
+    // Tier 1: Global
+    if (!libraryId || libraryId === 'null') {
+        return `${domainName}/documents/description/${filename}`;
+    }
+    // Tier 2 & 3: Tenant/Branch
+    return `${domainName}/documents/description/${libraryId}/${branchId}/${filename}`;
+};
 
-}
-
-const getDescriptionText = async (descriptionPath) => {
-    const url = getDescriptionUrl(descriptionPath);
+const getDescriptionText = async (filename, libraryId, branchId) => {
+    const url = getDescriptionUrl(filename, libraryId, branchId);
     if (!url) return "No description available.";
 
     return await fetchHelper(url, {
         method: 'GET'
-    })
+    });
+};
 
-
-}
 //List all media
 const list = async (libraryId, branchId = 'all', type = null, getToken = null) => {
     // Handle 'all' or null to return the base URL

@@ -129,7 +129,14 @@ const MediaSchema = new mongoose.Schema({
         default: function () {
             const editPath = this.cover.lastIndexOf('.');
             const descString = editPath === -1 ? this.cover : this.cover.substring(0, editPath);
-            return `/documents/description/${descString}.txt`;
+            const fileName = `${descString}.txt`;
+            // Tier 1: Global Master (No IDs)
+            if (!this.libraryId || this.libraryId === 'null') {
+                return `/documents/description/${fileName}`;
+            }
+            // Tier 2 & 3: Tenant/Branch (The missing logic)
+            // This ensures the DB path matches the getStoragePath folder structure
+            return `/documents/description/${this.libraryId}/${this.branchId}/${fileName}`;
         }
     },
     genre: { type: String, enum: genres, default: "Other" },
@@ -198,7 +205,7 @@ MediaSchema.index(
 // This ensures that a specific branch cannot have duplicate mediaIds.
 // We only apply this where a libraryId actually exists.
 MediaSchema.index(
-    { libraryId: 1, branchId: 1, title: 1, mediaType: 1},
+    { libraryId: 1, branchId: 1, title: 1, mediaType: 1 },
     {
         unique: true,
         partialFilterExpression: { libraryId: { $exists: true, $ne: null } }
